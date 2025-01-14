@@ -1,0 +1,29 @@
+{
+    "name": "thrift",
+    "version": "1.0.0",
+    "description": "A Lisk Dapp Scaffold",
+    "private": true,
+    "author": "Kennjenga",
+    "license": "MIT",
+    "scripts": {
+        "react-app:dev": "yarn workspace @Thrift/react-app dev",
+        "react-app:build": "yarn workspace @Thrift/react-app build",
+        "react-app:start": "yarn workspace @Thrift/react-app start",
+        "react-app:lint": "yarn workspace @Thrift/react-app lint"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/LiskAfricaEcosystem/scaffold-lisk.git"
+    },
+    "bugs": {
+        "url": "https://github.com/LiskAfricaEcosystem/scaffold-lisk/issues"
+    },
+    "homepage": "https://github.com/LiskAfricaEcosystem/scaffold-lisk/blob/main/README.md",
+    "workspaces": [
+        "packages/*"
+    ],
+    "keywords": [
+        "lisk",
+        "dapp"
+    ]
+}
