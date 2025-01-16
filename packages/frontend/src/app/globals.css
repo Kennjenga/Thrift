@@ -3,8 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --forest-green: #2C4A3E;
+  --natural-beige: #E5DCC5;
+  --terracotta: #C97C5D;
+  --olive: #89937C;
+  --soft-white: #FDFBF7;
+}
+
+body {
+  background: var(--soft-white);
+  color: var(--forest-green);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -14,8 +22,16 @@
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+  @keyframes aurora {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+
