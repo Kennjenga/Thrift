@@ -65,6 +65,7 @@ const SectionDivider = styled.div`
   margin: 3rem 0;
 `;
 
+
 const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -109,26 +110,118 @@ const Home: React.FC = () => {
 // Loading Spinner Component
 const SpinnerContainer = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  gap: 2rem;
+  background: ${colors.matte};
 `;
 
-const Spinner = styled(motion.div)`
-  width: 50px;
-  height: 50px;
-  border: 4px solid ${colors.gold};
-  border-top: 4px solid transparent;
+const SpinnerWrapper = styled.div`
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const OuterSpinner = styled(motion.div)`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-top: 3px solid ${colors.gold};
+  border-right: 3px solid ${colors.gold};
   border-radius: 50%;
-  box-shadow: 0 0 20px rgba(198, 169, 124, 0.2);
+  box-shadow: 0 0 15px rgba(198, 169, 124, 0.2);
+`;
+
+const InnerSpinner = styled(motion.div)`
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  border: 3px solid transparent;
+  border-top: 3px solid ${colors.goldLight};
+  border-left: 3px solid ${colors.goldLight};
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(198, 169, 124, 0.15);
+`;
+
+const SpinnerDot = styled(motion.div)`
+  width: 8px;
+  height: 8px;
+  background: ${colors.gold};
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(198, 169, 124, 0.3);
+`;
+
+const LoadingText = styled(motion.div)`
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  color: ${colors.gold};
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const Dot = styled(motion.span)`
+  opacity: 0;
 `;
 
 const LoadingSpinner: React.FC = () => (
   <SpinnerContainer>
-    <Spinner
-      animate={{ rotate: 360 }}
-      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-    />
+    <SpinnerWrapper>
+      <OuterSpinner
+        animate={{ rotate: 360 }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+      />
+      <InnerSpinner
+        animate={{ rotate: -360 }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+      />
+      <SpinnerDot
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [1, 0.8, 1],
+        }}
+        transition={{
+          duration: 1,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+    </SpinnerWrapper>
+    
+    <LoadingText>
+      Loading
+      {[...Array(3)].map((_, i) => (
+        <Dot
+          key={i}
+          animate={{
+            opacity: [0, 1, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            delay: i * 0.2,
+            ease: "easeInOut"
+          }}
+        >
+          .
+        </Dot>
+      ))}
+    </LoadingText>
   </SpinnerContainer>
 );
 
