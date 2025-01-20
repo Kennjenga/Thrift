@@ -1,21 +1,22 @@
 // components/Header.tsx
 "use client";
 
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import styled from "styled-components";
+import { motion, AnimatePresence } from "framer-motion";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 // Refined pastel & gold palette
 const colors = {
-  pastelBlue: '#B8C7DB',
-  pastelPink: '#E8D3D1',
-  pastelMint: '#C2D4C5',
-  pastelSand: '#E5DCD3',
-  gold: '#C6A97C',
-  goldLight: '#D4BC94',
-  matte: '#F4F1EC',
-  text: '#4A4544',
-  textLight: '#7A7574',
+  pastelBlue: "#B8C7DB",
+  pastelPink: "#E8D3D1",
+  pastelMint: "#C2D4C5",
+  pastelSand: "#E5DCD3",
+  gold: "#C6A97C",
+  goldLight: "#D4BC94",
+  matte: "#F4F1EC",
+  text: "#4A4544",
+  textLight: "#7A7574",
 };
 
 const HeaderWrapper = styled.div`
@@ -38,7 +39,7 @@ const HeaderContainer = styled.header`
 `;
 
 const Logo = styled(motion.div)`
-  font-family: 'Cormorant Garamond', serif;
+  font-family: "Cormorant Garamond", serif;
   font-size: 2.2rem;
   color: ${colors.text};
   display: flex;
@@ -80,7 +81,7 @@ const NavLink = styled(motion.a).attrs<{ href: string }>((props) => ({
 }))`
   color: ${colors.textLight};
   text-decoration: none;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-size: 0.95rem;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -89,7 +90,7 @@ const NavLink = styled(motion.a).attrs<{ href: string }>((props) => ({
   position: relative;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -126,7 +127,7 @@ const IconButton = styled(motion.button)`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-size: 0.9rem;
 
   svg {
@@ -139,12 +140,14 @@ const IconButton = styled(motion.button)`
   }
 `;
 
-const StyledButton = styled(motion.button).attrs<{ className?: string }>((props) => ({
-  className: props.className,
-}))`
+const StyledButton = styled(motion.button).attrs<{ className?: string }>(
+  (props) => ({
+    className: props.className,
+  })
+)`
   padding: 0.8rem 2rem;
   border-radius: 25px;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -204,10 +207,10 @@ const Header: React.FC = () => {
         <NavContainer>
           <Nav>
             {[
-              { name: 'Collections', path: '/collections' },
-              { name: 'Sustainable', path: '/sustainable' },
-              { name: 'Consign', path: '/consign' },
-              { name: 'Impact', path: '/impact' },
+              { name: "Collections", path: "/collections" },
+              { name: "Sustainable", path: "/sustainable" },
+              { name: "Consign", path: "/consign" },
+              { name: "Impact", path: "/impact" },
             ].map((item) => (
               <NavLink
                 key={item.name}
@@ -234,13 +237,7 @@ const Header: React.FC = () => {
         </NavContainer>
 
         <AuthSection>
-          <StyledButton
-            className="wallet"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Connect Wallet
-          </StyledButton>
+          <ConnectButton />
         </AuthSection>
       </HeaderContainer>
     </HeaderWrapper>
