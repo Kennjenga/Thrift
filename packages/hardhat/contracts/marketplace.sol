@@ -1,124 +1,127 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {ThriftToken} from "./thrift.sol";
 
 contract Marketplace is ReentrancyGuard {
     ThriftToken public thriftToken;
+    address public treasuryWallet;
 
-    uint256 public tokenPlatformFee = 25; // 2.5% for token purchases
-    uint256 public ethPlatformFee = 35; // 3.5% for ETH purchases
+    uint256 public tokenPlatformFee = 25; // 2.5% total platform fee
+    uint256 public ethPlatformFee = 35; // 3.5% total platform fee
+    uint256 public constant BURN_PERCENTAGE = 60; // 60% of platform fees are burned
+    uint256 public constant TREASURY_PERCENTAGE = 40; // 40% to treasury
+    uint256 public constant SPENDING_REWARD_PERCENTAGE = 20; // 2% spending reward
+
     uint256 public productCount;
 
     struct Product {
         uint256 id;
         address seller;
         uint256 tokenPrice;
-        uint256 quantity; // Quantity of the product
+        uint256 ethPrice;
+        uint256 quantity;
         string name;
         string description;
         string size;
         string condition;
-        string aesthetics;
         string brand;
         string categories;
         string gender;
         string image;
         bool isAvailableForExchange;
         string exchangePreference;
-        bool isSold; // Indicates if the product is completely sold out
+        bool isSold;
     }
 
+    // Updated exchange offer struct to include quantity and token top-up
     struct ExchangeOffer {
-        uint256 productOffered;
-        uint256 productWanted;
+        uint256 offeredProductId;
+        uint256 wantedProductId;
         address offerer;
         bool isActive;
+        uint256 offeredQuantity;
+        uint256 tokenTopUp;
     }
 
-    // Mappings for product and exchange management
     mapping(uint256 => Product) public products;
     mapping(uint256 => ExchangeOffer[]) public exchangeOffers;
 
-    // Events
     event ProductListed(
         uint256 id,
         address seller,
         uint256 tokenPrice,
-        uint256 quantity,
-        string name,
-        string brand,
-        string categories
+        uint256 ethPrice
     );
     event ProductSoldForTokens(
         uint256 id,
         address buyer,
         address seller,
-        uint256 tokenAmount,
-        uint256 quantity
+        uint256 amount
     );
     event ProductSoldForEth(
         uint256 id,
         address buyer,
         address seller,
-        uint256 ethAmount,
-        uint256 quantity
+        uint256 amount
+    );
+    event ListingDeleted(uint256 productId, address seller);
+    event EnhancedExchangeOfferCreated(
+        uint256 offeredProductId,
+        uint256 wantedProductId,
+        address offerer,
+        uint256 offeredQuantity,
+        uint256 tokenTopUp
+    );
+    event EnhancedExchangeCompleted(
+        uint256 product1,
+        uint256 product2,
+        address party1,
+        address party2,
+        uint256 exchangedQuantity,
+        uint256 tokenTopUp
     );
     event BulkPurchaseCompleted(
         address buyer,
         uint256[] productIds,
         uint256 totalAmount
     );
-    event ExchangeOfferCreated(
-        uint256 offeredProduct,
-        uint256 wantedProduct,
-        address offerer
-    );
-    event ExchangeCompleted(
-        uint256 product1,
-        uint256 product2,
-        address party1,
-        address party2
-    );
 
-    constructor(address payable _thriftTokenAddress) {
+    constructor(address payable _thriftTokenAddress, address _treasuryWallet) {
         thriftToken = ThriftToken(_thriftTokenAddress);
+        treasuryWallet = _treasuryWallet;
     }
 
-    // Function to list a product
     function listProduct(
         string memory name,
         string memory description,
         string memory size,
         string memory condition,
-        string memory aesthetics,
         string memory brand,
         string memory categories,
         string memory gender,
         string memory image,
         uint256 tokenPrice,
-        uint256 quantity, // Quantity of the product
+        uint256 ethPrice,
+        uint256 quantity,
         bool isAvailableForExchange,
         string memory exchangePreference
     ) external {
-        require(tokenPrice > 0, "Price must be greater than zero");
+        require(tokenPrice > 0 || ethPrice > 0, "Must set at least one price");
         require(quantity > 0, "Quantity must be greater than zero");
 
         productCount++;
-
         products[productCount] = Product(
             productCount,
             msg.sender,
             tokenPrice,
+            ethPrice,
             quantity,
             name,
             description,
             size,
             condition,
-            aesthetics,
             brand,
             categories,
             gender,
@@ -128,44 +131,40 @@ contract Marketplace is ReentrancyGuard {
             false
         );
 
-        emit ProductListed(
-            productCount,
-            msg.sender,
-            tokenPrice,
-            quantity,
-            name,
-            brand,
-            categories
-        );
+        emit ProductListed(productCount, msg.sender, tokenPrice, ethPrice);
     }
 
-    // Function to buy a single product with tokens
+    function deleteListing(uint256 productId) external {
+        Product storage product = products[productId];
+        require(product.seller == msg.sender, "Only seller can delete listing");
+        require(!product.isSold, "Cannot delete sold product");
+
+        // Reset the product to effectively delete it
+        delete products[productId];
+
+        // Optional: Emit an event for tracking
+        emit ListingDeleted(productId, msg.sender);
+    }
+
     function buyWithTokens(
         uint256 productId,
-        uint256 purchaseQuantity
+        uint256 quantity
     ) external nonReentrant {
         Product storage product = products[productId];
-        require(!product.isSold, "Product already sold");
-        require(
-            purchaseQuantity > 0,
-            "Purchase quantity must be greater than zero"
-        );
-        require(
-            product.quantity >= purchaseQuantity,
-            "Not enough quantity available"
-        );
+        require(!product.isSold, "Product sold out");
+        require(product.quantity >= quantity, "Insufficient quantity");
+        require(product.tokenPrice > 0, "Token price not set");
 
-        uint256 totalPrice = product.tokenPrice * purchaseQuantity;
-        uint256 platformFeeAmount = (totalPrice * tokenPlatformFee) / 1000;
-        uint256 sellerAmount = totalPrice - platformFeeAmount;
+        uint256 totalCost = product.tokenPrice * quantity;
 
-        // Transfer tokens to the seller
-        require(
-            thriftToken.transferFrom(msg.sender, product.seller, sellerAmount),
-            "Transfer to seller failed"
-        );
+        // Calculate fees and rewards
+        uint256 platformFeeAmount = (totalCost * tokenPlatformFee) / 1000;
+        uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
+        uint256 treasuryAmount = platformFeeAmount;
+        uint256 spendingReward = (totalCost * SPENDING_REWARD_PERCENTAGE) /
+            1000;
 
-        // Collect platform fee
+        // Process platform fees
         require(
             thriftToken.transferFrom(
                 msg.sender,
@@ -175,110 +174,100 @@ contract Marketplace is ReentrancyGuard {
             "Platform fee transfer failed"
         );
 
-        product.quantity -= purchaseQuantity; // Reduce the quantity
+        // Transfer tokens to seller
+        require(
+            thriftToken.transferFrom(msg.sender, product.seller, totalCost),
+            "Seller transfer failed"
+        );
+
+        // Update product state
+        product.quantity -= quantity;
         if (product.quantity == 0) {
-            product.isSold = true; // Mark as sold if quantity is zero
+            product.isSold = true;
         }
+
+        // Process fees and rewards
+        thriftToken.burn(burnAmount);
+        require(
+            thriftToken.transfer(treasuryWallet, treasuryAmount),
+            "Treasury transfer failed"
+        );
+        thriftToken.mintReward(msg.sender, spendingReward);
 
         emit ProductSoldForTokens(
             productId,
             msg.sender,
             product.seller,
-            totalPrice,
-            purchaseQuantity
+            totalCost
         );
     }
 
-    // Function to buy a single product with ETH
     function buyWithEth(
         uint256 productId,
-        uint256 purchaseQuantity
+        uint256 quantity
     ) external payable nonReentrant {
         Product storage product = products[productId];
-        require(!product.isSold, "Product already sold");
-        require(
-            purchaseQuantity > 0,
-            "Purchase quantity must be greater than zero"
-        );
-        require(
-            product.quantity >= purchaseQuantity,
-            "Not enough quantity available"
-        );
+        require(!product.isSold, "Product sold out");
+        require(product.quantity >= quantity, "Insufficient quantity");
+        require(product.ethPrice > 0, "ETH price not set");
 
-        uint256 totalEthPrice = thriftToken.getEthAmount(
-            product.tokenPrice * purchaseQuantity
-        );
-        require(msg.value >= totalEthPrice, "Insufficient ETH sent");
+        uint256 totalCost = product.ethPrice * quantity;
+        require(msg.value == totalCost, "Incorrect ETH amount");
 
-        uint256 platformFeeAmount = (msg.value * ethPlatformFee) / 1000;
-        uint256 sellerAmount = msg.value - platformFeeAmount;
+        uint256 platformFeeAmount = (totalCost * ethPlatformFee) / 1000;
+        uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
+        uint256 treasuryAmount = platformFeeAmount - burnAmount;
+        uint256 sellerAmount = totalCost - platformFeeAmount;
 
-        // Transfer ETH to the seller
-        (bool success, ) = product.seller.call{value: sellerAmount}("");
-        require(success, "Transfer to seller failed");
+        // Transfer ETH to seller
+        payable(product.seller).transfer(sellerAmount);
 
-        product.quantity -= purchaseQuantity; // Reduce the quantity
+        // Update product state
+        product.quantity -= quantity;
         if (product.quantity == 0) {
-            product.isSold = true; // Mark as sold if quantity is zero
+            product.isSold = true;
         }
+
+        // Send treasury amount
+        payable(treasuryWallet).transfer(treasuryAmount);
 
         emit ProductSoldForEth(
             productId,
             msg.sender,
             product.seller,
-            msg.value,
-            purchaseQuantity
+            totalCost
         );
     }
 
-    // Bulk purchase with tokens
-    function bulkPurchaseWithTokens(
-        uint256[] memory productIds,
-        uint256[] memory quantities
+    function buyWithTokensBulk(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
     ) external nonReentrant {
-        require(productIds.length > 0, "No products selected");
         require(
             productIds.length == quantities.length,
-            "Mismatched productIds and quantities"
+            "Arrays length mismatch"
         );
+        require(productIds.length > 0, "Empty purchase");
 
-        uint256 totalAmount = 0;
+        uint256 totalCost = 0;
 
-        for (uint i = 0; i < productIds.length; i++) {
-            uint256 productId = productIds[i];
-            uint256 purchaseQuantity = quantities[i];
-            Product storage product = products[productId];
-            require(!product.isSold, "Product already sold");
-            require(
-                purchaseQuantity > 0,
-                "Purchase quantity must be greater than zero"
-            );
-            require(
-                product.quantity >= purchaseQuantity,
-                "Not enough quantity available"
-            );
-
-            uint256 productTotalPrice = product.tokenPrice * purchaseQuantity;
-            totalAmount += productTotalPrice;
-
-            product.quantity -= purchaseQuantity; // Reduce the quantity
-            if (product.quantity == 0) {
-                product.isSold = true; // Mark as sold if quantity is zero
-            }
-
-            // Transfer tokens to the seller
-            require(
-                thriftToken.transferFrom(
-                    msg.sender,
-                    product.seller,
-                    productTotalPrice
-                ),
-                "Transfer to seller failed"
-            );
+        // Calculate total cost
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+            require(!product.isSold, "Product sold out");
+            require(product.quantity >= quantities[i], "Insufficient quantity");
+            require(product.tokenPrice > 0, "Token price not set");
+            totalCost += product.tokenPrice * quantities[i];
         }
 
-        // Calculate and collect platform fee
-        uint256 platformFeeAmount = (totalAmount * tokenPlatformFee) / 1000;
+        // Calculate fees and rewards
+        uint256 platformFeeAmount = (totalCost * tokenPlatformFee) / 1000;
+        uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
+        uint256 treasuryAmount = platformFeeAmount - burnAmount;
+        uint256 spendingReward = (totalCost * SPENDING_REWARD_PERCENTAGE) /
+            1000;
+
+        // Process platform fees
         require(
             thriftToken.transferFrom(
                 msg.sender,
@@ -288,73 +277,190 @@ contract Marketplace is ReentrancyGuard {
             "Platform fee transfer failed"
         );
 
-        emit BulkPurchaseCompleted(
-            msg.sender,
-            productIds,
-            totalAmount + platformFeeAmount
+        // Process each purchase
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+            uint256 sellerAmount = product.tokenPrice * quantities[i];
+
+            require(
+                thriftToken.transferFrom(
+                    msg.sender,
+                    product.seller,
+                    sellerAmount
+                ),
+                "Seller transfer failed"
+            );
+
+            product.quantity -= quantities[i];
+            if (product.quantity == 0) {
+                product.isSold = true;
+            }
+        }
+
+        // Process fees and rewards
+        thriftToken.burn(burnAmount);
+        require(
+            thriftToken.transfer(treasuryWallet, treasuryAmount),
+            "Treasury transfer failed"
         );
+        thriftToken.mintReward(msg.sender, spendingReward);
+
+        emit BulkPurchaseCompleted(msg.sender, productIds, totalCost);
     }
 
-    // Exchange functionality
-    function createExchangeOffer(
+    function buyWithEthBulk(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external payable nonReentrant {
+        require(
+            productIds.length == quantities.length,
+            "Arrays length mismatch"
+        );
+        require(productIds.length > 0, "Empty purchase");
+
+        uint256 totalCost = 0;
+
+        // Calculate total cost
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+            require(!product.isSold, "Product sold out");
+            require(product.quantity >= quantities[i], "Insufficient quantity");
+            require(product.ethPrice > 0, "ETH price not set");
+            totalCost += product.ethPrice * quantities[i];
+        }
+
+        require(msg.value == totalCost, "Incorrect ETH amount");
+
+        uint256 platformFeeAmount = (totalCost * ethPlatformFee) / 1000;
+        uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
+        uint256 treasuryAmount = platformFeeAmount;
+        uint256 sellerAmount = totalCost - platformFeeAmount;
+
+        // Process each purchase
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+            uint256 itemCost = product.ethPrice * quantities[i];
+            uint256 itemSellerAmount = itemCost -
+                ((itemCost * ethPlatformFee) / 1000);
+
+            payable(product.seller).transfer(itemSellerAmount);
+
+            product.quantity -= quantities[i];
+            if (product.quantity == 0) {
+                product.isSold = true;
+            }
+        }
+
+        // Send treasury amount
+        payable(treasuryWallet).transfer(treasuryAmount);
+
+        emit BulkPurchaseCompleted(msg.sender, productIds, totalCost);
+    }
+
+    function createEnhancedExchangeOffer(
         uint256 offeredProductId,
-        uint256 wantedProductId
+        uint256 wantedProductId,
+        uint256 offeredQuantity,
+        uint256 tokenTopUp
     ) external {
         Product storage offeredProduct = products[offeredProductId];
         Product storage wantedProduct = products[wantedProductId];
 
+        require(offeredProduct.seller == msg.sender, "Not your product");
         require(
-            offeredProduct.seller == msg.sender,
-            "Not the owner of offered product"
+            offeredProduct.isAvailableForExchange,
+            "Not available for exchange"
         );
-        require(!offeredProduct.isSold, "Offered product already sold");
-        require(!wantedProduct.isSold, "Wanted product already sold");
         require(
             wantedProduct.isAvailableForExchange,
-            "Product not available for exchange"
+            "Wanted product not for exchange"
         );
+        require(
+            !offeredProduct.isSold && !wantedProduct.isSold,
+            "Product(s) sold"
+        );
+        require(
+            offeredProduct.quantity >= offeredQuantity,
+            "Insufficient product quantity"
+        );
+
+        // Optional token top-up
+        if (tokenTopUp > 0) {
+            require(
+                thriftToken.transferFrom(msg.sender, address(this), tokenTopUp),
+                "Token transfer failed"
+            );
+        }
 
         exchangeOffers[wantedProductId].push(
-            ExchangeOffer(offeredProductId, wantedProductId, msg.sender, true)
+            ExchangeOffer(
+                offeredProductId,
+                wantedProductId,
+                msg.sender,
+                true,
+                offeredQuantity,
+                tokenTopUp
+            )
         );
 
-        emit ExchangeOfferCreated(
+        emit EnhancedExchangeOfferCreated(
             offeredProductId,
             wantedProductId,
-            msg.sender
+            msg.sender,
+            offeredQuantity,
+            tokenTopUp
         );
     }
 
-    function acceptExchangeOffer(
+    // Updated accept exchange offer to handle new exchange mechanics
+    function acceptEnhancedExchangeOffer(
         uint256 productId,
         uint256 offerIndex
     ) external nonReentrant {
+        Product storage receivingProduct = products[productId];
+        require(receivingProduct.seller == msg.sender, "Not your product");
+
         ExchangeOffer storage offer = exchangeOffers[productId][offerIndex];
-        require(offer.isActive, "Offer is not active");
+        require(offer.isActive, "Offer not active");
 
-        Product storage product1 = products[offer.productOffered];
-        Product storage product2 = products[offer.productWanted];
-
+        Product storage offeringProduct = products[offer.offeredProductId];
         require(
-            msg.sender == product2.seller,
-            "Not the owner of wanted product"
+            !offeringProduct.isSold && !receivingProduct.isSold,
+            "Product(s) sold"
         );
         require(
-            !product1.isSold && !product2.isSold,
-            "One of the products is sold"
+            receivingProduct.quantity >= 1,
+            "Insufficient receiving product quantity"
         );
 
-        product1.isSold = true;
-        product2.isSold = true;
+        // Transfer ownership and quantity
+        address party1 = offeringProduct.seller;
+        address party2 = receivingProduct.seller;
+
+        offeringProduct.seller = party2;
+        receivingProduct.seller = party1;
+
+        // Adjust quantities
+        offeringProduct.quantity -= offer.offeredQuantity;
+        receivingProduct.quantity -= 1;
+
+        // Handle token top-up
+        if (offer.tokenTopUp > 0) {
+            require(
+                thriftToken.transfer(receivingProduct.seller, offer.tokenTopUp),
+                "Token transfer failed"
+            );
+        }
+
         offer.isActive = false;
 
-        emit ExchangeCompleted(
-            offer.productOffered,
-            offer.productWanted,
-            offer.offerer,
-            msg.sender
+        emit EnhancedExchangeCompleted(
+            offer.offeredProductId,
+            productId,
+            party1,
+            party2,
+            offer.offeredQuantity,
+            offer.tokenTopUp
         );
     }
-
-    receive() external payable {}
 }
