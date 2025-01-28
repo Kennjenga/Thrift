@@ -8,7 +8,7 @@ contract Marketplace is ReentrancyGuard {
     ThriftToken public thriftToken;
     address public treasuryWallet;
 
-    uint256 public tokenPlatformFee = 25; // 2.5% total platform fee
+    uint256 public tokenPlatformFee = 35; // 3.5% total platform fee
     uint256 public ethPlatformFee = 35; // 3.5% total platform fee
     uint256 public constant BURN_PERCENTAGE = 60; // 60% of platform fees are burned
     uint256 public constant TREASURY_PERCENTAGE = 40; // 40% to treasury
@@ -160,7 +160,7 @@ contract Marketplace is ReentrancyGuard {
         // Calculate fees and rewards
         uint256 platformFeeAmount = (totalCost * tokenPlatformFee) / 1000;
         uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
-        uint256 treasuryAmount = platformFeeAmount;
+        uint256 treasuryAmount = platformFeeAmount - burnAmount;
         uint256 spendingReward = (totalCost * SPENDING_REWARD_PERCENTAGE) /
             1000;
 
@@ -215,8 +215,8 @@ contract Marketplace is ReentrancyGuard {
         require(msg.value == totalCost, "Incorrect ETH amount");
 
         uint256 platformFeeAmount = (totalCost * ethPlatformFee) / 1000;
-        uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
-        uint256 treasuryAmount = platformFeeAmount - burnAmount;
+        // uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
+        uint256 treasuryAmount = platformFeeAmount;
         uint256 sellerAmount = totalCost - platformFeeAmount;
 
         // Transfer ETH to seller
@@ -332,9 +332,8 @@ contract Marketplace is ReentrancyGuard {
         require(msg.value == totalCost, "Incorrect ETH amount");
 
         uint256 platformFeeAmount = (totalCost * ethPlatformFee) / 1000;
-        uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
+        // uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) / 100;
         uint256 treasuryAmount = platformFeeAmount;
-        uint256 sellerAmount = totalCost - platformFeeAmount;
 
         // Process each purchase
         for (uint256 i = 0; i < productIds.length; i++) {

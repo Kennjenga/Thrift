@@ -54,3 +54,9 @@ main()
   });
 
 module.exports = { main };
+
+// Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+// ThriftToken deployed to: 0xC8129f176074b4000c2394A36AdbDA35477d9ebf
+// Marketplace deployed to: 0x97647BDEDb5feE215eCDC4b71aa2f6D2B0788844
+// DonationAndRecycling deployed to: 0x9D9d5e60854A5E7b56c1ddC9f3012f7B7484A60D
+// Deployment complete!
