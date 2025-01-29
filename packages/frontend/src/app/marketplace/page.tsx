@@ -1,194 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
-import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
-import { useThriftToken } from "@/blockchain/hooks/useThriftToken";
-// import { useAccount } from "wagmi";
+// marketplace
+import { useState, useEffect } from "react";
+import { BrowserProvider, Contract, formatEther } from "ethers";
+import ProductCard from "./_components/ProductCard";
+import Cart from "./_components/Cart";
+import { CartProvider } from "./context/CartContext";
+import { Product } from "@/types/market";
+import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/blockchain/abis/thrift";
 
-interface Product {
-  id: bigint;
-  name: string;
-  description: string;
-  tokenPrice: bigint;
-  ethPrice: bigint;
-  quantity: bigint;
-  image: string;
-}
+export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
 
-export default function MarketplacePage() {
-  //   const { address } = useAccount();
-  const {
-    products,
-    // productCount = 0,
-    buyWithTokens,
-    buyWithEth,
-    listProduct,
-  } = useMarketplace() as {
-    products: Product[] | undefined;
-    productCount: number | undefined;
-    buyWithTokens: (id: bigint, quantity: bigint) => Promise<void>;
-    buyWithEth: (id: bigint, quantity: bigint) => Promise<void>;
-    listProduct: (
-      name: string,
-      description: string,
-      tokenPrice: bigint,
-      ethPrice: bigint,
-      quantity: bigint,
-      image: string
-    ) => Promise<void>;
-  };
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const provider = new BrowserProvider(window.ethereum);
+        const contract = new Contract(
+          MARKETPLACE_ADDRESS,
+          MARKETPLACE_ABI,
+          provider
+        );
 
-  const productList = products ?? [];
-  const { balance } = useThriftToken() as {
-    balance: bigint | null | undefined;
-  };
+        const count = await contract.productCount();
+        if (count.isZero) return;
 
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    tokenPrice: BigInt(0),
-    ethPrice: BigInt(0),
-    quantity: BigInt(0),
-    image: "",
-  });
-
-  const handleListProduct = async () => {
-    try {
-      await listProduct(
-        newProduct.name,
-        newProduct.description,
-        newProduct.tokenPrice,
-        newProduct.ethPrice,
-        newProduct.quantity,
-        newProduct.image
-      );
-      // Reset form or show success message
-    } catch (error) {
-      console.error("Failed to list product", error);
-    }
-  };
-
-  const handleBuyProduct = async (
-    product: Product,
-    paymentMethod: "token" | "eth"
-  ) => {
-    try {
-      if (paymentMethod === "token") {
-        await buyWithTokens(product.id, BigInt(1));
-      } else {
-        await buyWithEth(product.id, BigInt(1));
+        const productsData: Product[] = [];
+        for (let i = 1; i <= Number(count); i++) {
+          const product = await contract.products(i);
+          if (!product.isSold) {
+            productsData.push({
+              id: product.id.toString(),
+              name: product.name,
+              description: product.description,
+              tokenPrice: formatEther(product.tokenPrice),
+              ethPrice: formatEther(product.ethPrice),
+              image: product.image,
+              seller: product.seller,
+              quantity: product.quantity.toString(),
+            });
+          }
+        }
+        setProducts(productsData);
+      } catch (error) {
+        console.error("Error fetching products:", error);
       }
-    } catch (error) {
-      console.error("Purchase failed", error);
-    }
-  };
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Marketplace</h1>
-
-      {/* User Balance */}
-      <div className="mb-4">
-        <p>Your Token Balance: {balance?.toString() || "0"}</p>
+    <CartProvider>
+      <div className="flex min-h-screen">
+        <main className="flex-1 p-8">
+          <h1 className="text-3xl font-bold mb-6">Available Products</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </main>
+        <Cart />
       </div>
-
-      {productList.map((product) => (
-        <div key={product.id.toString()} className="grid grid-cols-3 gap-4">
-          {products?.map((product) => (
-            <div key={product.id.toString()} className="border p-4">
-              <h2>{product.name}</h2>
-              <p>{product.description}</p>
-              <div className="flex justify-between">
-                <button
-                  onClick={() => handleBuyProduct(product, "token")}
-                  className="bg-blue-500 text-white p-2"
-                >
-                  Buy with Tokens ({product.tokenPrice.toString()})
-                </button>
-                <button
-                  onClick={() => handleBuyProduct(product, "eth")}
-                  className="bg-green-500 text-white p-2"
-                >
-                  Buy with ETH ({product.ethPrice.toString()})
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
-
-      {/* Product Listing Form */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">List New Product</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleListProduct();
-          }}
-          className="space-y-4"
-        >
-          <input
-            type="text"
-            placeholder="Product Name"
-            value={newProduct.name}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, name: e.target.value })
-            }
-            className="w-full p-2 border"
-          />
-          <input
-            type="text"
-            placeholder="Description"
-            value={newProduct.description}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, description: e.target.value })
-            }
-            className="w-full p-2 border"
-          />
-          <input
-            type="number"
-            placeholder="Token Price"
-            value={newProduct.tokenPrice.toString()}
-            onChange={(e) =>
-              setNewProduct({
-                ...newProduct,
-                tokenPrice: BigInt(e.target.value),
-              })
-            }
-            className="w-full p-2 border"
-          />
-          <input
-            type="number"
-            placeholder="ETH Price"
-            value={newProduct.ethPrice.toString()}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, ethPrice: BigInt(e.target.value) })
-            }
-            className="w-full p-2 border"
-          />
-          <input
-            type="number"
-            placeholder="Quantity"
-            value={newProduct.quantity.toString()}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, quantity: BigInt(e.target.value) })
-            }
-            className="w-full p-2 border"
-          />
-          <input
-            type="text"
-            placeholder="Image URL"
-            value={newProduct.image}
-            onChange={(e) =>
-              setNewProduct({ ...newProduct, image: e.target.value })
-            }
-            className="w-full p-2 border"
-          />
-          <button type="submit" className="w-full bg-purple-500 text-white p-2">
-            List Product
-          </button>
-        </form>
-      </div>
-    </div>
+    </CartProvider>
   );
 }
