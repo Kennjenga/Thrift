@@ -1,68 +1,103 @@
 "use client";
 
-// marketplace
-import { useState, useEffect } from "react";
-import { BrowserProvider, Contract, formatEther } from "ethers";
-import ProductCard from "./_components/ProductCard";
-import Cart from "./_components/Cart";
-import { CartProvider } from "./context/CartContext";
+import Link from "next/link";
+import Image from "next/image";
+import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
-import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from "@/blockchain/abis/thrift";
 
-export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>([]);
+export default function MarketplacePage() {
+  const { useGetAllProducts } = useMarketplace();
+  const { data: productsData, isLoading, error } = useGetAllProducts();
+  const products = productsData as Array<Product>;
+  // console.log("products", products);
+  // console.log("prodData", productsData);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const provider = new BrowserProvider(window.ethereum);
-        const contract = new Contract(
-          MARKETPLACE_ADDRESS,
-          MARKETPLACE_ABI,
-          provider
-        );
-
-        const count = await contract.productCount();
-        if (count.isZero) return;
-
-        const productsData: Product[] = [];
-        for (let i = 1; i <= Number(count); i++) {
-          const product = await contract.products(i);
-          if (!product.isSold) {
-            productsData.push({
-              id: product.id.toString(),
-              name: product.name,
-              description: product.description,
-              tokenPrice: formatEther(product.tokenPrice),
-              ethPrice: formatEther(product.ethPrice),
-              image: product.image,
-              seller: product.seller,
-              quantity: product.quantity.toString(),
-            });
-          }
-        }
-        setProducts(productsData);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
-
-    fetchProducts();
-  }, []);
+  if (error) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p className="text-red-500">Error loading products: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
-    <CartProvider>
-      <div className="flex min-h-screen">
-        <main className="flex-1 p-8">
-          <h1 className="text-3xl font-bold mb-6">Available Products</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </main>
-        <Cart />
-      </div>
-    </CartProvider>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        Thrift Marketplace
+      </h1>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-gray-100 rounded-lg p-4 animate-pulse"
+            >
+              <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products?.map((product: Product) => (
+            <Link
+              key={product.id}
+              href={`/marketplace/product/${product.id}`}
+              className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+            >
+              <div className="h-40 bg-gray-100 relative">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  layout="fill"
+                  objectFit="cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold truncate">
+                  {product.name}
+                </h3>
+                <p className="text-sm text-gray-600 truncate">
+                  {product.brand}
+                </p>
+                <div className="mt-2">
+                  <p className="text-lg font-bold">
+                    {(Number(product.ethPrice) / 1e18).toFixed(4)} ETH
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    or {(Number(product.tokenPrice) / 1e18).toFixed(4)} Tokens
+                  </p>
+                </div>
+                <div className="mt-2 flex justify-between items-center">
+                  <span className="text-sm bg-gray-100 px-2 py-1 rounded">
+                    {product.condition}
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    Qty: {product.quantity.toString()}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && (!products || products.length === 0) && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">
+            No products found in the marketplace
+          </p>
+          <Link
+            href="/marketplace/create"
+            className="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            List a Product
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }

@@ -33,6 +33,7 @@ contract Marketplace is ReentrancyGuard {
         bool isAvailableForExchange;
         string exchangePreference;
         bool isSold;
+        bool isDeleted;
     }
 
     // Updated exchange offer struct to include quantity and token top-up
@@ -128,17 +129,114 @@ contract Marketplace is ReentrancyGuard {
             image,
             isAvailableForExchange,
             exchangePreference,
+            false,
             false
         );
 
         emit ProductListed(productCount, msg.sender, tokenPrice, ethPrice);
     }
 
+    // Get a single product by ID
+    function getProduct(
+        uint256 productId
+    ) external view returns (Product memory) {
+        require(
+            productId > 0 && productId <= productCount,
+            "Invalid product ID"
+        );
+        Product memory product = products[productId];
+        require(!product.isDeleted, "Product has been deleted");
+        return product;
+    }
+
+    // Get total number of products ever listed (including deleted and sold)
+    function getTotalProducts() external view returns (uint256) {
+        return productCount;
+    }
+
+    // Get total number of active products (not deleted and not sold)
+    function getTotalActiveProducts() external view returns (uint256) {
+        uint256 activeCount = 0;
+        for (uint256 i = 1; i <= productCount; i++) {
+            if (!products[i].isDeleted && !products[i].isSold) {
+                activeCount++;
+            }
+        }
+        return activeCount;
+    }
+
+    // Get all active products (not deleted and not sold)
+    function getAllProducts() external view returns (Product[] memory) {
+        uint256 activeProductCount = 0;
+
+        // First, count active products
+        for (uint256 i = 1; i <= productCount; i++) {
+            if (!products[i].isDeleted && !products[i].isSold) {
+                activeProductCount++;
+            }
+        }
+
+        // Create array of active products
+        Product[] memory activeProducts = new Product[](activeProductCount);
+        uint256 currentIndex = 0;
+
+        // Fill array with active products
+        for (uint256 i = 1; i <= productCount; i++) {
+            if (!products[i].isDeleted && !products[i].isSold) {
+                activeProducts[currentIndex] = products[i];
+                currentIndex++;
+            }
+        }
+
+        return activeProducts;
+    }
+
+    // Get all exchange offers for a specific product
+    function getAllExchangeOffersForProduct(
+        uint256 productId
+    ) external view returns (ExchangeOffer[] memory) {
+        require(
+            productId > 0 && productId <= productCount,
+            "Invalid product ID"
+        );
+        require(!products[productId].isDeleted, "Product has been deleted");
+
+        // Get all offers for the product
+        ExchangeOffer[] storage offers = exchangeOffers[productId];
+
+        // Count active offers
+        uint256 activeOfferCount = 0;
+        for (uint256 i = 0; i < offers.length; i++) {
+            if (offers[i].isActive) {
+                activeOfferCount++;
+            }
+        }
+
+        // Create array of active offers
+        ExchangeOffer[] memory activeOffers = new ExchangeOffer[](
+            activeOfferCount
+        );
+        uint256 currentIndex = 0;
+
+        // Fill array with active offers
+        for (uint256 i = 0; i < offers.length; i++) {
+            if (offers[i].isActive) {
+                activeOffers[currentIndex] = offers[i];
+                currentIndex++;
+            }
+        }
+
+        return activeOffers;
+    }
+
+    // delete a listed product
     function deleteListing(uint256 productId) external {
         Product storage product = products[productId];
         require(product.seller == msg.sender, "Only seller can delete listing");
         require(!product.isSold, "Cannot delete sold product");
+        require(!product.isDeleted, "Product already deleted");
 
+        product.isDeleted = true;
         // Reset the product to effectively delete it
         delete products[productId];
 
@@ -146,6 +244,7 @@ contract Marketplace is ReentrancyGuard {
         emit ListingDeleted(productId, msg.sender);
     }
 
+    // buy product with token
     function buyWithTokens(
         uint256 productId,
         uint256 quantity
@@ -202,6 +301,7 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
+    // buy a single product with eth
     function buyWithEth(
         uint256 productId,
         uint256 quantity
@@ -239,6 +339,7 @@ contract Marketplace is ReentrancyGuard {
         );
     }
 
+    // buy with thrift bulk
     function buyWithTokensBulk(
         uint256[] calldata productIds,
         uint256[] calldata quantities
@@ -308,6 +409,7 @@ contract Marketplace is ReentrancyGuard {
         emit BulkPurchaseCompleted(msg.sender, productIds, totalCost);
     }
 
+    // buy with eth bulk
     function buyWithEthBulk(
         uint256[] calldata productIds,
         uint256[] calldata quantities
@@ -356,6 +458,7 @@ contract Marketplace is ReentrancyGuard {
         emit BulkPurchaseCompleted(msg.sender, productIds, totalCost);
     }
 
+    // creating an exchange offer
     function createEnhancedExchangeOffer(
         uint256 offeredProductId,
         uint256 wantedProductId,

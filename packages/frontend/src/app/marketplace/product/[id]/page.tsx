@@ -1,258 +1,191 @@
-// pages/product/[id].tsx
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import { BrowserProvider, Contract, parseEther } from "ethers";
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
-import { useCart } from "../../context/CartContext";
-import { Product } from "@/types/market";
-import {
-  MARKETPLACE_ADDRESS,
-  MARKETPLACE_ABI,
-  THRIFT_ADDRESS,
-  THRIFT_ABI,
-} from "@/blockchain/abis/thrift";
+import { useParams } from "next/navigation";
+import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
+import { formatEther, formatGwei } from "viem";
+import { ExchangeOffer, Product } from "@/types/market";
 
-export default function ProductDetailPage() {
-  const router = useRouter();
-  const { id } = router.query;
-  const [product, setProduct] = useState<Product | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [exchangePref, setExchangePref] = useState("");
-  const { addToCart } = useCart();
+export default function ProductPage() {
+  const params = useParams();
+  const productId = BigInt(params.id as string);
+  const [quantity, setQuantity] = useState("1");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!id) return;
+  const {
+    useGetProduct,
+    useGetExchangeOffers,
+    buyWithEth,
+    buyWithTokens,
+    // createEnhancedExchangeOffer,
+    acceptEnhancedExchangeOffer,
+    useGetProductsByOwner,
+    userAddress,
+  } = useMarketplace();
 
-    const fetchProduct = async () => {
-      try {
-        const provider = new BrowserProvider(window.ethereum);
-        const contract = new Contract(
-          MARKETPLACE_ADDRESS,
-          MARKETPLACE_ABI,
-          provider
-        );
-        const productData = await contract.products(id);
+  const { data, isLoading: productLoading } = useGetProduct(productId);
+  const { data: exchangeOffersData } = useGetExchangeOffers(productId);
+  const { data: userProducts } = useGetProductsByOwner(userAddress!);
 
-        setProduct({
-          id: productData.id.toString(),
-          name: productData.name,
-          description: productData.description,
-          tokenPrice: productData.tokenPrice.toString(),
-          ethPrice: productData.ethPrice.toString(),
-          image: productData.image,
-          seller: productData.seller,
-          quantity: productData.quantity.toString(),
-          size: productData.size,
-          condition: productData.condition,
-          brand: productData.brand,
-          categories: productData.categories,
-          gender: productData.gender,
-          isAvailableForExchange: productData.isAvailableForExchange,
-          exchangePreference: productData.exchangePreference,
-          isSold: productData.isSold,
-        });
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      }
-    };
+  const product = data as Product;
+  const exchangeOffers = exchangeOffersData as Array<ExchangeOffer>;
 
-    fetchProduct();
-  }, [id]);
-
-  const handlePurchase = async (paymentMethod: "eth" | "token") => {
+  const handleBuyWithEth = async () => {
     if (!product) return;
-
+    setLoading(true);
     try {
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new Contract(
-        MARKETPLACE_ADDRESS,
-        MARKETPLACE_ABI,
-        signer
+      const tx = await buyWithEth(
+        productId,
+        BigInt(quantity),
+        product.ethPrice * BigInt(quantity)
       );
-
-      if (paymentMethod === "eth") {
-        const tx = await contract.buyWithEth(product.id, quantity, {
-          value: parseEther((Number(product.ethPrice) * quantity).toString()),
-        });
-        await tx.wait();
-      } else {
-        const tokenContract = new Contract(THRIFT_ADDRESS, THRIFT_ABI, signer);
-        const approveTx = await tokenContract.approve(
-          MARKETPLACE_ADDRESS,
-          parseEther((Number(product.tokenPrice) * quantity).toString())
-        );
-        await approveTx.wait();
-
-        const tx = await contract.buyWithToken(product.id, quantity);
-        await tx.wait();
-      }
-
-      router.push("/");
+      console.log("Purchase successful:", tx);
     } catch (error) {
-      console.error("Purchase failed:", error);
+      console.error("Error purchasing:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleExchange = async () => {
-    if (!product) return;
-
+  const handleBuyWithTokens = async () => {
+    setLoading(true);
     try {
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new Contract(
-        MARKETPLACE_ADDRESS,
-        MARKETPLACE_ABI,
-        signer
-      );
-
-      const tx = await contract.proposeExchange(
-        product.id,
-        quantity,
-        exchangePref
-      );
-      await tx.wait();
-
-      router.push("/");
+      const tx = await buyWithTokens(productId, BigInt(quantity));
+      console.log("Purchase successful:", tx);
     } catch (error) {
-      console.error("Exchange proposal failed:", error);
+      console.error("Error purchasing:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDonate = async () => {
-    if (!product) return;
-
-    try {
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new Contract(
-        MARKETPLACE_ADDRESS,
-        MARKETPLACE_ABI,
-        signer
-      );
-
-      const tx = await contract.donateItem(product.id, quantity);
-      await tx.wait();
-
-      router.push("/");
-    } catch (error) {
-      console.error("Donation failed:", error);
-    }
-  };
-
-  if (!product) return <div className="p-8">Loading...</div>;
+  if (productLoading || !product) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="relative h-96">
-            <Image
-              src={product.image || "/placeholder-clothing.jpg"}
-              alt={product.name}
-              fill
-              className="object-cover rounded-lg"
-            />
-          </div>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="grid md:grid-cols-2 gap-8">
+        <Image
+          src={product.image}
+          alt={product.name}
+          className="w-full rounded-lg"
+          width={500}
+          height={500}
+        />
+      </div>
 
-          <div className="space-y-6">
-            <h1 className="text-3xl font-bold">{product.name}</h1>
-            <p className="text-gray-600">{product.description}</p>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">{product.name}</h1>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p>
-                  <span className="font-semibold">Brand:</span> {product.brand}
-                </p>
-                <p>
-                  <span className="font-semibold">Size:</span> {product.size}
-                </p>
-                <p>
-                  <span className="font-semibold">Condition:</span>{" "}
-                  {product.condition}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <p>
-                  <span className="font-semibold">Gender:</span>{" "}
-                  {product.gender}
-                </p>
-                <p>
-                  <span className="font-semibold">Category:</span>{" "}
-                  {product.categories}
-                </p>
-                <p>
-                  <span className="font-semibold">Available:</span>{" "}
-                  {product.quantity}
-                </p>
-              </div>
+        <div className="space-y-2">
+          <p className="text-gray-600">{product.description}</p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="font-medium">Brand:</span> {product.brand}
             </div>
-
-            <div className="border-t pt-4">
-              <div className="flex items-center gap-4 mb-4">
-                <input
-                  type="number"
-                  min="1"
-                  max={product.quantity}
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(Math.max(1, parseInt(e.target.value)))
-                  }
-                  className="w-20 px-3 py-2 border rounded"
-                />
-                <button
-                  onClick={() => addToCart({ ...product, quantity: 1 })}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Add to Cart
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <button
-                  onClick={() => handlePurchase("eth")}
-                  className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                >
-                  Buy with ETH (
-                  {(Number(product.ethPrice) * quantity).toFixed(4)} ETH)
-                </button>
-
-                <button
-                  onClick={() => handlePurchase("token")}
-                  className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-                >
-                  Buy with Tokens (
-                  {(Number(product.tokenPrice) * quantity).toFixed(2)} THRIFT)
-                </button>
-
-                {product.isAvailableForExchange && (
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={exchangePref}
-                      onChange={(e) => setExchangePref(e.target.value)}
-                      placeholder="Enter your exchange preferences"
-                      className="w-full px-3 py-2 border rounded"
-                    />
-                    <button
-                      onClick={handleExchange}
-                      className="w-full bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-                    >
-                      Request Exchange
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleDonate}
-                  className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                >
-                  Donate to Charity
-                </button>
-              </div>
+            <div>
+              <span className="font-medium">Size:</span> {product.size}
+            </div>
+            <div>
+              <span className="font-medium">Condition:</span>{" "}
+              {product.condition}
+            </div>
+            <div>
+              <span className="font-medium">Gender:</span> {product.gender}
             </div>
           </div>
         </div>
+
+        <div className="space-y-4">
+          <div>
+            <span className="font-medium">Price:</span>
+            <div className="space-y-1">
+              <p>{formatEther(product.ethPrice)} ETH</p>
+              <p>{formatGwei(product.tokenPrice)} Tokens</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Quantity</label>
+            <input
+              type="number"
+              min="1"
+              max={product.quantity.toString()}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="w-32 p-2 border rounded-lg"
+            />
+          </div>
+
+          <div className="space-x-4">
+            <button
+              onClick={handleBuyWithEth}
+              disabled={loading}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+            >
+              Buy with ETH
+            </button>
+            <button
+              onClick={handleBuyWithTokens}
+              disabled={loading}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:bg-green-300"
+            >
+              Buy with Tokens
+            </button>
+          </div>
+        </div>
+
+        {product.isAvailableForExchange && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Exchange Offers</h2>
+            <p>{product.exchangePreference}</p>
+
+            {userProducts && userProducts.length > 0 && (
+              <div>
+                <h3 className="font-medium mb-2">Make an Exchange Offer</h3>
+                <select className="w-full p-2 border rounded-lg">
+                  {userProducts.map((userProduct) => (
+                    <option
+                      key={userProduct.id.toString()}
+                      value={userProduct.id.toString()}
+                    >
+                      {userProduct.name}
+                    </option>
+                  ))}
+                </select>
+                <button className="mt-2 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                  Create Offer
+                </button>
+              </div>
+            )}
+
+            {exchangeOffers && exchangeOffers.length > 0 ? (
+              <div className="space-y-4">
+                {exchangeOffers.map((offer, index) => (
+                  <div key={index} className="border p-4 rounded-lg">
+                    <p>Offered Product: {offer.offeredProductId}</p>
+                    <p>Token Top-up: {formatGwei(offer.tokenTopUp)}</p>
+                    {product.seller === userAddress && (
+                      <button
+                        onClick={() =>
+                          acceptEnhancedExchangeOffer(productId, BigInt(index))
+                        }
+                        className="mt-2 bg-purple-600 text-white px-4 py-1 rounded-lg hover:bg-purple-700"
+                      >
+                        Accept Offer
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No exchange offers yet</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

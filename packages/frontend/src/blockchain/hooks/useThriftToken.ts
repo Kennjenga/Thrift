@@ -2,123 +2,124 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { Address } from 'viem'
 import { THRIFT_ABI, THRIFT_ADDRESS } from '@/blockchain/abis/thrift'
 
+// ThriftToken Contract Hooks
 export function useThriftToken() {
   const { address } = useAccount()
   const { writeContract } = useWriteContract()
 
-  // Token details
-  const { data: balance } = useReadContract({
+  // Read functions
+  const { data: totalSupply } = useReadContract({
     address: THRIFT_ADDRESS,
-    functionName: 'balanceOf',
-    args: [address],
-    abi: THRIFT_ABI, 
+    abi: THRIFT_ABI,
+    functionName: 'totalSupply',
+  })
+
+  const { data: currentCap } = useReadContract({
+    address: THRIFT_ADDRESS,
+    abi: THRIFT_ABI,
+    functionName: 'currentCap',
   })
 
   const { data: tokenPrice } = useReadContract({
     address: THRIFT_ADDRESS,
+    abi: THRIFT_ABI,
     functionName: 'tokenPrice',
-    abi: THRIFT_ABI, 
   })
 
-  const { data: totalSupply } = useReadContract({
+  const { data: rewardPoolAllocation } = useReadContract({
     address: THRIFT_ADDRESS,
-    functionName: 'totalSupply',
-    abi: THRIFT_ABI, 
+    abi: THRIFT_ABI,
+    functionName: 'rewardPoolAllocation',
   })
+
+   // Additional read functions
+   const useGetBalance = (address: Address) => {
+    return useReadContract({
+      address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
+      functionName: 'balanceOf',
+      args: [address],
+    })
+  }
+
+  const useGetAllowance = (owner: Address, spender: Address) => {
+    return useReadContract({
+      address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
+      functionName: 'allowance',
+      args: [owner, spender],
+    })
+  }
+
 
   // Write functions
-  const buyTokens = async () => {
+  const buyTokens = async (ethAmount: bigint) => {
     return writeContract({
       address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
       functionName: 'buyTokens',
-      abi: THRIFT_ABI, 
-    })
-  }
-
-  const transfer = async (to: Address, amount: bigint) => {
-    return writeContract({
-      address: THRIFT_ADDRESS,
-      functionName: 'transfer',
-      abi: THRIFT_ABI, 
-      args: [to, amount]
-    })
-  }
-
-  const approve = async (spender: Address, amount: bigint) => {
-    return writeContract({
-      address: THRIFT_ADDRESS,
-      functionName: 'approve',
-      abi: THRIFT_ABI, 
-      args: [spender, amount]
+      value: ethAmount,
     })
   }
 
   const burn = async (amount: bigint) => {
     return writeContract({
       address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
       functionName: 'burn',
-      abi: THRIFT_ABI, 
-      args: [amount]
-    })
-  }
-
-  const mint = async (to: Address, amount: bigint) => {
-    return writeContract({
-      address: THRIFT_ADDRESS,
-      functionName: 'mint',
-      abi: THRIFT_ABI, 
-      args: [to, amount]
-    })
-  }
-
-  const mintReward = async (to: Address, amount: bigint) => {
-    return writeContract({
-      address: THRIFT_ADDRESS,
-      functionName: 'mintReward',
-      abi: THRIFT_ABI, 
-      args: [to, amount]
-    })
-  }
-
-  const setCap = async (newCap: bigint) => {
-    return writeContract({
-      address: THRIFT_ADDRESS,
-      functionName: 'setCap',
-      abi: THRIFT_ABI, 
-      args: [newCap]
-    })
-  }
-
-  const setRewardContract = async (contractAddress: Address, authorized: boolean) => {
-    return writeContract({
-      address: THRIFT_ADDRESS,
-      functionName: 'setRewardContract',
-      abi: THRIFT_ABI, 
-      args: [contractAddress, authorized]
+      args: [amount],
     })
   }
 
   const setTokenPrice = async (newPrice: bigint) => {
     return writeContract({
       address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
       functionName: 'setTokenPrice',
-      abi: THRIFT_ABI, 
-      args: [newPrice]
+      args: [newPrice],
+    })
+  }
+
+  const setCap = async (newCap: bigint) => {
+    return writeContract({
+      address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
+      functionName: 'setCap',
+      args: [newCap],
+    })
+  }
+
+  const approve = async (spender: Address, amount: bigint) => {
+    return writeContract({
+      address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
+      functionName: 'approve',
+      args: [spender, amount],
+    })
+  }
+
+  const transfer = async (to: Address, amount: bigint) => {
+    return writeContract({
+      address: THRIFT_ADDRESS,
+      abi: THRIFT_ABI,
+      functionName: 'transfer',
+      args: [to, amount],
     })
   }
 
   return {
-    balance,
-    tokenPrice,
     totalSupply,
-    buyTokens,
-    transfer,
+    currentCap,
+    tokenPrice,
+    rewardPoolAllocation,
+    userAddress: address,
+    useGetBalance,
+    useGetAllowance,
     approve,
+    transfer,
+    buyTokens,
     burn,
-    mint,
-    mintReward,
+    setTokenPrice,
     setCap,
-    setRewardContract,
-    setTokenPrice
   }
 }

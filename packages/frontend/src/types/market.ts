@@ -1,31 +1,34 @@
-// types/index.ts
+// types/market.ts
 export interface Product {
-    id: string;
-    name: string;
-    description: string;
-    tokenPrice: string;
-    ethPrice: string;
-    image: string;
-    seller: string;
-    quantity: number;
-    size?: string;
-    condition?: string;
-    brand?: string;
-    categories?: string;
-    gender?: string;
-    isAvailableForExchange?: boolean;
-    exchangePreference?: string;
-    isSold?: boolean;
+  id: number
+  name: string
+  description: string
+  size: string
+  condition: string
+  brand: string
+  categories: string
+  gender: string
+  image: string
+  tokenPrice: bigint
+  ethPrice: bigint
+  quantity: bigint
+  seller: string
+  isAvailableForExchange: boolean
+  exchangePreference: string
+  isDeleted: boolean
 }
-  
-  export interface CartItem extends Product {
-    quantity: number;
-  }
-  
-  export interface CartContextType {
-    cart: CartItem[];
-    addToCart: (product: Product) => void;
-    removeFromCart: (productId: string) => void;
-    updateQuantity: (productId: string, quantity: number) => void;
-    tokenBalance: string;
-  }
+
+export interface ExchangeOffer {
+  offeredProductId: bigint
+  wantedProductId: bigint
+  offerer: `0x${string}`
+  isActive: boolean
+  offeredQuantity: bigint
+  tokenTopUp: bigint
+}
+
+export interface CartItem {
+  product: Product
+  quantity: number
+  paymentMethod: 'ETH' | 'TOKEN'
+}
