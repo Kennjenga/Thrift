@@ -1,173 +1,222 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useThriftToken } from "@/blockchain/hooks/useThriftToken";
-// import { useAccount } from "wagmi";
 import { Address } from "viem";
+import {
+  parseTokenAmount,
+  formatTokenAmount,
+  formatNumber,
+} from "@/utils/token-utils";
 
 export default function ThriftTokenPage() {
-  //   const { address } = useAccount();
   const {
-    balance = BigInt(0),
-    tokenPrice,
     totalSupply,
-    buyTokens,
-    transfer,
+    currentCap,
+    tokenPrice,
+    rewardPoolAllocation,
+    userAddress,
+    useGetBalance,
+    useGetAllowance,
     approve,
+    transfer,
+    buyTokens,
     burn,
-    mint,
-    mintReward,
-    setCap,
     setTokenPrice,
-    setRewardContract,
+    setCap,
   } = useThriftToken();
 
+  // State management
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // User balance
+  const { data: balance } = useGetBalance(userAddress as Address);
+
+  // Form states
+  const [buyAmount, setBuyAmount] = useState("");
   const [transferData, setTransferData] = useState({
     to: "" as Address,
-    amount: BigInt(0),
+    amount: "",
   });
-
   const [approveData, setApproveData] = useState({
     spender: "" as Address,
-    amount: BigInt(0),
+    amount: "",
   });
+  const [burnAmount, setBurnAmount] = useState("");
+  const [newTokenPrice, setNewTokenPrice] = useState("");
+  const [newCap, setNewCap] = useState("");
 
-  const [tokenPriceData, setTokenPriceData] = useState(BigInt(0));
-  const [mintData, setMintData] = useState({
-    to: "" as Address,
-    amount: BigInt(0),
-  });
+  // Reset messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
 
-  const [burnAmount, setBurnAmount] = useState(BigInt(0));
-  const [rewardData, setRewardData] = useState({
-    to: "" as Address,
-    amount: BigInt(0),
-  });
+  // Error handler
+  const handleError = (error: Error, action: string) => {
+    console.error(`${action} failed:`, error);
+    setError(error?.message || `${action} failed. Please try again.`);
+    setLoading(false);
+  };
 
-  const [capAmount, setCapAmount] = useState(BigInt(0));
-  const [rewardContractData, setRewardContractData] = useState({
-    contractAddress: "" as Address,
-    authorized: false,
-  });
+  // Success handler
+  const handleSuccess = (message: string) => {
+    setSuccess(message);
+    setLoading(false);
+  };
 
+  // Buy tokens
   const handleBuyTokens = async () => {
     try {
-      await buyTokens();
+      setLoading(true);
+      const amount = parseTokenAmount(buyAmount);
+      await buyTokens(amount);
+      handleSuccess("Tokens purchased successfully!");
+      setBuyAmount("");
     } catch (error) {
-      console.error("Token purchase failed", error);
+      handleError(error as Error, "Token purchase");
     }
   };
 
+  // Transfer tokens
   const handleTransfer = async () => {
     try {
-      await transfer(transferData.to, transferData.amount);
+      setLoading(true);
+      const amount = parseTokenAmount(transferData.amount);
+      await transfer(transferData.to, amount);
+      handleSuccess("Transfer completed successfully!");
+      setTransferData({ to: "" as Address, amount: "" });
     } catch (error) {
-      console.error("Transfer failed", error);
+      handleError(error as Error, "Transfer");
     }
   };
 
+  // Approve tokens
   const handleApprove = async () => {
     try {
-      await approve(approveData.spender, approveData.amount);
+      setLoading(true);
+      const amount = parseTokenAmount(approveData.amount);
+      await approve(approveData.spender, amount);
+      handleSuccess("Approval granted successfully!");
+      setApproveData({ spender: "" as Address, amount: "" });
     } catch (error) {
-      console.error("Approval failed", error);
+      handleError(error as Error, "Approval");
     }
   };
 
+  // Burn tokens
   const handleBurn = async () => {
     try {
-      await burn(burnAmount);
+      setLoading(true);
+      const amount = parseTokenAmount(burnAmount);
+      await burn(amount);
+      handleSuccess("Tokens burned successfully!");
+      setBurnAmount("");
     } catch (error) {
-      console.error("Burn failed", error);
+      handleError(error as Error, "Burn");
     }
   };
 
-  const handleMint = async () => {
-    try {
-      await mint(mintData.to, mintData.amount);
-    } catch (error) {
-      console.error("Mint failed", error);
-    }
-  };
-
-  const handleMintReward = async () => {
-    try {
-      await mintReward(rewardData.to, rewardData.amount);
-    } catch (error) {
-      console.error("Reward minting failed", error);
-    }
-  };
-
+  // Set token price
   const handleSetTokenPrice = async () => {
     try {
-      await setTokenPrice(tokenPriceData);
+      setLoading(true);
+      await setTokenPrice(BigInt(newTokenPrice));
+      handleSuccess("Token price updated successfully!");
+      setNewTokenPrice("");
     } catch (error) {
-      console.error("Token price update failed", error);
+      handleError(error as Error, "Price update");
     }
   };
 
+  // Set cap
   const handleSetCap = async () => {
     try {
-      await setCap(capAmount);
+      setLoading(true);
+      await setCap(BigInt(newCap));
+      handleSuccess("Token cap updated successfully!");
+      setNewCap("");
     } catch (error) {
-      console.error("Cap setting failed", error);
-    }
-  };
-
-  const handleSetRewardContract = async () => {
-    try {
-      await setRewardContract(
-        rewardContractData.contractAddress,
-        rewardContractData.authorized
-      );
-    } catch (error) {
-      console.error("Reward contract update failed", error);
+      handleError(error as Error, "Cap update");
     }
   };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Thrift Token Management</h1>
+      <h1 className="text-3xl font-bold mb-6">Thrift Token Management</h1>
 
-      {/* Token Details */}
-      <div className="mb-4 grid md:grid-cols-3 gap-4">
-        <div className="border p-4">
-          <h2 className="font-semibold">Token Balance</h2>
-          <p>{balance?.toString() || "0"}</p>
+      {/* Status Messages */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
         </div>
-        <div className="border p-4">
-          <h2 className="font-semibold">Token Price</h2>
-          <p>{(tokenPrice ?? BigInt(0)).toString()}</p>
+      )}
+      {success && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+          {success}
         </div>
-        <div className="border p-4">
-          <h2 className="font-semibold">Total Supply</h2>
-          <p>{(totalSupply ?? BigInt(0)).toString()}</p>
+      )}
+
+      {/* Token Information */}
+      <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="p-4 border rounded bg-white shadow">
+          <h2 className="text-gray-600 font-semibold">Balance</h2>
+          <p className="text-2xl">{formatTokenAmount(balance || BigInt(0))}</p>
+        </div>
+        <div className="p-4 border rounded bg-white shadow">
+          <h2 className="text-gray-600 font-semibold">Token Price</h2>
+          <p className="text-2xl">
+            {formatTokenAmount(tokenPrice || BigInt(0))}
+          </p>
+        </div>
+        <div className="p-4 border rounded bg-white shadow">
+          <h2 className="text-gray-600 font-semibold">Total Supply</h2>
+          <p className="text-2xl">
+            {formatTokenAmount(totalSupply || BigInt(0))}
+          </p>
+        </div>
+        <div className="p-4 border rounded bg-white shadow">
+          <h2 className="text-gray-600 font-semibold">Current Cap</h2>
+          <p className="text-2xl">
+            {formatTokenAmount(currentCap || BigInt(0))}
+          </p>
         </div>
       </div>
 
-      {/* Token Actions Grid */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Action Grid */}
+      <div className="grid md:grid-cols-2 gap-6">
         {/* Buy Tokens */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Buy Tokens</h2>
-          <button
-            onClick={handleBuyTokens}
-            className="w-full bg-blue-500 text-white p-2"
-          >
-            Buy Tokens
-          </button>
+        <div className="p-6 border rounded bg-white shadow">
+          <h2 className="text-xl font-semibold mb-4">Buy Tokens</h2>
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Amount in ETH"
+              value={buyAmount}
+              onChange={(e) => setBuyAmount(e.target.value)}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <button
+              onClick={handleBuyTokens}
+              disabled={loading}
+              className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
+            >
+              {loading ? "Processing..." : "Buy Tokens"}
+            </button>
+          </div>
         </div>
 
         {/* Transfer Tokens */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Transfer Tokens</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleTransfer();
-            }}
-            className="space-y-2"
-          >
+        <div className="p-6 border rounded bg-white shadow">
+          <h2 className="text-xl font-semibold mb-4">Transfer Tokens</h2>
+          <div className="space-y-4">
             <input
               type="text"
               placeholder="Recipient Address"
@@ -178,39 +227,31 @@ export default function ThriftTokenPage() {
                   to: e.target.value as Address,
                 })
               }
-              className="w-full p-2 border"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <input
-              type="number"
+              type="text"
               placeholder="Amount"
-              value={transferData.amount.toString()}
+              value={transferData.amount}
               onChange={(e) =>
-                setTransferData({
-                  ...transferData,
-                  amount: BigInt(e.target.value),
-                })
+                setTransferData({ ...transferData, amount: e.target.value })
               }
-              className="w-full p-2 border"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <button
-              type="submit"
-              className="w-full bg-green-500 text-white p-2"
+              onClick={handleTransfer}
+              disabled={loading}
+              className="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 disabled:opacity-50 transition-colors"
             >
-              Transfer
+              {loading ? "Processing..." : "Transfer"}
             </button>
-          </form>
+          </div>
         </div>
 
-        {/* Approve Spending */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Approve Spending</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleApprove();
-            }}
-            className="space-y-2"
-          >
+        {/* Approve Tokens */}
+        <div className="p-6 border rounded bg-white shadow">
+          <h2 className="text-xl font-semibold mb-4">Approve Tokens</h2>
+          <div className="space-y-4">
             <input
               type="text"
               placeholder="Spender Address"
@@ -221,214 +262,90 @@ export default function ThriftTokenPage() {
                   spender: e.target.value as Address,
                 })
               }
-              className="w-full p-2 border"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <input
-              type="number"
+              type="text"
               placeholder="Amount"
-              value={approveData.amount.toString()}
+              value={approveData.amount}
               onChange={(e) =>
-                setApproveData({
-                  ...approveData,
-                  amount: BigInt(e.target.value),
-                })
+                setApproveData({ ...approveData, amount: e.target.value })
               }
-              className="w-full p-2 border"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <button
-              type="submit"
-              className="w-full bg-purple-500 text-white p-2"
+              onClick={handleApprove}
+              disabled={loading}
+              className="w-full bg-purple-500 text-white p-3 rounded hover:bg-purple-600 disabled:opacity-50 transition-colors"
             >
-              Approve
+              {loading ? "Processing..." : "Approve"}
             </button>
-          </form>
+          </div>
         </div>
 
         {/* Burn Tokens */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Burn Tokens</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleBurn();
-            }}
-            className="space-y-2"
-          >
+        <div className="p-6 border rounded bg-white shadow">
+          <h2 className="text-xl font-semibold mb-4">Burn Tokens</h2>
+          <div className="space-y-4">
             <input
-              type="number"
+              type="text"
               placeholder="Amount to Burn"
-              value={burnAmount.toString()}
-              onChange={(e) => setBurnAmount(BigInt(e.target.value))}
-              className="w-full p-2 border"
-            />
-            <button type="submit" className="w-full bg-red-500 text-white p-2">
-              Burn
-            </button>
-          </form>
-        </div>
-
-        {/* Mint Tokens */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Mint Tokens</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleMint();
-            }}
-            className="space-y-2"
-          >
-            <input
-              type="text"
-              placeholder="Recipient Address"
-              value={mintData.to}
-              onChange={(e) =>
-                setMintData({ ...mintData, to: e.target.value as Address })
-              }
-              className="w-full p-2 border"
-            />
-            <input
-              type="number"
-              placeholder="Amount"
-              value={mintData.amount.toString()}
-              onChange={(e) =>
-                setMintData({ ...mintData, amount: BigInt(e.target.value) })
-              }
-              className="w-full p-2 border"
+              value={burnAmount}
+              onChange={(e) => setBurnAmount(e.target.value)}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <button
-              type="submit"
-              className="w-full bg-yellow-500 text-white p-2"
+              onClick={handleBurn}
+              disabled={loading}
+              className="w-full bg-red-500 text-white p-3 rounded hover:bg-red-600 disabled:opacity-50 transition-colors"
             >
-              Mint
+              {loading ? "Processing..." : "Burn"}
             </button>
-          </form>
+          </div>
         </div>
 
-        {/* Mint Reward */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Mint Reward</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleMintReward();
-            }}
-            className="space-y-2"
-          >
+        {/* Set Token Price (Admin Only) */}
+        <div className="p-6 border rounded bg-white shadow">
+          <h2 className="text-xl font-semibold mb-4">
+            Set Token Price (Admin)
+          </h2>
+          <div className="space-y-4">
             <input
               type="text"
-              placeholder="Recipient Address"
-              value={rewardData.to}
-              onChange={(e) =>
-                setRewardData({ ...rewardData, to: e.target.value as Address })
-              }
-              className="w-full p-2 border"
-            />
-            <input
-              type="number"
-              placeholder="Reward Amount"
-              value={rewardData.amount.toString()}
-              onChange={(e) =>
-                setRewardData({ ...rewardData, amount: BigInt(e.target.value) })
-              }
-              className="w-full p-2 border"
-            />
-            <button
-              type="submit"
-              className="w-full bg-indigo-500 text-white p-2"
-            >
-              Mint Reward
-            </button>
-          </form>
-        </div>
-
-        {/* Set Token Price */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Set Token Price</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSetTokenPrice();
-            }}
-            className="space-y-2"
-          >
-            <input
-              type="number"
               placeholder="New Token Price"
-              value={tokenPriceData.toString()}
-              onChange={(e) => setTokenPriceData(BigInt(e.target.value))}
-              className="w-full p-2 border"
-            />
-            <button type="submit" className="w-full bg-teal-500 text-white p-2">
-              Update Price
-            </button>
-          </form>
-        </div>
-
-        {/* Set Token Cap */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Set Token Cap</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSetCap();
-            }}
-            className="space-y-2"
-          >
-            <input
-              type="number"
-              placeholder="New Token Cap"
-              value={capAmount.toString()}
-              onChange={(e) => setCapAmount(BigInt(e.target.value))}
-              className="w-full p-2 border"
+              value={newTokenPrice}
+              onChange={(e) => setNewTokenPrice(e.target.value)}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <button
-              type="submit"
-              className="w-full bg-orange-500 text-white p-2"
+              onClick={handleSetTokenPrice}
+              disabled={loading}
+              className="w-full bg-teal-500 text-white p-3 rounded hover:bg-teal-600 disabled:opacity-50 transition-colors"
             >
-              Set Cap
+              {loading ? "Processing..." : "Update Price"}
             </button>
-          </form>
+          </div>
         </div>
 
-        {/* Set Reward Contract */}
-        <div className="border p-4">
-          <h2 className="text-xl font-semibold mb-2">Set Reward Contract</h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSetRewardContract();
-            }}
-            className="space-y-2"
-          >
+        {/* Set Token Cap (Admin Only) */}
+        <div className="p-6 border rounded bg-white shadow">
+          <h2 className="text-xl font-semibold mb-4">Set Token Cap (Admin)</h2>
+          <div className="space-y-4">
             <input
               type="text"
-              placeholder="Contract Address"
-              value={rewardContractData.contractAddress}
-              onChange={(e) =>
-                setRewardContractData({
-                  ...rewardContractData,
-                  contractAddress: e.target.value as Address,
-                })
-              }
-              className="w-full p-2 border"
+              placeholder="New Token Cap"
+              value={newCap}
+              onChange={(e) => setNewCap(e.target.value)}
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
             />
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={rewardContractData.authorized}
-                onChange={(e) =>
-                  setRewardContractData({
-                    ...rewardContractData,
-                    authorized: e.target.checked,
-                  })
-                }
-              />
-              <label>Authorized</label>
-            </div>
-            <button type="submit" className="w-full bg-pink-500 text-white p-2">
-              Update Reward Contract
+            <button
+              onClick={handleSetCap}
+              disabled={loading}
+              className="w-full bg-orange-500 text-white p-3 rounded hover:bg-orange-600 disabled:opacity-50 transition-colors"
+            >
+              {loading ? "Processing..." : "Set Cap"}
             </button>
-          </form>
+          </div>
         </div>
       </div>
     </div>

@@ -5,8 +5,52 @@ import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { parseEther, parseGwei } from "viem";
 
 export default function CreateProduct() {
+  const sizeOptions = {
+    topsSizes: ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"],
+    bottomsSizes: [
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+    ],
+    shoesSizes: {
+      men: ["6", "7", "8", "9", "10", "11", "12", "13", "14"],
+      women: ["5", "6", "7", "8", "9", "10", "11"],
+      kids: ["1", "2", "3", "4", "5", "6"],
+    },
+    dressSizes: [
+      "0",
+      "2",
+      "4",
+      "6",
+      "8",
+      "10",
+      "12",
+      "14",
+      "16",
+      "18",
+      "20",
+      "22",
+      "24",
+    ],
+  };
+
   const { listProduct } = useMarketplace();
   const [loading, setLoading] = useState(false);
+  const [selectedSizeType, setSelectedSizeType] = useState("tops");
+  const [selectedShoeType, setSelectedShoeType] = useState("men");
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -64,6 +108,23 @@ export default function CreateProduct() {
     }));
   };
 
+  const getSizeOptions = () => {
+    switch (selectedSizeType) {
+      case "tops":
+        return sizeOptions.topsSizes;
+      case "bottoms":
+        return sizeOptions.bottomsSizes;
+      case "shoes":
+        return sizeOptions.shoesSizes[
+          selectedShoeType as keyof typeof sizeOptions.shoesSizes
+        ];
+      case "dress":
+        return sizeOptions.dressSizes;
+      default:
+        return [];
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">List New Product</h1>
@@ -94,15 +155,44 @@ export default function CreateProduct() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Size</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium mb-2">Size Type</label>
+            <select
+              value={selectedSizeType}
+              onChange={(e) => setSelectedSizeType(e.target.value)}
+              className="w-full p-2 border rounded-lg mb-2"
+            >
+              <option value="tops">Tops</option>
+              <option value="bottoms">Bottoms</option>
+              <option value="shoes">Shoes</option>
+              <option value="dress">Dress</option>
+            </select>
+
+            {selectedSizeType === "shoes" && (
+              <select
+                value={selectedShoeType}
+                onChange={(e) => setSelectedShoeType(e.target.value)}
+                className="w-full p-2 border rounded-lg mb-2"
+              >
+                <option value="men">Men&apos;s</option>
+                <option value="women">Women&apos;s</option>
+                <option value="kids">Kids&apos;</option>
+              </select>
+            )}
+
+            <select
               name="size"
               value={formData.size}
               onChange={handleChange}
               required
               className="w-full p-2 border rounded-lg"
-            />
+            >
+              <option value="">Select Size</option>
+              {getSizeOptions().map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
