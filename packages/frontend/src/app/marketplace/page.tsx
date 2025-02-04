@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
+import { formatEther } from "ethers";
+import { formatTokenAmount } from "@/utils/token-utils";
 
 export default function MarketplacePage() {
   const { useGetAllProducts } = useMarketplace();
@@ -65,10 +67,10 @@ export default function MarketplacePage() {
                 </p>
                 <div className="mt-2">
                   <p className="text-lg font-bold">
-                    {(Number(product.ethPrice) / 1e18).toFixed(4)} ETH
+                    {formatEther(product.ethPrice)} ETH
                   </p>
                   <p className="text-sm text-gray-600">
-                    or {(Number(product.tokenPrice) / 1e18).toFixed(4)} Tokens
+                    or {formatTokenAmount(product.tokenPrice)} Tokens
                   </p>
                 </div>
                 <div className="mt-2 flex justify-between items-center">
