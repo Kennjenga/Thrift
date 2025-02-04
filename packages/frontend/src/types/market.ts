@@ -21,6 +21,7 @@ export interface Product {
 export interface ExchangeOffer {
   offeredProductId: bigint
   wantedProductId: bigint
+  quantity: number
   offerer: `0x${string}`
   isActive: boolean
   offeredQuantity: bigint

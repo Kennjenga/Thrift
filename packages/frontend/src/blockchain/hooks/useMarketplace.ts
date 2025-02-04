@@ -12,18 +12,21 @@ export function useMarketplace() {
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'productCount',
+    chainId: 11155111,
   })
 
   const totalActiveProducts = useReadContract({
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getTotalActiveProducts',
+    chainId: 11155111,
   })
 
   const totalProducts = useReadContract({
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getTotalProducts',
+    chainId: 11155111,
   })
 
   const useGetProduct = (productId: bigint) => {
@@ -32,6 +35,7 @@ export function useMarketplace() {
       abi: MARKETPLACE_ABI,
       functionName: 'getProduct',
       args: [productId],
+      chainId: 11155111,
     })
   }
 
@@ -49,6 +53,7 @@ export function useMarketplace() {
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'getAllProducts',
+      chainId: 11155111,
     })
   }
 
