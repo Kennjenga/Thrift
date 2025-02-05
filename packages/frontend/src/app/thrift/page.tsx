@@ -6,7 +6,6 @@ import { Address } from "viem";
 import {
   parseTokenAmount,
   formatTokenAmount,
-  formatNumber,
 } from "@/utils/token-utils";
 
 export default function ThriftTokenPage() {
@@ -14,10 +13,8 @@ export default function ThriftTokenPage() {
     totalSupply,
     currentCap,
     tokenPrice,
-    rewardPoolAllocation,
     userAddress,
     useGetBalance,
-    useGetAllowance,
     approve,
     transfer,
     buyTokens,

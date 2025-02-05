@@ -16,10 +16,9 @@ import {
 // Context and Hook Imports
 import { useCart } from "@/contexts/cartContext";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
-import { useThriftToken } from "@/blockchain/hooks/useThriftToken";
 
 // Type Imports
-import { ExchangeOffer, Product } from "@/types/market";
+import { Product, ExchangeOffer } from "@/types/market";
 
 // Utility Components
 const LoadingSpinner = () => (
@@ -70,7 +69,7 @@ export default function ProductPage() {
   const { data: productData, isLoading: productLoading } =
     useGetProduct(productId);
   const { data: userProducts = [] } = useGetProductsByOwner(userAddress!);
-  const { data: exchangeOffersData = [] } = useGetExchangeOffers(productId);
+  const { data: exchangeOffersData = [] } = useGetExchangeOffers(productId) as { data: ExchangeOffer[] };
 
   // Type Safety and Derived Data
   const product = productData as Product | undefined;
@@ -360,8 +359,8 @@ export default function ProductPage() {
                 Create Exchange Offer
               </button>
 
-              {/* Exchange Offers */}
-              {exchangeOffersData && exchangeOffersData.length > 0 && (
+              
+              {exchangeOffersData.length > 0 && (
                 <div className="mt-4 space-y-3">
                   <h4 className="font-semibold text-gray-900">
                     Current Offers
