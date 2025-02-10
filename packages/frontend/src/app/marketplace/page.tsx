@@ -14,7 +14,7 @@ import {
   Mail,
   AlertCircle,
   Plus,
-  Tag,
+  // Tag,
   Package,
   Coins,
 } from "lucide-react";
@@ -32,8 +32,16 @@ export default function MarketplacePage() {
 
   const navLinks: NavLink[] = [
     { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "/marketplace" },
-    { name: "Thrift", icon: <ShoppingBag className="w-5 h-5" />, path: "/thrift" },
+    {
+      name: "Shop",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/marketplace",
+    },
+    {
+      name: "Thrift",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/thrift",
+    },
     { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
     { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
   ];
@@ -47,7 +55,9 @@ export default function MarketplacePage() {
         <div className="container mx-auto p-4">
           <div className="glass-card p-4 border-l-4 border-red-500 flex items-center gap-3">
             <AlertCircle className="w-6 h-6 text-red-500" />
-            <p className="text-[#162A2C]">Error loading products: {error.message}</p>
+            <p className="text-[#162A2C]">
+              Error loading products: {error.message}
+            </p>
           </div>
         </div>
       </div>
