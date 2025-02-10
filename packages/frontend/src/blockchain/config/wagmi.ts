@@ -16,7 +16,7 @@ const { wallets } = getDefaultWallets();
 
 
 export const config = getDefaultConfig({
-  appName: 'Pamoja app',
+  appName: 'Thrift app',
   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
   wallets: [
     ...wallets,

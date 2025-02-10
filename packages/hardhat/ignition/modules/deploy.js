@@ -1,49 +1,49 @@
 const hre = require("hardhat");
 
+// Deployment Script
 async function main() {
-  try {
-    console.log("Starting deployment process...");
+  const [deployer] = await ethers.getSigners();
+  console.log("Deploying contracts with the account:", deployer.address);
 
-    // Get the contract factory
-    const ThriftTokenFactory = await hre.ethers.getContractFactory(
-      "ThriftToken"
-    );
-    console.log("Contract factory created successfully");
+  // Deploy ThriftToken
+  const ThriftTokenFactory = await ethers.getContractFactory("ThriftToken");
+  const thriftToken = await ThriftTokenFactory.deploy(
+    deployer.address,
+    deployer.address
+  );
+  await thriftToken.waitForDeployment();
+  console.log("ThriftToken deployed to:", await thriftToken.getAddress());
 
-    // Deploy the contract
-    console.log("Deploying contract...");
-    const ThriftTokenContract = await ThriftTokenFactory.deploy();
-    console.log("Contract deployment initiated");
+  // Deploy Marketplace
+  const MarketplaceFactory = await ethers.getContractFactory("Marketplace");
+  const marketplace = await MarketplaceFactory.deploy(
+    await thriftToken.getAddress(),
+    deployer.address
+  );
+  await marketplace.waitForDeployment();
+  console.log("Marketplace deployed to:", await marketplace.getAddress());
 
-    // Wait for the deployment to be mined
-    console.log("Waiting for deployment to be mined...");
-    await ThriftTokenContract.waitForDeployment();
+  // Deploy DonationAndRecycling
+  const DonationFactory = await ethers.getContractFactory(
+    "DonationAndRecycling"
+  );
+  const donationAndRecycling = await DonationFactory.deploy(
+    await thriftToken.getAddress()
+  );
+  await donationAndRecycling.waitForDeployment();
+  console.log(
+    "DonationAndRecycling deployed to:",
+    await donationAndRecycling.getAddress()
+  );
 
-    const deployedAddress = await ThriftTokenContract.getAddress();
-    console.log("ThriftToken Contract Deployed to:", deployedAddress);
+  // Authorize contracts for rewards
+  await thriftToken.setRewardContract(await marketplace.getAddress(), true);
+  await thriftToken.setRewardContract(
+    await donationAndRecycling.getAddress(),
+    true
+  );
 
-    // Get the deployer's address - Fixed this line
-    const [signer] = await hre.ethers.getSigners();
-    const deployerAddress = await signer.address; // Changed from getAddress() to .address
-    console.log("Deployer address:", deployerAddress);
-
-    // Grant the CAMPAIGN_CREATOR_ROLE
-    console.log("Granting CAMPAIGN_CREATOR_ROLE...");
-    await ThriftTokenContract.grantCampaignCreatorRole(deployerAddress);
-    console.log("Granted CAMPAIGN_CREATOR_ROLE to:", deployerAddress);
-
-    // Verify the deployment
-    console.log("\nDeployment Summary:");
-    console.log("--------------------");
-    console.log("Contract Address:", deployedAddress);
-    console.log("Deployer Address:", deployerAddress);
-    console.log("Network:", hre.network.name);
-  } catch (error) {
-    console.error("\nDeployment Error:");
-    console.error("------------------");
-    console.error(error);
-    throw error;
-  }
+  console.log("Deployment complete!");
 }
 
 main()
@@ -52,3 +52,11 @@ main()
     console.error(error);
     process.exit(1);
   });
+
+module.exports = { main };
+
+// Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+// ThriftToken deployed to: 0xCD6152307d4b223C00D1beF239F401101e4FBE78
+// Marketplace deployed to: 0x3616330653bF9A38EFB5a2DD17E6d9B74739969d
+// DonationAndRecycling deployed to: 0xAc6C70A364edb9e04acE166AaFf759ea87C418B6
+// Deployment complete!

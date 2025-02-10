@@ -1,228 +1,262 @@
-// HomePage.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
-import Header from './components/Header';
-import HeroCarousel from './components/HeroCarousel';
-import FeaturedItems from './components/FeaturedItems';
-import FooterComponent from './components/FooterComponent';
+import type { NextPage } from "next";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Image from "next/image";
+import {
+  Leaf,
+  House,
+  ShoppingBag,
+  Heart,
+  Mail,
+  Recycle,
+  // Users,
+  // Trees,
+  // Clock,
+  Handshake,
+  Plane,
+  Shirt,
+  BadgeDollarSign,
+  Sparkles,
+  ChevronRight,
+  // Search
+} from "lucide-react";
+import {
+  Savings,
+  // LocalOffer,
+  ShoppingCart,
+  // Favorite,
+  Email,
+  Facebook,
+  Twitter,
+  Instagram,
+  LinkedIn,
+} from "@mui/icons-material";
 
-// Matching color palette
-const colors = {
-  pastelBlue: '#B8C7DB',
-  pastelPink: '#E8D3D1',
-  pastelMint: '#C2D4C5',
-  pastelSand: '#E5DCD3',
-  gold: '#C6A97C',
-  goldLight: '#D4BC94',
-  matte: '#F4F1EC',
-  text: '#4A4544',
-  textLight: '#7A7574',
-};
+// Type definitions
+interface FeaturedItem {
+  name: string;
+  price: string;
+  category: string;
+  image: string;
+  sustainability: string;
+}
 
-const PageContainer = styled.div`
-  background: ${colors.matte};
-  min-height: 100vh;
-  color: ${colors.text};
-  font-family: 'Quicksand', sans-serif;
-`;
+interface NavLink {
+  name: string;
+  icon: React.ReactNode;
+  path: string;
+}
 
-const MainContent = styled.main`
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 80px 2rem 2rem;
-`;
+interface Stat {
+  number: string;
+  label: string;
+  icon: React.ReactNode;
+}
 
-const ElegantSection = styled(motion.section)`
-  background: ${colors.matte};
-  border-radius: 30px;
-  padding: 2.5rem;
-  margin: 2rem 0;
+interface Feature {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
 
-  h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2.5rem;
-    color: ${colors.text};
-    margin-bottom: 1.5rem;
+interface SocialLink {
+  icon: React.ReactNode;
+  href: string;
+  label: string;
+}
 
-    span {
-      color: ${colors.gold};
-      font-style: italic;
-    }
-  }
-`;
+const featuredItems: FeaturedItem[] = [
+  {
+    name: "Vintage Denim Jacket",
+    price: "45",
+    category: "Outerwear",
+    image: "/jacket.jpg",
+    sustainability: "Saves 20kg CO₂",
+  },
+  {
+    name: "Classic White Blouse",
+    price: "28",
+    category: "Tops",
+    image: "/blouse.jpg",
+    sustainability: "Saves 15kg CO₂",
+  },
+  {
+    name: "Leather Crossbody Bag",
+    price: "35",
+    category: "Accessories",
+    image: "/bag.jpg",
+    sustainability: "Saves 12kg CO₂",
+  },
+];
 
-const SectionDivider = styled.div`
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    ${colors.goldLight},
-    transparent
-  );
-  margin: 3rem 0;
-`;
+const Home: NextPage = () => {
+  const navLinks: NavLink[] = [
+    { name: "Home", icon: <House className="w-5 h-5" />, path: "#" },
+    {
+      name: "Shop",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "./marketplace",
+    },
+    {
+      name: "thrift",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "./thrift",
+    },
+    { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "./donate" },
+    { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
+  ];
 
+  const stats: Stat[] = [
+    {
+      number: "1,000+",
+      label: "Available Items",
+      icon: <Shirt className="w-8 h-8" />,
+    },
+    {
+      number: "500+",
+      label: "Happy Customers",
+      icon: <Handshake className="w-8 h-8" />,
+    },
+    {
+      number: "2,000kg",
+      label: "CO₂ Saved",
+      icon: <Recycle className="w-8 h-8" />,
+    },
+  ];
 
-const Home: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const features: Feature[] = [
+    {
+      icon: <BadgeDollarSign className="w-8 h-8" />,
+      title: "Save Money",
+      description:
+        "Get high-quality fashion at fraction of retail prices while supporting sustainable practices.",
+    },
+    {
+      icon: <Plane className="w-8 h-8" />,
+      title: "Eco-Friendly",
+      description:
+        "Each purchase reduces fashion waste and helps create a more sustainable future for our planet.",
+    },
+    {
+      icon: <Sparkles className="w-8 h-8" />,
+      title: "Timeless Style",
+      description:
+        "Discover unique, pre-loved pieces that stand the test of time and tell their own stories.",
+    },
+  ];
 
-  useEffect(() => {
-    setTimeout(() => setIsLoading(false), 2000);
-  }, []);
+  const socialLinks: SocialLink[] = [
+    { icon: <Facebook className="w-6 h-6" />, href: "#", label: "Facebook" },
+    { icon: <Twitter className="w-6 h-6" />, href: "#", label: "Twitter" },
+    { icon: <Instagram className="w-6 h-6" />, href: "#", label: "Instagram" },
+    { icon: <LinkedIn className="w-6 h-6" />, href: "#", label: "LinkedIn" },
+  ];
+
+  const handleSubscribe = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    // Newsletter subscription logic
+  };
+
+  const handleItemClick = (): void => {
+    // Item click handling logic
+  };
 
   return (
-    <PageContainer>
-      <Header />
-      <MainContent>
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <>
-              <HeroCarousel />
-              <SectionDivider />
-              <ElegantSection
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <FeaturedItems />
-              </ElegantSection>
-              <SectionDivider />
-              <ElegantSection
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                <FooterComponent />
-              </ElegantSection>
-            </>
-          )}
-        </AnimatePresence>
-      </MainContent>
-    </PageContainer>
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
+        <Image
+          className="dark:invert"
+          src="/next.svg"
+          alt="Next.js logo"
+          width={180}
+          height={38}
+          priority
+        />
+        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
+          <li className="mb-2">
+            Get started by editing{" "}
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
+              src/app/page.tsx
+            </code>
+            .
+          </li>
+          <li>Save and see your changes instantly.</li>
+        </ol>
+
+        <div className="flex gap-4 items-center flex-col sm:flex-row">
+          <a
+            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
+            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              className="dark:invert"
+              src="/vercel.svg"
+              alt="Vercel logomark"
+              width={20}
+              height={20}
+            />
+            Deploy now
+          </a>
+          <a
+            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
+            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read our docs
+          </a>
+        </div>
+      </main>
+      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
+        <a
+          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            aria-hidden
+            src="/file.svg"
+            alt="File icon"
+            width={16}
+            height={16}
+          />
+          Learn
+        </a>
+        <a
+          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            aria-hidden
+            src="/window.svg"
+            alt="Window icon"
+            width={16}
+            height={16}
+          />
+          Examples
+        </a>
+        <a
+          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
+          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Image
+            aria-hidden
+            src="/globe.svg"
+            alt="Globe icon"
+            width={16}
+            height={16}
+          />
+          Go to nextjs.org →
+        </a>
+      </footer>
+    </div>
   );
 };
-
-// Loading Spinner Component
-const SpinnerContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 2rem;
-  background: ${colors.matte};
-`;
-
-const SpinnerWrapper = styled.div`
-  position: relative;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const OuterSpinner = styled(motion.div)`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 3px solid transparent;
-  border-top: 3px solid ${colors.gold};
-  border-right: 3px solid ${colors.gold};
-  border-radius: 50%;
-  box-shadow: 0 0 15px rgba(198, 169, 124, 0.2);
-`;
-
-const InnerSpinner = styled(motion.div)`
-  position: absolute;
-  width: 60%;
-  height: 60%;
-  border: 3px solid transparent;
-  border-top: 3px solid ${colors.goldLight};
-  border-left: 3px solid ${colors.goldLight};
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(198, 169, 124, 0.15);
-`;
-
-const SpinnerDot = styled(motion.div)`
-  width: 8px;
-  height: 8px;
-  background: ${colors.gold};
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(198, 169, 124, 0.3);
-`;
-
-const LoadingText = styled(motion.div)`
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.2rem;
-  color: ${colors.gold};
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const Dot = styled(motion.span)`
-  opacity: 0;
-`;
-
-const LoadingSpinner: React.FC = () => (
-  <SpinnerContainer>
-    <SpinnerWrapper>
-      <OuterSpinner
-        animate={{ rotate: 360 }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-      <InnerSpinner
-        animate={{ rotate: -360 }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-      <SpinnerDot
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [1, 0.8, 1],
-        }}
-        transition={{
-          duration: 1,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-    </SpinnerWrapper>
-    
-    <LoadingText>
-      Loading
-      {[...Array(3)].map((_, i) => (
-        <Dot
-          key={i}
-          animate={{
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            delay: i * 0.2,
-            ease: "easeInOut"
-          }}
-        >
-          .
-        </Dot>
-      ))}
-    </LoadingText>
-  </SpinnerContainer>
-);
-
-export default Home;

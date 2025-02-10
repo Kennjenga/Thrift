@@ -3,35 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --forest-green: #2C4A3E;
-  --natural-beige: #E5DCC5;
-  --terracotta: #C97C5D;
-  --olive: #89937C;
-  --soft-white: #FDFBF7;
+  --color-primary: #162A2C;
+  --color-secondary: #5E6C58;
+  --color-neutral: #686867;
+  --color-light: #DBE0E2;
+  --color-cream: #F4EFE6;
+  --color-white: #FEFCF6;
+  --color-gold: #C0B283;
+  --color-gold-light: #DCD0C0;
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--soft-white);
-  color: var(--forest-green);
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-  @keyframes aurora {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-

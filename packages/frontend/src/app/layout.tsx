@@ -28,6 +28,7 @@ export default async function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <body
+        className={`flex flex-col min-h-screen bg-green-50 mx-auto max-w-[98%] sm:max-w-[94%]`}
         style={{
           fontFamily: "Inter",
         }}
