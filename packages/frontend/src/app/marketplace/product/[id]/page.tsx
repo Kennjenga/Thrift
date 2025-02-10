@@ -176,7 +176,7 @@ export default function ProductPage() {
             <div className="flex items-center group hover-lift">
               <div className="relative">
                 <Image
-                  src="/ace-logo.png"
+                  src="/my-business-name-high-resolution-logo-transparent.png"
                   alt="Ace Logo"
                   width={45}
                   height={45}
