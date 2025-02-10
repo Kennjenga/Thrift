@@ -5,10 +5,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
 import { useThriftToken } from "@/blockchain/hooks/useThriftToken";
 import { Address } from "viem";
-import {
-  parseTokenAmount,
-  formatTokenAmount,
-} from "@/utils/token-utils";
+import { parseTokenAmount, formatTokenAmount } from "@/utils/token-utils";
 import {
   Coins,
   ArrowRightLeft,
@@ -25,7 +22,7 @@ import {
   Wallet,
   CreditCard,
   BarChart,
-  Target
+  Target,
 } from "lucide-react";
 
 interface NavLink {
@@ -55,7 +52,9 @@ export default function ThriftTokenPage() {
   const [loading, setLoading] = useState(false);
 
   // User balance
-  const { data: balance } = useGetBalance(userAddress as Address);
+  const { data: balance } = useGetBalance(userAddress as Address) as {
+    data: bigint | undefined;
+  };
 
   // Form states
   const [buyAmount, setBuyAmount] = useState("");
@@ -73,8 +72,16 @@ export default function ThriftTokenPage() {
 
   const navLinks: NavLink[] = [
     { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "/marketplace" },
-    { name: "Thrift", icon: <ShoppingBag className="w-5 h-5" />, path: "/thrift" },
+    {
+      name: "Shop",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/marketplace",
+    },
+    {
+      name: "Thrift",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/thrift",
+    },
     { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
     { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
   ];

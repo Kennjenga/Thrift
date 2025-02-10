@@ -6,12 +6,7 @@ import {
   ShoppingBag,
   Heart,
   Mail,
-  Tag,
-  Package,
   Upload,
-  Coins,
-  Info,
-  ShoppingCart,
   RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
@@ -147,8 +142,16 @@ export default function CreateProduct() {
 
   const navLinks: NavLink[] = [
     { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "/marketplace" },
-    { name: "Thrift", icon: <ShoppingBag className="w-5 h-5" />, path: "/thrift" },
+    {
+      name: "Shop",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/marketplace",
+    },
+    {
+      name: "Thrift",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/thrift",
+    },
     { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
     { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
   ];
@@ -195,9 +198,7 @@ export default function CreateProduct() {
             ))}
           </div>
 
-          <div className="w-45">
-            {/* Placeholder for consistency */}
-          </div>
+          <div className="w-45">{/* Placeholder for consistency */}</div>
         </div>
       </nav>
 

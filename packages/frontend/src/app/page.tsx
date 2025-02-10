@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import type { NextPage } from 'next';
+import type { NextPage } from "next";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
 import {
@@ -10,27 +10,27 @@ import {
   Heart,
   Mail,
   Recycle,
-  Users,
-  Trees,
-  Clock,
+  // Users,
+  // Trees,
+  // Clock,
   Handshake,
   Plane,
   Shirt,
   BadgeDollarSign,
   Sparkles,
   ChevronRight,
-  Search
+  // Search
 } from "lucide-react";
 import {
   Savings,
-  LocalOffer,
+  // LocalOffer,
   ShoppingCart,
-  Favorite,
+  // Favorite,
   Email,
   Facebook,
   Twitter,
   Instagram,
-  LinkedIn
+  LinkedIn,
 } from "@mui/icons-material";
 
 // Type definitions
@@ -93,34 +93,57 @@ const featuredItems: FeaturedItem[] = [
 const Home: NextPage = () => {
   const navLinks: NavLink[] = [
     { name: "Home", icon: <House className="w-5 h-5" />, path: "#" },
-    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "./marketplace" },
-    { name: "thrift", icon: <ShoppingBag className="w-5 h-5" />, path: "./thrift" },
+    {
+      name: "Shop",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "./marketplace",
+    },
+    {
+      name: "thrift",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "./thrift",
+    },
     { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "./donate" },
     { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
   ];
 
   const stats: Stat[] = [
-    { number: "1,000+", label: "Available Items", icon: <Shirt className="w-8 h-8" /> },
-    { number: "500+", label: "Happy Customers", icon: <Handshake className="w-8 h-8" /> },
-    { number: "2,000kg", label: "CO₂ Saved", icon: <Recycle className="w-8 h-8" /> },
+    {
+      number: "1,000+",
+      label: "Available Items",
+      icon: <Shirt className="w-8 h-8" />,
+    },
+    {
+      number: "500+",
+      label: "Happy Customers",
+      icon: <Handshake className="w-8 h-8" />,
+    },
+    {
+      number: "2,000kg",
+      label: "CO₂ Saved",
+      icon: <Recycle className="w-8 h-8" />,
+    },
   ];
 
   const features: Feature[] = [
     {
       icon: <BadgeDollarSign className="w-8 h-8" />,
       title: "Save Money",
-      description: "Get high-quality fashion at fraction of retail prices while supporting sustainable practices."
+      description:
+        "Get high-quality fashion at fraction of retail prices while supporting sustainable practices.",
     },
     {
       icon: <Plane className="w-8 h-8" />,
       title: "Eco-Friendly",
-      description: "Each purchase reduces fashion waste and helps create a more sustainable future for our planet."
+      description:
+        "Each purchase reduces fashion waste and helps create a more sustainable future for our planet.",
     },
     {
       icon: <Sparkles className="w-8 h-8" />,
       title: "Timeless Style",
-      description: "Discover unique, pre-loved pieces that stand the test of time and tell their own stories."
-    }
+      description:
+        "Discover unique, pre-loved pieces that stand the test of time and tell their own stories.",
+    },
   ];
 
   const socialLinks: SocialLink[] = [
@@ -135,7 +158,7 @@ const Home: NextPage = () => {
     // Newsletter subscription logic
   };
 
-  const handleItemClick = (item: FeaturedItem): void => {
+  const handleItemClick = (): void => {
     // Item click handling logic
   };
 
@@ -199,7 +222,7 @@ const Home: NextPage = () => {
           <div className="floating-icon right-icon">
             <Savings className="w-8 h-8 text-[#5E6C58]" />
           </div>
-        
+
           <h2 className="text-5xl font-bold mb-6 text-[#162A2C] relative">
             Sustainable Fashion for a Better Tomorrow
             <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-[#C0B283] to-[#DCD0C0] opacity-10 blur"></div>
@@ -224,8 +247,8 @@ const Home: NextPage = () => {
       <section className="container mx-auto py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stats.map((stat, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="glass-card p-8 text-center transform hover:-translate-y-1 transition-transform duration-300"
             >
               <div className="text-[#5E6C58] mb-4">{stat.icon}</div>
@@ -239,20 +262,23 @@ const Home: NextPage = () => {
       </section>
 
       {/* Featured Items Section */}
-      <section id="shop" className="container mx-auto py-16 bg-[#162A2C]/5 rounded-3xl my-16">
+      <section
+        id="shop"
+        className="container mx-auto py-16 bg-[#162A2C]/5 rounded-3xl my-16"
+      >
         <h2 className="text-3xl font-bold text-center text-[#162A2C] mb-12">
           Featured Thrift Finds
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
           {featuredItems.map((item, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="glass-card overflow-hidden group"
-              onClick={() => handleItemClick(item)}
+              onClick={() => handleItemClick()}
               role="button"
               tabIndex={0}
               onKeyPress={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter') handleItemClick(item);
+                if (e.key === "Enter") handleItemClick();
               }}
             >
               <div className="relative h-64 bg-[#DBE0E2]/20">
@@ -270,8 +296,10 @@ const Home: NextPage = () => {
                 </h3>
                 <p className="text-[#686867] mb-2">{item.category}</p>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#5E6C58] font-bold">${item.price}</span>
-                  <button 
+                  <span className="text-[#5E6C58] font-bold">
+                    ${item.price}
+                  </span>
+                  <button
                     className="btn-glass px-4 py-2 text-sm flex items-center gap-2"
                     aria-label={`View details for ${item.name}`}
                   >
@@ -292,8 +320,8 @@ const Home: NextPage = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="glass-card p-8 text-center transform hover:-translate-y-1 transition-transform duration-300"
             >
               <div className="text-[#5E6C58] mb-4">{feature.icon}</div>
@@ -314,9 +342,10 @@ const Home: NextPage = () => {
             Join Our Sustainable Fashion Community
           </h2>
           <p className="text-[#686867] mb-8 max-w-2xl mx-auto">
-            Subscribe to our newsletter for exclusive thrift finds, sustainability tips, and community updates.
+            Subscribe to our newsletter for exclusive thrift finds,
+            sustainability tips, and community updates.
           </p>
-          <form 
+          <form
             onSubmit={handleSubscribe}
             className="flex max-w-md mx-auto gap-4"
           >
@@ -327,7 +356,7 @@ const Home: NextPage = () => {
               required
               aria-label="Email subscription"
             />
-            <button 
+            <button
               type="submit"
               className="btn-primary whitespace-nowrap flex items-center gap-2"
               aria-label="Subscribe to newsletter"
@@ -346,7 +375,8 @@ const Home: NextPage = () => {
             <div>
               <h3 className="text-[#162A2C] font-bold mb-4">About Ace</h3>
               <p className="text-[#686867]">
-                Sustainable fashion marketplace promoting eco-friendly shopping and conscious consumption.
+                Sustainable fashion marketplace promoting eco-friendly shopping
+                and conscious consumption.
               </p>
             </div>
             <div>
@@ -354,8 +384,8 @@ const Home: NextPage = () => {
               <ul className="space-y-2">
                 {navLinks.map((link) => (
                   <li key={link.name}>
-                    <a 
-                      href={link.path} 
+                    <a
+                      href={link.path}
                       className="text-[#686867] hover:text-[#5E6C58] flex items-center gap-2"
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -368,9 +398,12 @@ const Home: NextPage = () => {
             <div>
               <h3 className="text-[#162A2C] font-bold mb-4">Support</h3>
               <ul className="space-y-2">
-                {['FAQ', 'Contact', 'Privacy Policy'].map((item) => (
+                {["FAQ", "Contact", "Privacy Policy"].map((item) => (
                   <li key={item}>
-                    <a href="#" className="text-[#686867] hover:text-[#5E6C58] flex items-center gap-2">
+                    <a
+                      href="#"
+                      className="text-[#686867] hover:text-[#5E6C58] flex items-center gap-2"
+                    >
                       <ChevronRight className="w-4 h-4" />
                       {item}
                     </a>
@@ -398,8 +431,8 @@ const Home: NextPage = () => {
             <p>&copy; {new Date().getFullYear()} Ace. All rights reserved.</p>
             <p className="text-sm mt-2 flex items-center justify-center">
               Made with{" "}
-              <Heart className="w-5 h-5 mx-2 text-[#C0B283] animate-pulse" /> for a
-              sustainable future.
+              <Heart className="w-5 h-5 mx-2 text-[#C0B283] animate-pulse" />{" "}
+              for a sustainable future.
             </p>
           </div>
         </div>

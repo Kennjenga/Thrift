@@ -2,57 +2,58 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { Address } from 'viem'
 import { THRIFT_ABI, THRIFT_ADDRESS } from '@/blockchain/abis/thrift'
 
-// ThriftToken Contract Hooks
 export function useThriftToken() {
   const { address } = useAccount()
   const { writeContract } = useWriteContract()
 
-  // Read functions
-  const { data: totalSupply } = useReadContract({
+  // Read functions with proper typing
+  const { data: totalSupply = 0n } = useReadContract({
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'totalSupply',
-  })
+  }) as { data: bigint | undefined }
 
-  const { data: currentCap } = useReadContract({
+  const { data: currentCap = 0n } = useReadContract({
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'currentCap',
-  })
+  }) as { data: bigint | undefined }
 
-  const { data: tokenPrice } = useReadContract({
+  const { data: tokenPrice = 0n } = useReadContract({
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'tokenPrice',
-  })
+  }) as { data: bigint | undefined }
 
-  const { data: rewardPoolAllocation } = useReadContract({
+  const { data: rewardPoolAllocation = 0n } = useReadContract({
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'rewardPoolAllocation',
-  })
+  }) as { data: bigint | undefined }
 
-   // Additional read functions
-   const useGetBalance = (address: Address) => {
-    return useReadContract({
+  // Typed balance hook
+  const useGetBalance = (address: Address) => {
+    const { data = 0n } = useReadContract({
       address: THRIFT_ADDRESS,
       abi: THRIFT_ABI,
       functionName: 'balanceOf',
       args: [address],
-    })
+    }) as { data: bigint | undefined }
+    return { data }
   }
 
+  // Typed allowance hook
   const useGetAllowance = (owner: Address, spender: Address) => {
-    return useReadContract({
+    const { data = 0n } = useReadContract({
       address: THRIFT_ADDRESS,
       abi: THRIFT_ABI,
       functionName: 'allowance',
       args: [owner, spender],
-    })
+    }) as { data: bigint | undefined }
+    return { data }
   }
 
-
-  // Write functions
+  // Write functions remain the same
   const buyTokens = async (ethAmount: bigint) => {
     return writeContract({
       address: THRIFT_ADDRESS,
