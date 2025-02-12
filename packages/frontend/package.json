@@ -25,8 +25,6 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "wagmi": "^2.14.8",
-    "framer-motion": "^10.16.0",
-    "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.5.2",
     "react-router-dom": "^6.18.0",
     "styled-components": "^6.1.0"

@@ -3,7 +3,11 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { formatEther } from "viem";
+import {
+  formatTokenAmount,
+  parseTokenAmount,
+  formatETHPrice,
+} from "@/utils/token-utils";
 import { CartButton } from "@/components/cartButton";
 import {
   ShoppingCart,
@@ -61,8 +65,16 @@ export default function ProductPage() {
 
   const navLinks: NavLink[] = [
     { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "/marketplace" },
-    { name: "Thrift", icon: <ShoppingBag className="w-5 h-5" />, path: "/thrift" },
+    {
+      name: "Shop",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/marketplace",
+    },
+    {
+      name: "Thrift",
+      icon: <ShoppingBag className="w-5 h-5" />,
+      path: "/thrift",
+    },
     { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
     { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
   ];
@@ -73,7 +85,7 @@ export default function ProductPage() {
     bigint | null
   >(null);
   const [exchangeQuantity, setExchangeQuantity] = useState(1);
-  const [tokenTopUp, setTokenTopUp] = useState(0);
+  const [tokenTopUp, setTokenTopUp] = useState<bigint>(BigInt(0));
 
   // Context and Hook Integrations
   const { addToCart } = useCart();
@@ -92,7 +104,9 @@ export default function ProductPage() {
   const { data: productData, isLoading: productLoading } =
     useGetProduct(productId);
   const { data: userProducts = [] } = useGetProductsByOwner(userAddress!);
-  const { data: exchangeOffersData = [] } = useGetExchangeOffers(productId) as { data: ExchangeOffer[] };
+  const { data: exchangeOffersData = [] } = useGetExchangeOffers(productId) as {
+    data: ExchangeOffer[];
+  };
 
   // Type Safety and Derived Data
   const product = productData as Product | undefined;
@@ -145,18 +159,24 @@ export default function ProductPage() {
         throw new Error("Please select a product to exchange");
       }
 
+      // Convert token amount string to BigInt using parseTokenAmount
+      const tokenTopUpBigInt = parseTokenAmount(tokenTopUp.toString());
+      if (tokenTopUpBigInt === null) {
+        throw new Error("Invalid token amount");
+      }
+
       await createEnhancedExchangeOffer(
         selectedExchangeProduct,
         productId,
         BigInt(exchangeQuantity),
-        BigInt(tokenTopUp)
+        tokenTopUpBigInt
       );
 
       // Reset modal state
       setShowExchangeModal(false);
       setSelectedExchangeProduct(null);
       setExchangeQuantity(1);
-      setTokenTopUp(0);
+      setTokenTopUp(BigInt(0));
     });
 
   const handleAcceptExchangeOffer = (offerIndex: bigint) =>
@@ -164,6 +184,13 @@ export default function ProductPage() {
       await acceptEnhancedExchangeOffer(productId, offerIndex);
     });
 
+  const handleTokenTopUpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Ensure non-negative numbers only
+    if (/^\d*\.?\d*$/.test(value) || value === "") {
+      setTokenTopUp(BigInt(value || 0));
+    }
+  };
   // Render Loading State
   if (productLoading || !product) return <LoadingSpinner />;
 
@@ -215,7 +242,7 @@ export default function ProductPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-16">
-      <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Image */}
           <div className="glass-card p-4 rounded-3xl overflow-hidden">
             <div className="relative aspect-square rounded-2xl overflow-hidden">
@@ -243,25 +270,25 @@ export default function ProductPage() {
             <div className="glass-card p-8 rounded-3xl">
               <div className="grid grid-cols-2 gap-6">
                 {[
-                  { 
-                    label: "Condition", 
+                  {
+                    label: "Condition",
                     value: product.condition,
-                    icon: <Tag className="w-5 h-5 text-[#5E6C58]" />
+                    icon: <Tag className="w-5 h-5 text-[#5E6C58]" />,
                   },
-                  { 
-                    label: "Size", 
+                  {
+                    label: "Size",
                     value: product.size,
-                    icon: <Package className="w-5 h-5 text-[#5E6C58]" />
+                    icon: <Package className="w-5 h-5 text-[#5E6C58]" />,
                   },
-                  { 
-                    label: "Gender", 
+                  {
+                    label: "Gender",
                     value: product.gender,
-                    icon: <Info className="w-5 h-5 text-[#5E6C58]" />
+                    icon: <Info className="w-5 h-5 text-[#5E6C58]" />,
                   },
-                  { 
-                    label: "Available", 
+                  {
+                    label: "Available",
                     value: `${product.quantity.toString()} items`,
-                    icon: <ShoppingBag className="w-5 h-5 text-[#5E6C58]" />
+                    icon: <ShoppingBag className="w-5 h-5 text-[#5E6C58]" />,
                   },
                 ].map(({ label, value, icon }) => (
                   <div key={label} className="flex items-start gap-3">
@@ -287,7 +314,7 @@ export default function ProductPage() {
                       ETH Price
                     </span>
                     <p className="text-2xl font-bold text-[#162A2C]">
-                      {formatEther(product.ethPrice)} ETH
+                      {formatETHPrice(product.ethPrice)} ETH
                     </p>
                   </div>
                 </div>
@@ -298,7 +325,7 @@ export default function ProductPage() {
                       Token Price
                     </span>
                     <p className="text-2xl font-bold text-[#162A2C]">
-                      {formatEther(product.tokenPrice)} Tokens
+                      {formatTokenAmount(product.tokenPrice)} Thrifts
                     </p>
                   </div>
                 </div>
@@ -384,18 +411,26 @@ export default function ProductPage() {
                       >
                         <div className="space-y-1">
                           <p className="font-medium text-[#162A2C]">
-                            Offered Product ID: {offer.offeredProductId?.toString() || "N/A"}
+                            Offered Product ID:{" "}
+                            {offer.offeredProductId?.toString() || "N/A"}
                           </p>
                           <p className="text-sm text-[#686867]">
-                            Quantity: {offer.quantity?.toString() || "N/A"}
+                            Quantity:{" "}
+                            {offer.offeredQuantity.toString() || "N/A"}
                           </p>
                           <p className="text-sm text-[#686867]">
-                            Token Top-up: {offer.tokenTopUp ? formatEther(offer.tokenTopUp) : "0"} Tokens
+                            Token Top-up:{" "}
+                            {offer.tokenTopUp
+                              ? formatTokenAmount(offer.tokenTopUp)
+                              : "0"}{" "}
+                            Tokens
                           </p>
                         </div>
                         {product.seller === userAddress && (
                           <button
-                            onClick={() => handleAcceptExchangeOffer(BigInt(index))}
+                            onClick={() =>
+                              handleAcceptExchangeOffer(BigInt(index))
+                            }
                             disabled={loading}
                             className="btn-glass"
                           >
@@ -440,7 +475,9 @@ export default function ProductPage() {
                 </label>
                 <select
                   value={selectedExchangeProduct?.toString() || ""}
-                  onChange={(e) => setSelectedExchangeProduct(BigInt(e.target.value))}
+                  onChange={(e) =>
+                    setSelectedExchangeProduct(BigInt(e.target.value))
+                  }
                   className="w-full px-4 py-2 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
                 >
                   <option value="">Choose a product to exchange</option>
@@ -477,10 +514,10 @@ export default function ProductPage() {
                   Token Top-up (Optional)
                 </label>
                 <input
-                  type="number"
-                  min={0}
-                  value={tokenTopUp}
-                  onChange={(e) => setTokenTopUp(Number(e.target.value))}
+                  type="text"
+                  value={tokenTopUp.toString()}
+                  onChange={handleTokenTopUpChange}
+                  placeholder="0"
                   className="w-full px-4 py-2 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
                 />
               </div>

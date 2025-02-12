@@ -7,6 +7,7 @@
     "compile": "npx hardhat compile",
     "test": "npx hardhat test",
     "deploy:normal": "npx hardhat run ./ignition/modules/deploy.js --network sepolia",
+    "deploy1:normal": "npx hardhat run ./ignition/modules/deploy1.js --network sepolia",
     "deploy:ignition": "npx hardhat ignition deploy ./ignition/modules/deploy.js --network lisk-sepolia",
     "hardhat-verify": "npx hardhat verify"
   },

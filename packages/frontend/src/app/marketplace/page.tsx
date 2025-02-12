@@ -5,8 +5,7 @@ import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
-import { formatEther } from "ethers";
-import { formatTokenAmount } from "@/utils/token-utils";
+import { formatTokenAmount, formatETHPrice } from "@/utils/token-utils";
 import {
   House,
   ShoppingBag,
@@ -171,7 +170,7 @@ export default function MarketplacePage() {
                       <div className="flex items-center gap-2">
                         <Coins className="w-4 h-4 text-[#5E6C58]" />
                         <p className="text-lg font-bold text-[#162A2C]">
-                          {formatEther(product.ethPrice)} ETH
+                          {formatETHPrice(product.ethPrice)} ETH
                         </p>
                       </div>
                       <p className="text-sm text-[#686867]">

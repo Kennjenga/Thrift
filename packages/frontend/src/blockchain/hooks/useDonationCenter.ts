@@ -2,8 +2,7 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { Address } from 'viem'
 import { DONATION_ABI, DONATION_ADDRESS } from '@/blockchain/abis/thrift'
 
-
-export function useThriftToken() {
+export function useDonationContract() {
   const { address } = useAccount()
   const { writeContract } = useWriteContract()
 
@@ -27,7 +26,7 @@ export function useThriftToken() {
     abi: DONATION_ABI, 
   })
 
-  // Read functions
+  // Read functions for counts
   const { data: donationCenterCount } = useReadContract({
     address: DONATION_ADDRESS,
     functionName: 'donationCenterCount',
@@ -40,10 +39,35 @@ export function useThriftToken() {
     abi: DONATION_ABI,
   })
 
+  // New read functions for donation centers
+  const { data: allDonationCenters } = useReadContract({
+    address: DONATION_ADDRESS,
+    functionName: 'getAllDonationCenters',
+    abi: DONATION_ABI,
+  })
+
+  const { data: activeDonationCenters } = useReadContract({
+    address: DONATION_ADDRESS,
+    functionName: 'getActiveDonationCenters',
+    abi: DONATION_ABI,
+  })
+
+  const { data: totalActiveDonationCenters } = useReadContract({
+    address: DONATION_ADDRESS,
+    functionName: 'getTotalActiveDonationCenters',
+    abi: DONATION_ABI,
+  })
+
+  const { data: totalDonationCenters } = useReadContract({
+    address: DONATION_ADDRESS,
+    functionName: 'getTotalDonationCenters',
+    abi: DONATION_ABI,
+  })
+
   const useDonationCenter = (centerId: bigint) => {
     return useReadContract({
       address: DONATION_ADDRESS,
-      functionName: 'donationCenters',
+      functionName: 'getDonationCenter',
       args: [centerId],
       abi: DONATION_ABI,
     })
@@ -103,7 +127,6 @@ export function useThriftToken() {
     })
   }
 
-  // Write functions
   const addDonationCenter = (
     name: string, 
     description: string, 
@@ -187,18 +210,27 @@ export function useThriftToken() {
   }
 
   return {
+    // Token details
     balance,
     tokenPrice,
     totalSupply,
-    buyTokens,
-    transfer,
-    approve,
+    
+    // Read functions
     donationCenterCount,
     donationCount,
+    allDonationCenters,
+    activeDonationCenters,
+    totalActiveDonationCenters,
+    totalDonationCenters,
     useDonationCenter,
     useDonation,
     useCalculateClothingReward,
     useCalculateRecyclingReward,
+    
+    // Write functions
+    buyTokens,
+    transfer,
+    approve,
     addDonationCenter,
     updateDonationCenter,
     registerDonation,
