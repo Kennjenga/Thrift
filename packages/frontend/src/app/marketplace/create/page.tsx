@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
-import { parseEther, parseGwei } from "viem";
+import { parseEther } from "viem";
+import { parseTokenAmount } from "@/utils/token-utils";
 
 interface NavLink {
   name: string;
@@ -87,6 +88,20 @@ export default function CreateProduct() {
     setLoading(true);
 
     try {
+      // Convert token price from human-readable to blockchain format
+      const tokenPriceValue = parseTokenAmount(formData.tokenPrice || "0");
+      if (tokenPriceValue === null) {
+        throw new Error("Invalid token price");
+      }
+
+      // Convert ETH price from human-readable to blockchain format
+      let ethPriceValue;
+      try {
+        ethPriceValue = parseEther(formData.ethPrice || "0");
+      } catch {
+        throw new Error("Invalid ETH price");
+      }
+
       const tx = await listProduct(
         formData.name,
         formData.description,
@@ -96,8 +111,8 @@ export default function CreateProduct() {
         formData.categories,
         formData.gender,
         formData.image,
-        parseGwei(formData.tokenPrice || "0"),
-        parseEther(formData.ethPrice || "0"),
+        tokenPriceValue,
+        ethPriceValue,
         BigInt(formData.quantity),
         formData.isAvailableForExchange,
         formData.exchangePreference
@@ -105,6 +120,8 @@ export default function CreateProduct() {
       console.log("Product listed:", tx);
     } catch (error) {
       console.error("Error listing product:", error);
+      // You might want to show this error to the user
+      alert(error instanceof Error ? error.message : "Failed to list product");
     } finally {
       setLoading(false);
     }
@@ -116,10 +133,30 @@ export default function CreateProduct() {
     >
   ) => {
     const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked,
+      }));
+      return;
+    }
+
+    // Handle number inputs for prices
+    if (name === "tokenPrice" || name === "ethPrice") {
+      // Allow only numbers and decimals
+      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [name]: value,
     }));
   };
 
@@ -406,14 +443,14 @@ export default function CreateProduct() {
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-[#686867] mb-2">
-                      Token Price
+                      Token Price (Thrifts)
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="tokenPrice"
                       value={formData.tokenPrice}
                       onChange={handleChange}
-                      step="0.000000001"
+                      placeholder="0.00"
                       className="input-primary"
                     />
                   </div>
@@ -423,11 +460,11 @@ export default function CreateProduct() {
                       ETH Price
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       name="ethPrice"
                       value={formData.ethPrice}
                       onChange={handleChange}
-                      step="0.000000000000000001"
+                      placeholder="0.00"
                       className="input-primary"
                     />
                   </div>

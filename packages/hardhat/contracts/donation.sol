@@ -67,6 +67,62 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         thriftToken = ThriftToken(_thriftTokenAddress);
     }
 
+    // New function to get total donation centers
+    function getTotalDonationCenters() external view returns (uint256) {
+        return donationCenterCount;
+    }
+
+    // New function to get total active donation centers
+    function getTotalActiveDonationCenters() external view returns (uint256) {
+        uint256 activeCount = 0;
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (donationCenters[i].isActive) {
+                activeCount++;
+            }
+        }
+        return activeCount;
+    }
+
+    // Get all donation centers
+    function getAllDonationCenters() external view returns (DonationCenter[] memory) {
+        DonationCenter[] memory centers = new DonationCenter[](donationCenterCount);
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            centers[i - 1] = donationCenters[i];
+        }
+        return centers;
+    }
+
+    // Get active donation centers
+    function getActiveDonationCenters() external view returns (DonationCenter[] memory) {
+        uint256 activeCount = 0;
+        
+        // First count active centers
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (donationCenters[i].isActive) {
+                activeCount++;
+            }
+        }
+        
+        // Create array of correct size and populate
+        DonationCenter[] memory activeCenters = new DonationCenter[](activeCount);
+        uint256 currentIndex = 0;
+        
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (donationCenters[i].isActive) {
+                activeCenters[currentIndex] = donationCenters[i];
+                currentIndex++;
+            }
+        }
+        
+        return activeCenters;
+    }
+
+    // Get a specific donation center
+    function getDonationCenter(uint256 centerId) external view returns (DonationCenter memory) {
+        require(centerId <= donationCenterCount && centerId > 0, "Invalid center ID");
+        return donationCenters[centerId];
+    }
+
     function calculateClothingReward(
         uint256 itemCount,
         uint256 weightInKg
