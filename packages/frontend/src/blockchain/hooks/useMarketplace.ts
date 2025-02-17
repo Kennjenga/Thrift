@@ -2,6 +2,7 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { type Address } from 'viem'
 import { MARKETPLACE_ABI, MARKETPLACE_ADDRESS } from '@/blockchain/abis/thrift'
 import { Product } from '@/types/market'
+import { sepolia } from 'wagmi/chains'
 
 export function useMarketplace() {
   const { address } = useAccount()
@@ -12,21 +13,21 @@ export function useMarketplace() {
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'productCount',
-    chainId: 11155111,
+    chainId: sepolia.id,
   })
 
   const totalActiveProducts = useReadContract({
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getTotalActiveProducts',
-    chainId: 11155111,
+    chainId: sepolia.id,
   })
 
   const totalProducts = useReadContract({
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getTotalProducts',
-    chainId: 11155111,
+    chainId: sepolia.id,
   })
 
   const useGetProduct = (productId: bigint) => {
@@ -35,7 +36,7 @@ export function useMarketplace() {
       abi: MARKETPLACE_ABI,
       functionName: 'getProduct',
       args: [productId],
-      chainId: 11155111,
+      chainId: sepolia.id,
     })
   }
 
@@ -53,7 +54,7 @@ export function useMarketplace() {
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'getAllProducts',
-      chainId: 11155111,
+      chainId: sepolia.id,
     })
   }
 
@@ -61,7 +62,7 @@ export function useMarketplace() {
     const allProducts = useGetAllProducts()
     return {
       ...allProducts,
-      data: Array.isArray(allProducts.data) 
+      data: Array.isArray(allProducts.data)
         ? allProducts.data.filter((product: Product) => product.seller === owner && !product.isDeleted)
         : []
     }

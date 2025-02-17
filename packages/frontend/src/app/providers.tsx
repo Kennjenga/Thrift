@@ -16,9 +16,10 @@ interface ProvidersProps {
 
 export const Providers: React.FC<ProvidersProps> = ({
   children,
+  initialState,
 }: ProvidersProps) => {
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={lightTheme({
@@ -28,7 +29,6 @@ export const Providers: React.FC<ProvidersProps> = ({
             fontStack: "system",
           })}
           showRecentTransactions={true}
-          // coolMode
         >
           {children}
         </RainbowKitProvider>

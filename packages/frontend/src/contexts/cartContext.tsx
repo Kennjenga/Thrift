@@ -1,3 +1,6 @@
+// contexts/CartContext.tsx
+"use client";
+
 import React, {
   createContext,
   useContext,
@@ -38,8 +41,17 @@ const deserializeCart = (jsonString: string): CartState => {
   });
 };
 
-// Load cart state from localStorage
+// Load cart state from localStorage with client-side check
 const loadCartState = (): CartState => {
+  const initialState = {
+    items: [],
+    total: { eth: BigInt(0), tokens: BigInt(0) },
+  };
+
+  if (typeof window === "undefined") {
+    return initialState;
+  }
+
   try {
     const savedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (savedCart) {
@@ -48,10 +60,7 @@ const loadCartState = (): CartState => {
   } catch (error) {
     console.error("Failed to load cart from localStorage:", error);
   }
-  return {
-    items: [],
-    total: { eth: BigInt(0), tokens: BigInt(0) },
-  };
+  return initialState;
 };
 
 const calculateTotal = (items: CartItem[]) => {
@@ -130,11 +139,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return state;
   }
 
-  // Save to localStorage after every state change
-  try {
-    localStorage.setItem(CART_STORAGE_KEY, serializeCart(newState));
-  } catch (error) {
-    console.error("Failed to save cart to localStorage:", error);
+  // Save to localStorage only on client-side
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, serializeCart(newState));
+    } catch (error) {
+      console.error("Failed to save cart to localStorage:", error);
+    }
   }
 
   return newState;
@@ -149,14 +160,16 @@ interface CartContextType {
   clearCart: () => void;
 }
 
-export const CartContext = createContext({} as CartContextType);
+export const CartContext = createContext<CartContextType>(
+  {} as CartContextType
+);
 
+// Client-side only CartProvider component
 export const CartProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(cartReducer, null, loadCartState);
 
-  // Initialize cart from localStorage on mount
   useEffect(() => {
     const savedState = loadCartState();
     dispatch({ type: "INIT_CART", payload: savedState });
@@ -194,6 +207,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
+// Custom hook to use cart context
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
