@@ -11,12 +11,14 @@ export function useThriftToken() {
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'totalSupply',
+    chainId: 11155111,
   }) as { data: bigint | undefined }
 
   const { data: currentCap = 0n } = useReadContract({
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'currentCap',
+    chainId: 11155111,
   }) as { data: bigint | undefined }
 
   const { data: tokenPrice = 0n } = useReadContract({

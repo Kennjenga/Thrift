@@ -1,33 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatTokenAmount } from "@/utils/token-utils";
-import Image from "next/image";
 import { useDonationContract } from "@/blockchain/hooks/useDonationCenter";
-import {
-  Recycle,
-  Package,
-  Building2,
-  ChevronRight,
-  House,
-  ShoppingBag,
-  Heart,
-  Mail,
-  Leaf,
-} from "lucide-react";
+import { Recycle, Package, Building2, ChevronRight, Leaf } from "lucide-react";
 import {
   DonationCenter,
   DonationData,
   RecyclingData,
   NewDonationCenterData,
 } from "@/types/donate";
-
-interface NavLink {
-  name: string;
-  icon: React.ReactNode;
-  path: string;
-}
+import Navbar from "@/components/navbar";
 
 interface DonationCentersListProps {
   centers: DonationCenter[] | undefined;
@@ -378,70 +361,10 @@ const DonationPage: React.FC = () => {
     null
   );
 
-  const navLinks: NavLink[] = [
-    { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    {
-      name: "Shop",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/marketplace",
-    },
-    {
-      name: "Thrift",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/thrift",
-    },
-    { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
-    { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">
       {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/50 border-b border-[#5E6C58]/10 shadow-soft">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center">
-            <div className="flex items-center group hover-lift">
-              <div className="relative">
-                <Image
-                  src="/my-business-name-high-resolution-logo-transparent.png"
-                  alt="Ace Logo"
-                  width={45}
-                  height={45}
-                  className="mr-2 rounded-lg shine-effect"
-                  priority
-                />
-                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-[#C0B283] to-[#DCD0C0] opacity-30 blur group-hover:opacity-40 transition duration-300"></div>
-              </div>
-              <h1 className="text-2xl font-bold text-[#162A2C] ml-2 gold-gradient">
-                Ace
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                className="nav-link group flex items-center space-x-2 text-[#162A2C]"
-              >
-                <span className="text-lg group-hover:text-[#C0B283] transition-colors duration-300">
-                  {link.icon}
-                </span>
-                <span className="relative">
-                  {link.name}
-                  <span className="nav-link-underline"></span>
-                </span>
-              </a>
-            ))}
-          </div>
-
-          <div className="connect-button-wrapper">
-            <ConnectButton />
-          </div>
-        </div>
-      </nav>
-
+      <Navbar />
       {/* Main Content */}
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
