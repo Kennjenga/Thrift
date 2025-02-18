@@ -91,7 +91,7 @@ const Navbar = () => {
 
           {/* Connect Button */}
           <div className="connect-button-wrapper">
-            <ConnectButton />
+            <ConnectButton accountStatus="avatar" />
           </div>
         </div>
       </nav>

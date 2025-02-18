@@ -159,10 +159,7 @@ export default function ThriftTokenPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">
-      {/* Navigation Bar */}
-      {/* <Navbar /> */}
-
+    <div className="min-h-screen">
       {/* Main Content */}
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto hero-card p-12 rounded-3xl glass-card mb-16">

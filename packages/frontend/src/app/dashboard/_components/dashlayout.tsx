@@ -1,26 +1,14 @@
 "use client";
 import React from "react";
-import Image from "next/image";
+// import Image from "next/image";
 import Link from "next/link";
 import Navbar from "./navbar";
 
 function SideNav() {
   return (
-    <div className="h-screen bg-accent text-black p-4 bg-green-200">
-      {/* App Logo */}
-      <div className="mb-8">
-        <Link href="/">
-          <Image
-            src="/my-business-name-high-resolution-logo-transparent.png"
-            alt="App Logo"
-            width={150}
-            height={50}
-            className="mx-auto"
-          />
-        </Link>
-      </div>
+    <div className="h-[calc(100vh-64px)] bg-accent text-black p-4 ticky top-0 z-50 backdrop-blur-md border-b border-[#5E6C58]/10 shadow-soft">
       {/* Navigation Links */}
-      <nav className="space-y-4">
+      <nav className="space-y-4 mt-10">
         <Link href="/dashboard" className="block hover:text-gray-300">
           Dashboard
         </Link>
@@ -50,14 +38,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex">
-      <aside className="fixed md:w-64 hidden md:block">
-        <SideNav />
-      </aside>
-      <main className="flex-1 md:ml-64">
-        <Navbar />
-        <div className="p-4">{children}</div>
-      </main>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <div className="flex flex-1">
+        <aside className="fixed top-16 bottom-0 md:w-64 hidden md:block">
+          <SideNav />
+        </aside>
+        <main className="flex-1 md:ml-64">
+          <div className="p-4">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

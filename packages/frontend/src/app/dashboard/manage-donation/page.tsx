@@ -174,7 +174,7 @@ export default function ManageDonationCenters() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto hero-card p-12 rounded-3xl glass-card mb-16">
           <h1 className="text-4xl font-bold text-[#162A2C] mb-6 text-center">

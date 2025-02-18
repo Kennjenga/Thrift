@@ -7,7 +7,7 @@ export default async function DashboardServerLayout({
 }) {
   return (
     <div
-      className={`flex flex-col min-h-screen bg-green-50 mx-auto max-w-[98%] sm:max-w-[100%]`}
+      className={`flex flex-col min-h-screen bg-green-50 mx-auto sm:max-w-[100%]`}
       style={{
         fontFamily: "Inter",
       }}

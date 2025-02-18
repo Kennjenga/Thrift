@@ -1,6 +1,6 @@
 import React from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-// import Image from "next/image";
+import Image from "next/image";
 import {
   House,
   ShoppingBag,
@@ -48,8 +48,25 @@ const Navbar = () => {
   return (
     <>
       {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/50 border-b border-[#5E6C58]/10 shadow-soft">
+      <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-[#5E6C58]/10 shadow-soft">
         <div className="container mx-auto flex items-center justify-between p-4">
+          {/* Logo Container */}
+          <div className="flex items-center group hover-lift">
+            <div className="relative">
+              <Image
+                src="/my-business-name-high-resolution-logo-transparent.png"
+                alt="Ace Logo"
+                width={45}
+                height={45}
+                className="mr-2 rounded-lg shine-effect"
+                priority
+              />
+              <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-[#C0B283] to-[#DCD0C0] opacity-30 blur group-hover:opacity-40 transition duration-300"></div>
+            </div>
+            <h1 className="text-2xl font-bold text-[#162A2C] ml-2 gold-gradient">
+              Ace
+            </h1>
+          </div>
           {/* Navigation Links */}
           <div className="flex space-x-8">
             {navLinks.map((link) => (
