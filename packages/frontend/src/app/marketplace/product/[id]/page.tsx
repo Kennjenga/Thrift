@@ -23,28 +23,239 @@ import {
   Coins,
   Info,
 } from "lucide-react";
+import styled from 'styled-components';
 
 // Context and Hook Imports
 import { useCart } from "@/contexts/cartContext";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
-
-// Type Imports
 import { Product, ExchangeOffer } from "@/types/market";
 
+// Styled Components
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FEFCF6 0%, #F4EFE6 100%);
+`;
+
+const NavigationBar = styled.nav`
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(94, 108, 88, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+`;
+
+const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+`;
+
+const LogoText = styled.h1`
+  font-size: 2rem;
+  font-weight: bold;
+  color: #162A2C;
+  background: linear-gradient(to right, #C0B283, #DCD0C0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const NavLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #162A2C;
+  position: relative;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background: #C0B283;
+    transition: width 0.3s ease;
+  }
+  
+  &:hover:after {
+    width: 100%;
+  }
+  
+  &:hover svg {
+    color: #C0B283;
+  }
+`;
+
+const GlassCard = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const Button = styled.button<{ variant?: 'primary' | 'secondary' | 'glass' }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  width: 100%;
+  
+  ${props => {
+    switch (props.variant) {
+      case 'primary':
+        return `
+          background: #CB2140;
+          color: white;
+          &:hover:not(:disabled) {
+            background: #d62747;
+          }
+        `;
+      case 'secondary':
+        return `
+          background: transparent;
+          border: 1px solid #CB2140;
+          color: #CB2140;
+          &:hover:not(:disabled) {
+            background: rgba(203, 33, 64, 0.1);
+          }
+        `;
+      case 'glass':
+      default:
+        return `
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(4px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #162A2C;
+          &:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+          }
+        `;
+    }
+  }}
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid #DBE0E2;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #5E6C58;
+    box-shadow: 0 0 0 2px rgba(94, 108, 88, 0.1);
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid #DBE0E2;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #5E6C58;
+    box-shadow: 0 0 0 2px rgba(94, 108, 88, 0.1);
+  }
+`;
+
+const Modal = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+`;
+
+const ModalContent = styled(GlassCard)`
+  max-width: 28rem;
+  width: 100%;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid #ef4444;
+  color: #162A2C;
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FEFCF6 0%, #F4EFE6 100%);
+`;
+
+const SpinnerWrapper = styled(GlassCard)`
+  padding: 2rem;
+  border-radius: 9999px;
+  
+  .spinner {
+    width: 4rem;
+    height: 4rem;
+    border: 4px solid #5E6C58;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
 // Utility Components
 const LoadingSpinner = () => (
-  <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">
-    <div className="glass-card p-8 rounded-full">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-[#5E6C58]" />
-    </div>
-  </div>
+  <LoadingContainer>
+    <SpinnerWrapper>
+      <div className="spinner" />
+    </SpinnerWrapper>
+  </LoadingContainer>
 );
 
 const ErrorMessage = ({ message }: { message: string }) => (
-  <div className="glass-card p-4 border-l-4 border-red-500 flex items-center gap-3">
+  <ErrorContainer>
     <AlertTriangle className="h-5 w-5 text-red-500" />
-    <p className="text-[#162A2C]">{message}</p>
-  </div>
+    <p>{message}</p>
+  </ErrorContainer>
 );
 
 interface NavLink {
@@ -62,30 +273,18 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [selectedExchangeProduct, setSelectedExchangeProduct] = useState<bigint | null>(null);
+  const [exchangeQuantity, setExchangeQuantity] = useState(1);
+  const [tokenTopUp, setTokenTopUp] = useState<bigint>(BigInt(0));
 
   const navLinks: NavLink[] = [
     { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    {
-      name: "Shop",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/marketplace",
-    },
-    {
-      name: "Thrift",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/thrift",
-    },
+    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "/marketplace" },
+    { name: "Thrift", icon: <ShoppingBag className="w-5 h-5" />, path: "/thrift" },
     { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
     { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
   ];
-
-  // Exchange Specific State
-  const [showExchangeModal, setShowExchangeModal] = useState(false);
-  const [selectedExchangeProduct, setSelectedExchangeProduct] = useState<
-    bigint | null
-  >(null);
-  const [exchangeQuantity, setExchangeQuantity] = useState(1);
-  const [tokenTopUp, setTokenTopUp] = useState<bigint>(BigInt(0));
 
   // Context and Hook Integrations
   const { addToCart } = useCart();
@@ -101,37 +300,32 @@ export default function ProductPage() {
   } = useMarketplace();
 
   // Data Fetching
-  const { data: productData, isLoading: productLoading } =
-    useGetProduct(productId);
+  const { data: productData, isLoading: productLoading } = useGetProduct(productId);
   const { data: userProducts = [] } = useGetProductsByOwner(userAddress!);
   const { data: exchangeOffersData = [] } = useGetExchangeOffers(productId) as {
     data: ExchangeOffer[];
   };
 
-  // Type Safety and Derived Data
   const product = productData as Product | undefined;
   const availableUserProducts = useMemo(
     () => userProducts.filter((p) => p.quantity > 0n && p.id !== productId),
     [userProducts, productId]
   );
 
-  // Error Handling Wrapper
+  // Action Handlers
   const handleAsyncAction = async (action: () => Promise<void>) => {
     setLoading(true);
     setError(null);
     try {
       await action();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unexpected error occurred"
-      );
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Action Handlers
   const handleAddToCart = () => {
     if (!product) return;
     addToCart(product, BigInt(quantity));
@@ -140,11 +334,7 @@ export default function ProductPage() {
   const handleBuyWithEth = () =>
     handleAsyncAction(async () => {
       if (!product) return;
-      await buyWithEth(
-        productId,
-        BigInt(quantity),
-        product.ethPrice * BigInt(quantity)
-      );
+      await buyWithEth(productId, BigInt(quantity), product.ethPrice * BigInt(quantity));
     });
 
   const handleBuyWithTokens = () =>
@@ -158,21 +348,12 @@ export default function ProductPage() {
       if (!selectedExchangeProduct) {
         throw new Error("Please select a product to exchange");
       }
-
-      // Convert token amount string to BigInt using parseTokenAmount
-      const tokenTopUpBigInt = parseTokenAmount(tokenTopUp.toString());
-      if (tokenTopUpBigInt === null) {
-        throw new Error("Invalid token amount");
-      }
-
       await createEnhancedExchangeOffer(
         selectedExchangeProduct,
         productId,
         BigInt(exchangeQuantity),
-        tokenTopUpBigInt
+        tokenTopUp
       );
-
-      // Reset modal state
       setShowExchangeModal(false);
       setSelectedExchangeProduct(null);
       setExchangeQuantity(1);
@@ -184,135 +365,85 @@ export default function ProductPage() {
       await acceptEnhancedExchangeOffer(productId, offerIndex);
     });
 
-  const handleTokenTopUpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Ensure non-negative numbers only
-    if (/^\d*\.?\d*$/.test(value) || value === "") {
-      setTokenTopUp(BigInt(value || 0));
-    }
-  };
-  // Render Loading State
   if (productLoading || !product) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">
-      {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/50 border-b border-[#5E6C58]/10 shadow-soft">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center">
-            <div className="flex items-center group hover-lift">
-              <div className="relative">
-                <Image
-                  src="/my-business-name-high-resolution-logo-transparent.png"
-                  alt="Ace Logo"
-                  width={45}
-                  height={45}
-                  className="mr-2 rounded-lg shine-effect"
-                  priority
-                />
-                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-[#C0B283] to-[#DCD0C0] opacity-30 blur group-hover:opacity-40 transition duration-300"></div>
-              </div>
-              <h1 className="text-2xl font-bold text-[#162A2C] ml-2 gold-gradient">
-                Ace
-              </h1>
-            </div>
-          </div>
+    <PageContainer>
+      <NavigationBar>
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <Logo>
+            <Image
+              src="/my-business-name-high-resolution-logo-transparent.png"
+              alt="Ace Logo"
+              width={45}
+              height={45}
+              priority
+            />
+            <LogoText>Ace</LogoText>
+          </Logo>
 
           <div className="flex space-x-8">
             {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                className="nav-link group flex items-center space-x-2 text-[#162A2C]"
-              >
-                <span className="text-lg group-hover:text-[#C0B283] transition-colors duration-300">
-                  {link.icon}
-                </span>
-                <span className="relative">
-                  {link.name}
-                  <span className="nav-link-underline"></span>
-                </span>
-              </a>
+              <NavLink key={link.name} href={link.path}>
+                {link.icon}
+                <span>{link.name}</span>
+              </NavLink>
             ))}
           </div>
 
           <CartButton />
         </div>
-      </nav>
+      </NavigationBar>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Image */}
-          <div className="glass-card p-4 rounded-3xl overflow-hidden">
+          <GlassCard>
             <div className="relative aspect-square rounded-2xl overflow-hidden">
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
-                className="object-cover hover:scale-105 transition-transform duration-300"
                 priority
+                className="object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
-          </div>
+          </GlassCard>
 
           {/* Product Details */}
           <div className="space-y-8">
-            {/* Product Info */}
-            <div className="glass-card p-8 rounded-3xl">
-              <h1 className="text-3xl font-bold text-[#162A2C] mb-2">
-                {product.name}
-              </h1>
+            <GlassCard>
+              <h1 className="text-3xl font-bold text-[#162A2C] mb-2">{product.name}</h1>
               <p className="text-lg text-[#686867]">{product.brand}</p>
-            </div>
+            </GlassCard>
 
-            {/* Product Specs */}
-            <div className="glass-card p-8 rounded-3xl">
+            {/* Product Specifications */}
+            <GlassCard>
               <div className="grid grid-cols-2 gap-6">
                 {[
-                  {
-                    label: "Condition",
-                    value: product.condition,
-                    icon: <Tag className="w-5 h-5 text-[#5E6C58]" />,
-                  },
-                  {
-                    label: "Size",
-                    value: product.size,
-                    icon: <Package className="w-5 h-5 text-[#5E6C58]" />,
-                  },
-                  {
-                    label: "Gender",
-                    value: product.gender,
-                    icon: <Info className="w-5 h-5 text-[#5E6C58]" />,
-                  },
-                  {
-                    label: "Available",
-                    value: `${product.quantity.toString()} items`,
-                    icon: <ShoppingBag className="w-5 h-5 text-[#5E6C58]" />,
-                  },
+                  { label: "Condition", value: product.condition, icon: <Tag className="w-5 h-5" /> },
+                  { label: "Size", value: product.size, icon: <Package className="w-5 h-5" /> },
+                  { label: "Gender", value: product.gender, icon: <Info className="w-5 h-5" /> },
+                  { label: "Available", value: `${product.quantity.toString()} items`, icon: <ShoppingBag className="w-5 h-5" /> },
                 ].map(({ label, value, icon }) => (
                   <div key={label} className="flex items-start gap-3">
                     {icon}
                     <div>
-                      <span className="block text-sm font-medium text-[#686867]">
-                        {label}
-                      </span>
+                      <span className="block text-sm font-medium text-[#686867]">{label}</span>
                       <p className="text-[#162A2C] font-semibold">{value}</p>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </GlassCard>
 
             {/* Pricing and Purchase Options */}
-            <div className="glass-card p-8 rounded-3xl">
+            <GlassCard>
               <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-3">
                   <Coins className="w-6 h-6 text-[#5E6C58]" />
                   <div>
-                    <span className="block text-sm font-medium text-[#686867]">
-                      ETH Price
-                    </span>
+                    <span className="block text-sm font-medium text-[#686867]">ETH Price</span>
                     <p className="text-2xl font-bold text-[#162A2C]">
                       {formatETHPrice(product.ethPrice)} ETH
                     </p>
@@ -321,9 +452,7 @@ export default function ProductPage() {
                 <div className="flex items-center gap-3">
                   <Coins className="w-6 h-6 text-[#5E6C58]" />
                   <div>
-                    <span className="block text-sm font-medium text-[#686867]">
-                      Token Price
-                    </span>
+                    <span className="block text-sm font-medium text-[#686867]">Token Price</span>
                     <p className="text-2xl font-bold text-[#162A2C]">
                       {formatTokenAmount(product.tokenPrice)} Thrifts
                     </p>
@@ -333,115 +462,82 @@ export default function ProductPage() {
 
               <div className="space-y-6">
                 <div>
-                  <label
-                    htmlFor="quantity"
-                    className="block text-sm font-medium text-[#686867] mb-2"
-                  >
+                  <label htmlFor="quantity" className="block text-sm font-medium text-[#686867] mb-2">
                     Quantity
                   </label>
-                  <input
+                  <Input
                     type="number"
                     id="quantity"
                     min={1}
                     max={Number(product.quantity)}
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="w-32 px-4 py-2 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
                   />
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  <button
-                    onClick={handleAddToCart}
-                    className="btn-glass w-full"
-                  >
+                <div className="space-y-4">
+                  <Button onClick={handleAddToCart} variant="glass">
                     <ShoppingCart className="w-5 h-5" />
                     Add to Cart
-                  </button>
+                  </Button>
                   <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={handleBuyWithEth}
-                      disabled={loading}
-                      className="btn-primary"
-                    >
+                    <Button onClick={handleBuyWithEth} disabled={loading} variant="primary">
                       Buy with ETH
-                    </button>
-                    <button
-                      onClick={handleBuyWithTokens}
-                      disabled={loading}
-                      className="btn-secondary"
-                    >
+                    </Button>
+                    <Button onClick={handleBuyWithTokens} disabled={loading} variant="secondary">
                       Buy with Tokens
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
+            </GlassCard>
 
             {/* Exchange Section */}
             {product.isAvailableForExchange && (
-              <div className="glass-card p-8 rounded-3xl">
+              <GlassCard>
                 <div className="flex items-center gap-3 mb-6">
-                  <House className="w-6 h-6 text-[#5E6C58]" />
-                  <h3 className="text-xl font-semibold text-[#162A2C]">
-                    Exchange Options
-                  </h3>
+                  <RefreshCw className="w-6 h-6 text-[#5E6C58]" />
+                  <h3 className="text-xl font-semibold text-[#162A2C]">Exchange Options</h3>
                 </div>
-                <p className="text-[#686867] mb-6">
-                  {String(product.exchangePreference)}
-                </p>
+                <p className="text-[#686867] mb-6">{String(product.exchangePreference)}</p>
 
-                <button
-                  onClick={() => setShowExchangeModal(true)}
-                  className="btn-glass w-full"
-                >
+                <Button onClick={() => setShowExchangeModal(true)} variant="glass">
                   Create Exchange Offer
-                </button>
+                </Button>
 
-                {/* Exchange Offers */}
+                {/* Exchange Offers List */}
                 {exchangeOffersData.length > 0 && (
                   <div className="mt-6 space-y-4">
-                    <h4 className="font-semibold text-[#162A2C]">
-                      Current Offers
-                    </h4>
+                    <h4 className="font-semibold text-[#162A2C]">Current Offers</h4>
                     {exchangeOffersData.map((offer, index) => (
-                      <div
-                        key={index}
-                        className="glass-card p-6 rounded-2xl flex justify-between items-center"
-                      >
-                        <div className="space-y-1">
-                          <p className="font-medium text-[#162A2C]">
-                            Offered Product ID:{" "}
-                            {offer.offeredProductId?.toString() || "N/A"}
-                          </p>
-                          <p className="text-sm text-[#686867]">
-                            Quantity:{" "}
-                            {offer.offeredQuantity.toString() || "N/A"}
-                          </p>
-                          <p className="text-sm text-[#686867]">
-                            Token Top-up:{" "}
-                            {offer.tokenTopUp
-                              ? formatTokenAmount(offer.tokenTopUp)
-                              : "0"}{" "}
-                            Tokens
-                          </p>
+                      <GlassCard key={index}>
+                        <div className="flex justify-between items-center">
+                          <div className="space-y-1">
+                            <p className="font-medium text-[#162A2C]">
+                              Offered Product ID: {offer.offeredProductId?.toString() || "N/A"}
+                            </p>
+                            <p className="text-sm text-[#686867]">
+                              Quantity: {offer.offeredQuantity.toString() || "N/A"}
+                            </p>
+                            <p className="text-sm text-[#686867]">
+                              Token Top-up: {formatTokenAmount(offer.tokenTopUp)} Tokens
+                            </p>
+                          </div>
+                          {product.seller === userAddress && (
+                            <Button
+                              onClick={() => handleAcceptExchangeOffer(BigInt(index))}
+                              disabled={loading}
+                              variant="glass"
+                            >
+                              Accept Offer
+                            </Button>
+                          )}
                         </div>
-                        {product.seller === userAddress && (
-                          <button
-                            onClick={() =>
-                              handleAcceptExchangeOffer(BigInt(index))
-                            }
-                            disabled={loading}
-                            className="btn-glass"
-                          >
-                            Accept Offer
-                          </button>
-                        )}
-                      </div>
+                      </GlassCard>
                     ))}
                   </div>
                 )}
-              </div>
+              </GlassCard>
             )}
           </div>
         </div>
@@ -449,15 +545,10 @@ export default function ProductPage() {
 
       {/* Exchange Modal */}
       {showExchangeModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="glass-card max-w-md w-full p-8 rounded-3xl">
+        <Modal>
+          <ModalContent>
             <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <House className="w-6 h-6 text-[#5E6C58]" />
-                <h3 className="text-xl font-semibold text-[#162A2C]">
-                  Create Exchange Offer
-                </h3>
-              </div>
+              <h3 className="text-xl font-semibold text-[#162A2C]">Create Exchange Offer</h3>
               <button
                 onClick={() => setShowExchangeModal(false)}
                 className="text-[#686867] hover:text-[#162A2C] transition-colors"
@@ -473,12 +564,9 @@ export default function ProductPage() {
                 <label className="block text-sm font-medium text-[#686867] mb-2">
                   Select Your Product
                 </label>
-                <select
+                <Select
                   value={selectedExchangeProduct?.toString() || ""}
-                  onChange={(e) =>
-                    setSelectedExchangeProduct(BigInt(e.target.value))
-                  }
-                  className="w-full px-4 py-2 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
+                  onChange={(e) => setSelectedExchangeProduct(BigInt(e.target.value))}
                 >
                   <option value="">Choose a product to exchange</option>
                   {availableUserProducts.map((p) => (
@@ -486,14 +574,14 @@ export default function ProductPage() {
                       {p.name} (Qty: {p.quantity.toString()})
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#686867] mb-2">
                   Exchange Quantity
                 </label>
-                <input
+                <Input
                   type="number"
                   min={1}
                   max={Number(
@@ -505,7 +593,6 @@ export default function ProductPage() {
                   )}
                   value={exchangeQuantity}
                   onChange={(e) => setExchangeQuantity(Number(e.target.value))}
-                  className="w-full px-4 py-2 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
                 />
               </div>
 
@@ -513,30 +600,34 @@ export default function ProductPage() {
                 <label className="block text-sm font-medium text-[#686867] mb-2">
                   Token Top-up (Optional)
                 </label>
-                <input
+                <Input
                   type="text"
                   value={tokenTopUp.toString()}
-                  onChange={handleTokenTopUpChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      setTokenTopUp(BigInt(value || 0));
+                    }
+                  }}
                   placeholder="0"
-                  className="w-full px-4 py-2 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
                 />
               </div>
 
-              <button
+              <Button
                 onClick={handleCreateExchangeOffer}
                 disabled={!selectedExchangeProduct || loading}
-                className="btn-primary w-full"
+                variant="primary"
               >
                 {loading ? (
                   <RefreshCw className="animate-spin w-5 h-5" />
                 ) : (
                   "Create Exchange Offer"
                 )}
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </ModalContent>
+        </Modal>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -11,7 +11,96 @@ import {
   NewDonationCenterData,
 } from "@/types/donate";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
+import EcoCharacter from "@/components/eco-character";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef } from "react";
 
+// Theme configuration
+const theme = {
+  colors: {
+    primary: '#B5C7C4',
+    secondary: '#C7D4D2',
+    accent: '#DBE2E0',
+    gold: '#E2D9C9',
+    goldLight: '#F0EBE3',
+    background: '#FBFBFB',
+    text: '#6B7F7C',
+    blush: '#D4DCDA',
+    highlight: '#96A7A4',
+    glass: 'rgba(255, 255, 255, 0.15)',
+  }
+};
+
+
+// Enhanced Animated Background with gold particles
+const AnimatedBackground = () => {
+  const gradientRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (gradientRef.current) {
+        const { clientX, clientY } = e;
+        const x = clientX / window.innerWidth;
+        const y = clientY / window.innerHeight;
+        
+        gradientRef.current.style.background = `
+          radial-gradient(
+            circle at ${x * 100}% ${y * 100}%,
+            ${theme.colors.goldLight},
+            ${theme.colors.secondary},
+            ${theme.colors.background}
+          )
+        `;
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 -z-10">
+      <div 
+        ref={gradientRef}
+        className="absolute inset-0 transition-all duration-300 ease-out"
+      />
+      <div className="absolute inset-0">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="floating-particle"
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: -20,
+              rotate: 0 
+            }}
+            animate={{
+              y: window.innerHeight + 20,
+              rotate: 360,
+              x: `${Math.sin(i) * 200}px`
+            }}
+            transition={{
+              duration: 15 + Math.random() * 10,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            <div 
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
+                opacity: 0.3
+              }}
+            />
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Component interfaces
 interface DonationCentersListProps {
   centers: DonationCenter[] | undefined;
   onSelect: (center: DonationCenter) => void;
@@ -40,46 +129,118 @@ interface RecyclingFormState extends Omit<RecyclingData, "weightInKg"> {
   weightInKg: string;
 }
 
+// Enhanced Glass Card Component
+const GlassCard: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = "" }) => {
+  return (
+    <motion.div
+      className={`
+        backdrop-blur-lg bg-white/10 
+        border border-white/30 
+        shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
+        rounded-2xl
+        ${className}
+      `}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Enhanced Button Component
+const NeoButton: React.FC<{
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  type?: "button" | "submit";
+}> = ({ children, onClick, className = "", type = "button" }) => {
+  return (
+    <motion.button
+      type={type}
+      className={`
+        px-6 py-3 rounded-xl
+        bg-gradient-to-r from-primary to-secondary
+        text-white font-medium
+        transition-all duration-300
+        ${className}
+      `}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      style={{
+        background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+      }}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+// Enhanced DonationCentersList Component
 const DonationCentersList: React.FC<DonationCentersListProps> = ({
   centers,
   onSelect,
 }) => {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <motion.div 
+      className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ staggerChildren: 0.1 }}
+    >
       {centers?.map((center) => (
-        <div
+        <GlassCard
           key={Number(center.id)}
-          className="glass-card p-6 rounded-3xl cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onSelect(center)}
+          className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Building2 className="w-6 h-6 text-[#5E6C58]" />
-            <h3 className="text-xl font-semibold text-[#162A2C]">
-              {center.name}
-            </h3>
-          </div>
-          <p className="text-[#686867] mb-4">{center.location}</p>
-          <div className="flex gap-2">
-            {center.acceptsTokens && (
-              <span className="px-4 py-1 rounded-full text-sm bg-[#5E6C58]/10 text-[#5E6C58]">
-                Accepts Tokens
-              </span>
-            )}
-            {center.acceptsRecycling && (
-              <span className="px-4 py-1 rounded-full text-sm bg-[#5E6C58]/10 text-[#5E6C58]">
-                Accepts Recycling
-              </span>
-            )}
-          </div>
-        </div>
+          <motion.div
+            onClick={() => onSelect(center)}
+            whileHover={{ scale: 1.02 }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <Building2 className="w-6 h-6" style={{ color: theme.colors.text }} />
+              <h3 className="text-xl font-semibold" style={{ color: theme.colors.text }}>
+                {center.name}
+              </h3>
+            </div>
+            <p className="mb-4" style={{ color: theme.colors.text }}>
+              {center.location}
+            </p>
+            <div className="flex gap-2">
+              {center.acceptsTokens && (
+                <span className="px-4 py-1 rounded-full text-sm" 
+                  style={{ 
+                    background: `${theme.colors.primary}20`,
+                    color: theme.colors.text 
+                  }}>
+                  Accepts Tokens
+                </span>
+              )}
+              {center.acceptsRecycling && (
+                <span className="px-4 py-1 rounded-full text-sm"
+                  style={{ 
+                    background: `${theme.colors.primary}20`,
+                    color: theme.colors.text 
+                  }}>
+                  Accepts Recycling
+                </span>
+              )}
+            </div>
+          </motion.div>
+        </GlassCard>
       ))}
-    </div>
+    </motion.div>
   );
 };
 
+// Enhanced DonationForm Component
 const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
-  const { registerDonation, useCalculateClothingReward } =
-    useDonationContract();
+  const { registerDonation, useCalculateClothingReward } = useDonationContract();
   const [formData, setFormData] = useState<FormState>({
     itemCount: "",
     itemType: "",
@@ -111,74 +272,89 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
-        <Package className="w-6 h-6 text-[#5E6C58]" />
-        <h2 className="text-2xl font-semibold text-[#162A2C]">
+        <Package className="w-6 h-6" style={{ color: theme.colors.text }} />
+        <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
           Register Donation
         </h2>
       </div>
 
-      <input
-        type="number"
-        placeholder="Number of Items"
-        value={formData.itemCount}
-        onChange={(e) =>
-          setFormData({ ...formData, itemCount: e.target.value })
-        }
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Item Type"
-        value={formData.itemType}
-        onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Description"
-        value={formData.description}
-        onChange={(e) =>
-          setFormData({ ...formData, description: e.target.value })
-        }
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <input
-        type="number"
-        placeholder="Weight (kg)"
-        value={formData.weightInKg}
-        onChange={(e) =>
-          setFormData({ ...formData, weightInKg: e.target.value })
-        }
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
+      <motion.div className="space-y-4">
+        <input
+          type="number"
+          placeholder="Number of Items"
+          value={formData.itemCount}
+          onChange={(e) => setFormData({ ...formData, itemCount: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Item Type"
+          value={formData.itemType}
+          onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Weight (kg)"
+          value={formData.weightInKg}
+          onChange={(e) => setFormData({ ...formData, weightInKg: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+      </motion.div>
 
       {estimatedReward != null && (
-        <div className="p-4 rounded-full bg-[#5E6C58]/10">
-          <p className="text-[#5E6C58] text-center">
-            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)}{" "}
-            tokens
+        <motion.div
+          className="p-4 rounded-full"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ backgroundColor: `${theme.colors.primary}20` }}
+        >
+          <p style={{ color: theme.colors.text }} className="text-center">
+            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)} tokens
           </p>
-        </div>
+        </motion.div>
       )}
 
-      <button
-        type="submit"
-        className="btn-primary w-full flex items-center justify-center gap-2"
-      >
-        Register Donation
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      <NeoButton type="submit" className="w-full">
+        <span className="flex items-center justify-center gap-2">
+          Register Donation
+          <ChevronRight className="w-5 h-5" />
+        </span>
+      </NeoButton>
     </form>
   );
 };
 
+// Enhanced RecyclingForm Component
 const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
-  const { registerRecycling, useCalculateRecyclingReward } =
-    useDonationContract();
+  const { registerRecycling, useCalculateRecyclingReward } = useDonationContract();
   const [formData, setFormData] = useState<RecyclingFormState>({
     description: "",
     weightInKg: "",
@@ -205,53 +381,63 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
-        <Recycle className="w-6 h-6 text-[#5E6C58]" />
-        <h2 className="text-2xl font-semibold text-[#162A2C]">
+        <Recycle className="w-6 h-6" style={{ color: theme.colors.text }} />
+        <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
           Register Recycling
         </h2>
       </div>
 
-      <input
-        type="text"
-        placeholder="Description"
-        value={formData.description}
-        onChange={(e) =>
-          setFormData({ ...formData, description: e.target.value })
-        }
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <input
-        type="number"
-        placeholder="Weight (kg)"
-        value={formData.weightInKg}
-        onChange={(e) =>
-          setFormData({ ...formData, weightInKg: e.target.value })
-        }
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
+      <motion.div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Weight (kg)"
+          value={formData.weightInKg}
+          onChange={(e) => setFormData({ ...formData, weightInKg: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+      </motion.div>
 
       {estimatedReward != null && (
-        <div className="p-4 rounded-full bg-[#5E6C58]/10">
-          <p className="text-[#5E6C58] text-center">
-            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)}{" "}
-            tokens
+        <motion.div
+          className="p-4 rounded-full"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ backgroundColor: `${theme.colors.primary}20` }}
+        >
+          <p style={{ color: theme.colors.text }} className="text-center">
+            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)} tokens
           </p>
-        </div>
+        </motion.div>
       )}
 
-      <button
-        type="submit"
-        className="btn-primary w-full flex items-center justify-center gap-2"
-      >
-        Register Recycling
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      <NeoButton type="submit" className="w-full">
+        <span className="flex items-center justify-center gap-2">
+          Register Recycling
+          <ChevronRight className="w-5 h-5" />
+        </span>
+      </NeoButton>
     </form>
   );
 };
 
+// Enhanced RegisterCenterForm Component
 const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
   const { addDonationCenter } = useDonationContract();
   const [formData, setFormData] = useState<NewDonationCenterData>({
@@ -281,122 +467,142 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
-        <Building2 className="w-6 h-6 text-[#5E6C58]" />
-        <h2 className="text-2xl font-semibold text-[#162A2C]">
+        <Building2 className="w-6 h-6" style={{ color: theme.colors.background }} />
+        <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
           Register Donation Center
         </h2>
       </div>
 
-      <input
-        type="text"
-        placeholder="Center Name"
-        value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Description"
-        value={formData.description}
-        onChange={(e) =>
-          setFormData({ ...formData, description: e.target.value })
-        }
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Location"
-        value={formData.location}
-        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-        className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-[#5E6C58] bg-white/50"
-        required
-      />
-      <div className="flex items-center gap-4">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.acceptsTokens}
-            onChange={(e) =>
-              setFormData({ ...formData, acceptsTokens: e.target.checked })
-            }
-            className="form-checkbox h-5 w-5 text-[#5E6C58]"
-          />
-          Accepts Tokens
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.acceptsRecycling}
-            onChange={(e) =>
-              setFormData({ ...formData, acceptsRecycling: e.target.checked })
-            }
-            className="form-checkbox h-5 w-5 text-[#5E6C58]"
-          />
-          Accepts Recycling
-        </label>
-      </div>
+      <motion.div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Center Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Location"
+          value={formData.location}
+          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
+          style={{ 
+            borderColor: theme.colors.primary,
+            backgroundColor: `${theme.colors.background}50`
+          }}
+          required
+        />
+        
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.acceptsTokens}
+              onChange={(e) => setFormData({ ...formData, acceptsTokens: e.target.checked })}
+              className="form-checkbox h-5 w-5"
+              style={{ color: theme.colors.primary }}
+            />
+            <span style={{ color: theme.colors.text }}>Accepts Tokens</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={formData.acceptsRecycling}
+              onChange={(e) => setFormData({ ...formData, acceptsRecycling: e.target.checked })}
+              className="form-checkbox h-5 w-5"
+              style={{ color: theme.colors.primary }}
+            />
+            <span style={{ color: theme.colors.text }}>Accepts Recycling</span>
+          </label>
+        </div>
+      </motion.div>
 
-      <button
-        type="submit"
-        className="btn-primary w-full flex items-center justify-center gap-2"
-      >
-        Register Center
-        <ChevronRight className="w-5 h-5" />
-      </button>
+      <NeoButton type="submit" className="w-full">
+        <span className="flex items-center justify-center gap-2">
+          Register Center
+          <ChevronRight className="w-5 h-5" />
+        </span>
+      </NeoButton>
     </form>
   );
 };
 
+// Main DonationPage Component
 const DonationPage: React.FC = () => {
   const { allDonationCenters } = useDonationContract() as {
     allDonationCenters: DonationCenter[] | undefined;
   };
-  const [selectedCenter, setSelectedCenter] = useState<DonationCenter | null>(
-    null
-  );
+  const [selectedCenter, setSelectedCenter] = useState<DonationCenter | null>(null);
   const [showRegisterCenter, setShowRegisterCenter] = useState<boolean>(false);
-  const [activeForm, setActiveForm] = useState<"donation" | "recycling" | null>(
-    null
-  );
+  const [activeForm, setActiveForm] = useState<"donation" | "recycling" | null>(null);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">
-      {/* Navigation Bar */}
+    <div className="min-h-screen relative">
+      <AnimatedBackground />
+      <EcoCharacter />
       <Navbar />
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-16">
+      
+      <motion.div 
+        className="container mx-auto px-4 py-16"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         {/* Hero Section */}
-        <div className="max-w-4xl mx-auto hero-card p-12 rounded-3xl glass-card mb-16">
-          <div className="floating-icon left-icon">
-            <Leaf className="w-8 h-8 text-[#5E6C58]" />
-          </div>
-          <h1 className="text-4xl font-bold text-[#162A2C] mb-6 text-center">
-            Donation Centers
-          </h1>
-          <p className="text-xl text-[#686867] text-center mb-8">
-            Find a donation center near you and contribute to sustainable
-            fashion
-          </p>
-          {!selectedCenter && (
-            <button
-              onClick={() => setShowRegisterCenter(true)}
-              className="btn-primary flex items-center justify-center gap-2 mx-auto"
-            >
-              Register New Center
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        <GlassCard className="max-w-4xl mx-auto p-12 mb-16">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold mb-4" style={{ color: theme.colors.text }}>
+                Donation Centers
+              </h1>
+              <p className="text-xl" style={{ color: theme.colors.text }}>
+                Find a donation center near you and contribute to sustainable fashion
+              </p>
+            </div>
+            
+            {!selectedCenter && (
+              <NeoButton
+                onClick={() => setShowRegisterCenter(true)}
+                className="mx-auto"
+              >
+                <span className="flex items-center gap-2">
+                  Register New Center
+                  <ChevronRight className="w-5 h-5" />
+                </span>
+              </NeoButton>
+            )}
+          </motion.div>
+        </GlassCard>
 
         {/* Centers List or Selected Center View */}
         {selectedCenter ? (
-          <div className="glass-card p-8 rounded-3xl">
+          <GlassCard className="p-8">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <Building2 className="w-6 h-6 text-[#5E6C58]" />
-                <h2 className="text-2xl font-semibold text-[#162A2C]">
+                <Building2 className="w-6 h-6" style={{ color: theme.colors.text }} />
+                <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
                   {selectedCenter.name}
                 </h2>
               </div>
@@ -412,30 +618,35 @@ const DonationPage: React.FC = () => {
             </div>
 
             <div className="mb-6">
-              <p className="text-[#686867] mb-2">
+              <p style={{ color: theme.colors.text }} className="mb-2">
                 {selectedCenter.description}
               </p>
-              <p className="text-[#686867]">{selectedCenter.location}</p>
+              <p style={{ color: theme.colors.text }}>
+                {selectedCenter.location}
+              </p>
             </div>
 
             <div className="flex gap-4 mb-6">
               {selectedCenter.acceptsTokens && (
-                <button
+                <NeoButton
                   onClick={() => setActiveForm("donation")}
-                  className="btn-primary flex items-center justify-center gap-2"
                 >
-                  Make Donation
-                  <Package className="w-5 h-5" />
-                </button>
+                  <span className="flex items-center gap-2">
+                    Make Donation
+                    <Package className="w-5 h-5" />
+                  </span>
+                </NeoButton>
               )}
               {selectedCenter.acceptsRecycling && (
-                <button
+                <NeoButton
                   onClick={() => setActiveForm("recycling")}
-                  className="btn-glass flex items-center justify-center gap-2"
+                  className="bg-gradient-to-r from-goldLight to-gold"
                 >
-                  Register Recycling
-                  <Recycle className="w-5 h-5" />
-                </button>
+                  <span className="flex items-center gap-2">
+                    Register Recycling
+                    <Recycle className="w-5 h-5" />
+                  </span>
+                </NeoButton>
               )}
             </div>
 
@@ -454,7 +665,7 @@ const DonationPage: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
+          </GlassCard>
         ) : (
           <DonationCentersList
             centers={allDonationCenters}
@@ -463,22 +674,31 @@ const DonationPage: React.FC = () => {
         )}
 
         {/* Register Center Modal */}
-        {showRegisterCenter && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="glass-card p-8 rounded-3xl max-w-md w-full relative">
-              <button
-                onClick={() => setShowRegisterCenter(false)}
-                className="absolute top-4 right-4 text-[#686867] hover:text-[#162A2C]"
-              >
-                ×
-              </button>
-              <RegisterCenterForm
-                onClose={() => setShowRegisterCenter(false)}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+        <AnimatePresence>
+          {showRegisterCenter && (
+            <motion.div 
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <GlassCard className="max-w-md w-full p-8 relative">
+                <button
+                  onClick={() => setShowRegisterCenter(false)}
+                  className="absolute top-4 right-4 text-[#686867] hover:text-[#162A2C]"
+                >
+                  ×
+                </button>
+                <RegisterCenterForm
+                  onClose={() => setShowRegisterCenter(false)}
+                />
+              </GlassCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+      
+      <Footer />
     </div>
   );
 };

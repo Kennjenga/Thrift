@@ -5,6 +5,89 @@ import { formatEther } from "viem";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { useCart } from "@/contexts/cartContext";
 import React, { useState } from "react";
+import styled from 'styled-components';
+
+// Styled Components
+const StyledPanel = styled(Dialog.Panel)`
+  @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,800');
+  
+  width: 100%;
+  max-width: 32rem;
+  background: linear-gradient(135deg, #0c1f2c 0%, #1a2f3c 100%);
+  font-family: 'Open Sans', sans-serif;
+  color: #fff;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.2);
+`;
+
+const GlassCard = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 23px;
+`;
+
+const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 90px;
+  font-weight: 300;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  
+  ${props => props.variant === 'primary' ? `
+    background: #CB2140;
+    color: #fff;
+    &:hover {
+      background: #d62747;
+    }
+  ` : `
+    background: transparent;
+    color: #fff;
+    border: 1px solid #CB2140;
+    &:hover {
+      background: rgba(203, 33, 64, 0.1);
+    }
+  `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const CartItem = styled(GlassCard)`
+  padding: 1rem;
+  margin-bottom: 1rem;
+`;
+
+const Select = styled.select`
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  padding: 4px 12px;
+  appearance: none;
+  cursor: pointer;
+  
+  &:focus {
+    outline: none;
+    border-color: #CB2140;
+  }
+`;
+
+const IconButton = styled.button`
+  color: #CB2140;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #d62747;
+  }
+`;
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -72,132 +155,109 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             leaveFrom="translate-x-0"
             leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="w-screen max-w-md transform bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6] shadow-xl">
+            <StyledPanel>
               <div className="flex h-full flex-col">
                 {/* Header */}
-                <div className="glass-card rounded-b-3xl px-6 py-4">
+                <GlassCard className="p-4 rounded-b-3xl">
                   <div className="flex items-center justify-between">
-                    <Dialog.Title className="flex items-center gap-3 text-xl font-semibold text-[#162A2C]">
-                      <ShoppingBag className="w-6 h-6 text-[#5E6C58]" />
+                    <Dialog.Title className="flex items-center gap-3 text-xl font-semibold">
+                      <ShoppingBag className="w-6 h-6" />
                       Shopping Cart ({state.items.length})
                     </Dialog.Title>
-                    <button
-                      onClick={onClose}
-                      className="text-[#686867] hover:text-[#162A2C] transition-colors"
-                    >
+                    <IconButton onClick={onClose}>
                       <X className="h-6 w-6" />
-                    </button>
+                    </IconButton>
                   </div>
-                </div>
+                </GlassCard>
 
                 {/* Cart Items */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="flex-1 overflow-y-auto p-4">
                   {state.items.length === 0 ? (
-                    <div className="glass-card p-8 rounded-3xl text-center">
-                      <ShoppingBag className="w-12 h-12 text-[#5E6C58] mx-auto mb-4" />
-                      <p className="text-[#686867]">Your cart is empty</p>
-                    </div>
+                    <GlassCard className="p-8 text-center">
+                      <ShoppingBag className="w-12 h-12 mx-auto mb-4" />
+                      <p>Your cart is empty</p>
+                    </GlassCard>
                   ) : (
-                    <div className="space-y-4">
-                      {state.items.map((item) => (
-                        <div
-                          key={item.id.toString()}
-                          className="glass-card p-4 rounded-2xl"
-                        >
-                          <div className="flex gap-4">
-                            <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl">
-                              <Image
-                                src={item.image}
-                                alt={item.name}
-                                width={96}
-                                height={96}
-                                className="object-cover h-full w-full"
-                              />
+                    state.items.map((item) => (
+                      <CartItem key={item.id.toString()}>
+                        <div className="flex gap-4">
+                          <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl">
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              width={96}
+                              height={96}
+                              className="object-cover h-full w-full"
+                            />
+                          </div>
+                          <div className="flex flex-1 flex-col">
+                            <div className="flex justify-between">
+                              <h3 className="font-semibold">{item.name}</h3>
+                              <div className="flex items-center gap-2">
+                                <Coins className="w-4 h-4" />
+                                <p>{formatEther(item.ethPrice * item.quantity)} ETH</p>
+                              </div>
                             </div>
-                            <div className="flex flex-1 flex-col">
-                              <div className="flex justify-between">
-                                <h3 className="text-[#162A2C] font-semibold">
-                                  {item.name}
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                  <Coins className="w-4 h-4 text-[#5E6C58]" />
-                                  <p className="text-[#162A2C]">
-                                    {formatEther(item.ethPrice * item.quantity)} ETH
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="text-sm text-[#686867] mt-1">
-                                {item.brand}
-                              </p>
-                              <div className="flex items-center justify-between mt-4">
-                                <div className="flex items-center gap-2">
-                                  <label
-                                    htmlFor={`quantity-${item.id}`}
-                                    className="text-sm text-[#686867]"
-                                  >
-                                    Qty
-                                  </label>
-                                  <select
-                                    id={`quantity-${item.id}`}
-                                    value={item.quantity.toString()}
-                                    onChange={(e) =>
-                                      updateQuantity(
-                                        BigInt(item.id),
-                                        BigInt(e.target.value)
-                                      )
-                                    }
-                                    className="input-primary py-1 px-3"
-                                  >
-                                    {[...Array(Number(item.quantity))].map((_, i) => (
-                                      <option key={i + 1} value={i + 1}>
-                                        {i + 1}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <button
-                                  onClick={() => removeFromCart(BigInt(item.id))}
-                                  className="text-red-500 hover:text-red-600 transition-colors"
+                            <p className="text-sm opacity-70 mt-1">{item.brand}</p>
+                            <div className="flex items-center justify-between mt-4">
+                              <div className="flex items-center gap-2">
+                                <label htmlFor={`quantity-${item.id}`}>Qty</label>
+                                <Select
+                                  id={`quantity-${item.id}`}
+                                  value={item.quantity.toString()}
+                                  onChange={(e) =>
+                                    updateQuantity(
+                                      BigInt(item.id),
+                                      BigInt(e.target.value)
+                                    )
+                                  }
                                 >
-                                  <Trash2 className="w-5 h-5" />
-                                </button>
+                                  {[...Array(Number(item.quantity))].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>
+                                      {i + 1}
+                                    </option>
+                                  ))}
+                                </Select>
                               </div>
+                              <IconButton onClick={() => removeFromCart(BigInt(item.id))}>
+                                <Trash2 className="w-5 h-5" />
+                              </IconButton>
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </CartItem>
+                    ))
                   )}
                 </div>
 
                 {/* Footer */}
                 {state.items.length > 0 && (
-                  <div className="glass-card rounded-t-3xl px-6 py-6">
+                  <GlassCard className="p-6 rounded-t-3xl">
                     <div className="space-y-4 mb-6">
                       <div className="flex justify-between items-center">
-                        <p className="text-[#162A2C] font-semibold">Total ETH</p>
+                        <p className="font-semibold">Total ETH</p>
                         <div className="flex items-center gap-2">
-                          <Coins className="w-5 h-5 text-[#5E6C58]" />
-                          <p className="text-[#162A2C] font-bold">
+                          <Coins className="w-5 h-5" />
+                          <p className="font-bold">
                             {formatEther(state.total.eth)} ETH
                           </p>
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-[#162A2C] font-semibold">Total Tokens</p>
+                        <p className="font-semibold">Total Tokens</p>
                         <div className="flex items-center gap-2">
-                          <Coins className="w-5 h-5 text-[#5E6C58]" />
-                          <p className="text-[#162A2C] font-bold">
+                          <Coins className="w-5 h-5" />
+                          <p className="font-bold">
                             {formatEther(state.total.tokens)} Tokens
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <button
+                      <Button
+                        variant="primary"
                         onClick={handleBuyWithEth}
                         disabled={loading === 'eth'}
-                        className="btn-primary w-full"
                       >
                         {loading === 'eth' ? (
                           <>
@@ -210,11 +270,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                             Buy with ETH
                           </>
                         )}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="secondary"
                         onClick={handleBuyWithTokens}
                         disabled={loading === 'tokens'}
-                        className="btn-secondary w-full"
                       >
                         {loading === 'tokens' ? (
                           <>
@@ -227,12 +287,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                             Buy with Tokens
                           </>
                         )}
-                      </button>
+                      </Button>
                     </div>
-                  </div>
+                  </GlassCard>
                 )}
               </div>
-            </Dialog.Panel>
+            </StyledPanel>
           </Transition.Child>
         </div>
       </Dialog>
