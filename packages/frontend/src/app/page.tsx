@@ -3,30 +3,31 @@
 import type { NextPage } from "next";
 import React, { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/navbar";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Parallax } from "react-parallax";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import * as LucideIcons from "lucide-react";
-import * as MuiIcons from "@mui/icons-material";
 import Footer from "@/components/footer";
 import EcoCharacter from "@/components/eco-character";
-
 
 // Updated color palette with soft gold accents
 const theme = {
   colors: {
-    primary: '#B5C7C4',    // Soft grey-green
-    secondary: '#C7D4D2',  // Light grey-green
-    accent: '#DBE2E0',     // Pale grey-green
-    gold: '#E2D9C9',       // Warm grey (kept for warmth)
-    goldLight: '#F0EBE3',  // Light beige
-    background: '#FBFBFB', // Pure white
-    text: '#6B7F7C',       // Deep grey-green
-    blush: '#D4DCDA',      // Soft grey-green
-    highlight: '#96A7A4',  // Medium grey-green
-    glass: 'rgba(255, 255, 255, 0.15)',
-  }
+    primary: "#B5C7C4", // Soft grey-green
+    secondary: "#C7D4D2", // Light grey-green
+    accent: "#DBE2E0", // Pale grey-green
+    gold: "#E2D9C9", // Warm grey (kept for warmth)
+    goldLight: "#F0EBE3", // Light beige
+    background: "#FBFBFB", // Pure white
+    text: "#6B7F7C", // Deep grey-green
+    blush: "#D4DCDA", // Soft grey-green
+    highlight: "#96A7A4", // Medium grey-green
+    glass: "rgba(255, 255, 255, 0.15)",
+  },
 };
-
 
 // Main Page Implementation
 const Home: NextPage = () => {
@@ -36,7 +37,7 @@ const Home: NextPage = () => {
         <AnimatedBackground />
         <EcoCharacter />
         <Navbar />
-        
+
         <main>
           <HeroSection />
           <FeatureSection />
@@ -70,8 +71,8 @@ const NeoButton: React.FC<{
       style={{
         boxShadow: isHovered
           ? `0 10px 20px -10px ${theme.colors.gold}40`
-          : '8px 8px 16px #d1d9d9,-8px -8px 16px #ffffff',
-        transform: isPressed ? 'translateY(2px)' : 'translateY(0)',
+          : "8px 8px 16px #d1d9d9,-8px -8px 16px #ffffff",
+        transform: isPressed ? "translateY(2px)" : "translateY(0)",
       }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -85,7 +86,7 @@ const NeoButton: React.FC<{
       }}
     >
       <div className="absolute inset-0 rounded-xl overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"
           style={{
             opacity: isHovered ? 0.8 : 0.5,
@@ -98,24 +99,22 @@ const NeoButton: React.FC<{
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div 
+            <div
               className="absolute top-0 left-0 w-full h-px"
               style={{
-                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`
+                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`,
               }}
             />
-            <div 
+            <div
               className="absolute bottom-0 left-0 w-full h-px"
               style={{
-                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`
+                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`,
               }}
             />
           </motion.div>
         )}
       </div>
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
     </motion.button>
   );
 };
@@ -135,7 +134,7 @@ const InteractiveFeatureCard: React.FC<{
     const rect = card.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    
+
     setRotation({
       x: (y - 0.5) * 10,
       y: (x - 0.5) * 10,
@@ -152,14 +151,14 @@ const InteractiveFeatureCard: React.FC<{
       }}
       onMouseMove={handleMouseMove}
       style={{
-        perspective: '1000px',
+        perspective: "1000px",
       }}
     >
       <motion.div
         className="h-full"
         style={{
           transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-          transition: 'transform 0.3s ease-out',
+          transition: "transform 0.3s ease-out",
         }}
       >
         <GlassCard className="p-8 h-full">
@@ -172,7 +171,7 @@ const InteractiveFeatureCard: React.FC<{
               duration: 0.6,
             }}
           >
-            <div 
+            <div
               className="absolute inset-0 rounded-full"
               style={{
                 background: `linear-gradient(135deg, ${theme.colors.gold}, ${theme.colors.primary})`,
@@ -184,16 +183,14 @@ const InteractiveFeatureCard: React.FC<{
             </div>
           </motion.div>
 
-          <h3 
+          <h3
             className="text-xl font-bold text-center mb-4"
             style={{ color: theme.colors.text }}
           >
             {title}
           </h3>
-          
-          <p className="text-gray-600 text-center mb-6">
-            {description}
-          </p>
+
+          <p className="text-gray-600 text-center mb-6">{description}</p>
 
           <motion.div
             className="grid grid-cols-2 gap-4"
@@ -203,16 +200,16 @@ const InteractiveFeatureCard: React.FC<{
             }}
           >
             {stats.map((stat, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="text-center p-3 rounded-lg"
                 style={{
-                  background: isHovered 
+                  background: isHovered
                     ? `linear-gradient(135deg, ${theme.colors.primary}10, ${theme.colors.gold}10)`
-                    : 'transparent',
+                    : "transparent",
                 }}
               >
-                <motion.p 
+                <motion.p
                   className="text-2xl font-bold"
                   animate={{
                     color: isHovered ? theme.colors.gold : theme.colors.text,
@@ -220,9 +217,7 @@ const InteractiveFeatureCard: React.FC<{
                 >
                   {stat.value}
                 </motion.p>
-                <p className="text-sm text-gray-600">
-                  {stat.label}
-                </p>
+                <p className="text-sm text-gray-600">{stat.label}</p>
               </div>
             ))}
           </motion.div>
@@ -234,16 +229,16 @@ const InteractiveFeatureCard: React.FC<{
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div 
+              <div
                 className="absolute top-0 left-0 w-full h-px"
                 style={{
-                  background: `linear-gradient(90deg, transparent, ${theme.colors.gold}30, transparent)`
+                  background: `linear-gradient(90deg, transparent, ${theme.colors.gold}30, transparent)`,
                 }}
               />
-              <div 
+              <div
                 className="absolute bottom-0 left-0 w-full h-px"
                 style={{
-                  background: `linear-gradient(90deg, transparent, ${theme.colors.gold}30, transparent)`
+                  background: `linear-gradient(90deg, transparent, ${theme.colors.gold}30, transparent)`,
                 }}
               />
             </motion.div>
@@ -266,7 +261,7 @@ const AnimatedBackground = () => {
         const { clientX, clientY } = e;
         const x = clientX / window.innerWidth;
         const y = clientY / window.innerHeight;
-        
+
         gradientRef.current.style.background = `
           radial-gradient(
             circle at ${x * 100}% ${y * 100}%,
@@ -278,13 +273,13 @@ const AnimatedBackground = () => {
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
     <div className="fixed inset-0 -z-10">
-      <div 
+      <div
         ref={gradientRef}
         className="absolute inset-0 transition-all duration-300 ease-out"
       />
@@ -293,27 +288,28 @@ const AnimatedBackground = () => {
           <motion.div
             key={i}
             className="floating-particle"
-            initial={{ 
+            initial={{
               x: Math.random() * window.innerWidth,
               y: -20,
-              rotate: 0 
+              rotate: 0,
             }}
             animate={{
               y: window.innerHeight + 20,
               rotate: 360,
-              x: `${Math.sin(i) * 200}px`
+              x: `${Math.sin(i) * 200}px`,
             }}
             transition={{
               duration: 15 + Math.random() * 10,
               repeat: Infinity,
-              ease: "linear"
+              ease: "linear",
             }}
           >
-            <div 
+            <div
               className="w-2 h-2 rounded-full"
               style={{
-                background: i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
-                opacity: 0.3
+                background:
+                  i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
+                opacity: 0.3,
               }}
             />
           </motion.div>
@@ -336,7 +332,7 @@ const GlassCard: React.FC<{
     const rect = card.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    
+
     setRotation({
       x: (y - 0.5) * 20,
       y: (x - 0.5) * 20,
@@ -355,7 +351,7 @@ const GlassCard: React.FC<{
       `}
       style={{
         transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-        transition: 'transform 0.3s ease-out',
+        transition: "transform 0.3s ease-out",
       }}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
@@ -364,10 +360,10 @@ const GlassCard: React.FC<{
         setRotation({ x: 0, y: 0 });
       }}
     >
-      <div 
+      <div
         className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"
         style={{
-          borderTop: isHovered ? `1px solid ${theme.colors.goldLight}` : 'none'
+          borderTop: isHovered ? `1px solid ${theme.colors.goldLight}` : "none",
         }}
       />
       {children}
@@ -396,18 +392,21 @@ const HeroSection: React.FC = () => {
     {
       title: "Sustainable Fashion for a Better Tomorrow",
       subtitle: "Join our eco-conscious community",
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQhH6MUt16EJdLbLEfZ26Iod6UaoAdwMKUFA&s"
+      image:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQhH6MUt16EJdLbLEfZ26Iod6UaoAdwMKUFA&s",
     },
     {
       title: "Style Meets Sustainability",
       subtitle: "Discover our eco-friendly collection",
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDN1l5Ni0n2uXdUHmHnh0cin-19u11RID1rA&s"
+      image:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDN1l5Ni0n2uXdUHmHnh0cin-19u11RID1rA&s",
     },
     {
       title: "Fashion with Purpose",
       subtitle: "Making a difference, one piece at a time",
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQI5O3lJtn0FwOVOPU28r-KiqKg7W2fokDIkA&s"
-    }
+      image:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQI5O3lJtn0FwOVOPU28r-KiqKg7W2fokDIkA&s",
+    },
   ];
 
   useEffect(() => {
@@ -438,8 +437,8 @@ const HeroSection: React.FC = () => {
                 transition={{ duration: 0.5 }}
                 style={{
                   background: `linear-gradient(135deg, ${theme.colors.text}, ${theme.colors.gold})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
                 }}
               >
                 {heroContent[activeIndex].title}
@@ -458,9 +457,9 @@ const HeroSection: React.FC = () => {
                 {heroContent[activeIndex].subtitle}
               </motion.p>
             </AnimatePresence>
-            
+
             <div className="flex gap-6">
-              <NeoButton 
+              <NeoButton
                 className="bg-gradient-to-r from-primary to-secondary text-green"
                 onClick={() => {}}
               >
@@ -469,7 +468,7 @@ const HeroSection: React.FC = () => {
                   <LucideIcons.ArrowRight className="w-5 h-5 ml-2" />
                 </span>
               </NeoButton>
-              <NeoButton 
+              <NeoButton
                 className="bg-gradient-to-r from-goldLight to-gold text-text"
                 onClick={() => {}}
               >
@@ -497,7 +496,7 @@ const HeroSection: React.FC = () => {
                   alt={heroContent[activeIndex].title}
                   className="w-full h-full object-cover object-center rounded-2xl"
                   style={{
-                    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
+                    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
                   }}
                 />
               </motion.div>
@@ -514,27 +513,45 @@ const HeroSection: React.FC = () => {
 const FeatureSection: React.FC = () => {
   const features = [
     {
-      icon: <LucideIcons.Leaf className="w-8 h-8" style={{ color: theme.colors.gold }} />,
+      icon: (
+        <LucideIcons.Leaf
+          className="w-8 h-8"
+          style={{ color: theme.colors.gold }}
+        />
+      ),
       title: "Eco-Friendly Materials",
-      description: "Our products are crafted from sustainable and recycled materials, giving new life to existing resources.",
+      description:
+        "Our products are crafted from sustainable and recycled materials, giving new life to existing resources.",
       stats: [
         { label: "Recycled Materials", value: "85%" },
         { label: "CO₂ Reduction", value: "60%" },
       ],
     },
     {
-      icon: <LucideIcons.Droplets className="w-8 h-8" style={{ color: theme.colors.primary }} />,
+      icon: (
+        <LucideIcons.Droplets
+          className="w-8 h-8"
+          style={{ color: theme.colors.primary }}
+        />
+      ),
       title: "Water Conservation",
-      description: "Our production process saves millions of liters of water annually through innovative techniques.",
+      description:
+        "Our production process saves millions of liters of water annually through innovative techniques.",
       stats: [
         { label: "Water Saved", value: "2M L" },
         { label: "Ocean Impact", value: "90%" },
       ],
     },
     {
-      icon: <LucideIcons.Heart className="w-8 h-8" style={{ color: theme.colors.secondary }} />,
+      icon: (
+        <LucideIcons.Heart
+          className="w-8 h-8"
+          style={{ color: theme.colors.secondary }}
+        />
+      ),
       title: "Fair Trade Certified",
-      description: "Supporting ethical labor practices and sustainable communities worldwide.",
+      description:
+        "Supporting ethical labor practices and sustainable communities worldwide.",
       stats: [
         { label: "Worker Benefits", value: "100%" },
         { label: "Community Impact", value: "75%" },
@@ -552,8 +569,8 @@ const FeatureSection: React.FC = () => {
           viewport={{ once: true }}
           style={{
             background: `linear-gradient(135deg, ${theme.colors.text}, ${theme.colors.gold})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
           }}
         >
           Why Choose Sustainable Fashion?
@@ -587,7 +604,7 @@ const NewsletterSection: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsSubmitting(false);
     setIsSuccess(true);
     setEmail("");
@@ -597,7 +614,7 @@ const NewsletterSection: React.FC = () => {
   return (
     <section className="py-24 relative">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
-      
+
       <motion.div
         className="container mx-auto px-4"
         initial={{ opacity: 0, y: 20 }}
@@ -618,25 +635,28 @@ const NewsletterSection: React.FC = () => {
                 repeatType: "reverse",
               }}
             >
-              <div className="absolute inset-0 rounded-full"
+              <div
+                className="absolute inset-0 rounded-full"
                 style={{
                   background: `linear-gradient(135deg, ${theme.colors.gold}, ${theme.colors.primary})`,
                   opacity: 0.2,
                 }}
               />
-              <LucideIcons.Mail 
+              <LucideIcons.Mail
                 className="w-10 h-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                 style={{ color: theme.colors.text }}
               />
             </motion.div>
-            
-            <h3 className="text-3xl font-bold mb-4"
+
+            <h3
+              className="text-3xl font-bold mb-4"
               style={{ color: theme.colors.text }}
             >
               Join Our Eco-Community
             </h3>
             <p className="text-gray-600">
-              Get sustainable fashion tips and exclusive offers delivered to your inbox
+              Get sustainable fashion tips and exclusive offers delivered to
+              your inbox
             </p>
           </div>
 
@@ -648,8 +668,8 @@ const NewsletterSection: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
                 className="flex-1 px-6 py-4 rounded-xl bg-white/50 backdrop-blur-sm border border-white/30 focus:outline-none focus:ring-2"
-                style={{ 
-                  color: theme.colors.text
+                style={{
+                  color: theme.colors.text,
                 }}
               />
               <NeoButton
@@ -659,7 +679,11 @@ const NewsletterSection: React.FC = () => {
                 {isSubmitting ? (
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   >
                     <LucideIcons.Loader className="w-5 h-5" />
                   </motion.div>

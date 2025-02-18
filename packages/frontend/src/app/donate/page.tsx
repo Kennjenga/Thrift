@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { formatTokenAmount } from "@/utils/token-utils";
 import { useDonationContract } from "@/blockchain/hooks/useDonationCenter";
-import { Recycle, Package, Building2, ChevronRight, Leaf } from "lucide-react";
+import { Recycle, Package, Building2, ChevronRight } from "lucide-react";
 import {
   DonationCenter,
   DonationData,
@@ -19,19 +19,18 @@ import { useEffect, useRef } from "react";
 // Theme configuration
 const theme = {
   colors: {
-    primary: '#B5C7C4',
-    secondary: '#C7D4D2',
-    accent: '#DBE2E0',
-    gold: '#E2D9C9',
-    goldLight: '#F0EBE3',
-    background: '#FBFBFB',
-    text: '#6B7F7C',
-    blush: '#D4DCDA',
-    highlight: '#96A7A4',
-    glass: 'rgba(255, 255, 255, 0.15)',
-  }
+    primary: "#B5C7C4",
+    secondary: "#C7D4D2",
+    accent: "#DBE2E0",
+    gold: "#E2D9C9",
+    goldLight: "#F0EBE3",
+    background: "#FBFBFB",
+    text: "#6B7F7C",
+    blush: "#D4DCDA",
+    highlight: "#96A7A4",
+    glass: "rgba(255, 255, 255, 0.15)",
+  },
 };
-
 
 // Enhanced Animated Background with gold particles
 const AnimatedBackground = () => {
@@ -43,7 +42,7 @@ const AnimatedBackground = () => {
         const { clientX, clientY } = e;
         const x = clientX / window.innerWidth;
         const y = clientY / window.innerHeight;
-        
+
         gradientRef.current.style.background = `
           radial-gradient(
             circle at ${x * 100}% ${y * 100}%,
@@ -55,13 +54,13 @@ const AnimatedBackground = () => {
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
     <div className="fixed inset-0 -z-10">
-      <div 
+      <div
         ref={gradientRef}
         className="absolute inset-0 transition-all duration-300 ease-out"
       />
@@ -70,27 +69,28 @@ const AnimatedBackground = () => {
           <motion.div
             key={i}
             className="floating-particle"
-            initial={{ 
+            initial={{
               x: Math.random() * window.innerWidth,
               y: -20,
-              rotate: 0 
+              rotate: 0,
             }}
             animate={{
               y: window.innerHeight + 20,
               rotate: 360,
-              x: `${Math.sin(i) * 200}px`
+              x: `${Math.sin(i) * 200}px`,
             }}
             transition={{
               duration: 15 + Math.random() * 10,
               repeat: Infinity,
-              ease: "linear"
+              ease: "linear",
             }}
           >
-            <div 
+            <div
               className="w-2 h-2 rounded-full"
               style={{
-                background: i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
-                opacity: 0.3
+                background:
+                  i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
+                opacity: 0.3,
               }}
             />
           </motion.div>
@@ -187,7 +187,7 @@ const DonationCentersList: React.FC<DonationCentersListProps> = ({
   onSelect,
 }) => {
   return (
-    <motion.div 
+    <motion.div
       className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -203,8 +203,14 @@ const DonationCentersList: React.FC<DonationCentersListProps> = ({
             whileHover={{ scale: 1.02 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <Building2 className="w-6 h-6" style={{ color: theme.colors.text }} />
-              <h3 className="text-xl font-semibold" style={{ color: theme.colors.text }}>
+              <Building2
+                className="w-6 h-6"
+                style={{ color: theme.colors.text }}
+              />
+              <h3
+                className="text-xl font-semibold"
+                style={{ color: theme.colors.text }}
+              >
                 {center.name}
               </h3>
             </div>
@@ -213,20 +219,24 @@ const DonationCentersList: React.FC<DonationCentersListProps> = ({
             </p>
             <div className="flex gap-2">
               {center.acceptsTokens && (
-                <span className="px-4 py-1 rounded-full text-sm" 
-                  style={{ 
+                <span
+                  className="px-4 py-1 rounded-full text-sm"
+                  style={{
                     background: `${theme.colors.primary}20`,
-                    color: theme.colors.text 
-                  }}>
+                    color: theme.colors.text,
+                  }}
+                >
                   Accepts Tokens
                 </span>
               )}
               {center.acceptsRecycling && (
-                <span className="px-4 py-1 rounded-full text-sm"
-                  style={{ 
+                <span
+                  className="px-4 py-1 rounded-full text-sm"
+                  style={{
                     background: `${theme.colors.primary}20`,
-                    color: theme.colors.text 
-                  }}>
+                    color: theme.colors.text,
+                  }}
+                >
                   Accepts Recycling
                 </span>
               )}
@@ -240,7 +250,8 @@ const DonationCentersList: React.FC<DonationCentersListProps> = ({
 
 // Enhanced DonationForm Component
 const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
-  const { registerDonation, useCalculateClothingReward } = useDonationContract();
+  const { registerDonation, useCalculateClothingReward } =
+    useDonationContract();
   const [formData, setFormData] = useState<FormState>({
     itemCount: "",
     itemType: "",
@@ -273,7 +284,10 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
         <Package className="w-6 h-6" style={{ color: theme.colors.text }} />
-        <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
+        <h2
+          className="text-2xl font-semibold"
+          style={{ color: theme.colors.text }}
+        >
           Register Donation
         </h2>
       </div>
@@ -283,11 +297,13 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           type="number"
           placeholder="Number of Items"
           value={formData.itemCount}
-          onChange={(e) => setFormData({ ...formData, itemCount: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, itemCount: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -295,11 +311,13 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           type="text"
           placeholder="Item Type"
           value={formData.itemType}
-          onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, itemType: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -307,11 +325,13 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           type="text"
           placeholder="Description"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -319,11 +339,13 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           type="number"
           placeholder="Weight (kg)"
           value={formData.weightInKg}
-          onChange={(e) => setFormData({ ...formData, weightInKg: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, weightInKg: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -337,7 +359,8 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           style={{ backgroundColor: `${theme.colors.primary}20` }}
         >
           <p style={{ color: theme.colors.text }} className="text-center">
-            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)} tokens
+            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)}{" "}
+            tokens
           </p>
         </motion.div>
       )}
@@ -354,7 +377,8 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
 
 // Enhanced RecyclingForm Component
 const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
-  const { registerRecycling, useCalculateRecyclingReward } = useDonationContract();
+  const { registerRecycling, useCalculateRecyclingReward } =
+    useDonationContract();
   const [formData, setFormData] = useState<RecyclingFormState>({
     description: "",
     weightInKg: "",
@@ -382,7 +406,10 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
         <Recycle className="w-6 h-6" style={{ color: theme.colors.text }} />
-        <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
+        <h2
+          className="text-2xl font-semibold"
+          style={{ color: theme.colors.text }}
+        >
           Register Recycling
         </h2>
       </div>
@@ -392,11 +419,13 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
           type="text"
           placeholder="Description"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -404,11 +433,13 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
           type="number"
           placeholder="Weight (kg)"
           value={formData.weightInKg}
-          onChange={(e) => setFormData({ ...formData, weightInKg: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, weightInKg: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -422,7 +453,8 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
           style={{ backgroundColor: `${theme.colors.primary}20` }}
         >
           <p style={{ color: theme.colors.text }} className="text-center">
-            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)} tokens
+            Estimated Reward: {formatTokenAmount(estimatedReward as bigint)}{" "}
+            tokens
           </p>
         </motion.div>
       )}
@@ -467,8 +499,14 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
-        <Building2 className="w-6 h-6" style={{ color: theme.colors.background }} />
-        <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
+        <Building2
+          className="w-6 h-6"
+          style={{ color: theme.colors.background }}
+        />
+        <h2
+          className="text-2xl font-semibold"
+          style={{ color: theme.colors.text }}
+        >
           Register Donation Center
         </h2>
       </div>
@@ -480,9 +518,9 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -490,11 +528,13 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
           type="text"
           placeholder="Description"
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
@@ -502,21 +542,25 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
           type="text"
           placeholder="Location"
           value={formData.location}
-          onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, location: e.target.value })
+          }
           className="w-full px-6 py-3 rounded-full border focus:outline-none focus:ring-2"
-          style={{ 
+          style={{
             borderColor: theme.colors.primary,
-            backgroundColor: `${theme.colors.background}50`
+            backgroundColor: `${theme.colors.background}50`,
           }}
           required
         />
-        
+
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={formData.acceptsTokens}
-              onChange={(e) => setFormData({ ...formData, acceptsTokens: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, acceptsTokens: e.target.checked })
+              }
               className="form-checkbox h-5 w-5"
               style={{ color: theme.colors.primary }}
             />
@@ -526,7 +570,9 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
             <input
               type="checkbox"
               checked={formData.acceptsRecycling}
-              onChange={(e) => setFormData({ ...formData, acceptsRecycling: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, acceptsRecycling: e.target.checked })
+              }
               className="form-checkbox h-5 w-5"
               style={{ color: theme.colors.primary }}
             />
@@ -550,17 +596,21 @@ const DonationPage: React.FC = () => {
   const { allDonationCenters } = useDonationContract() as {
     allDonationCenters: DonationCenter[] | undefined;
   };
-  const [selectedCenter, setSelectedCenter] = useState<DonationCenter | null>(null);
+  const [selectedCenter, setSelectedCenter] = useState<DonationCenter | null>(
+    null
+  );
   const [showRegisterCenter, setShowRegisterCenter] = useState<boolean>(false);
-  const [activeForm, setActiveForm] = useState<"donation" | "recycling" | null>(null);
+  const [activeForm, setActiveForm] = useState<"donation" | "recycling" | null>(
+    null
+  );
 
   return (
     <div className="min-h-screen relative">
       <AnimatedBackground />
       <EcoCharacter />
       <Navbar />
-      
-      <motion.div 
+
+      <motion.div
         className="container mx-auto px-4 py-16"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -574,14 +624,18 @@ const DonationPage: React.FC = () => {
             transition={{ delay: 0.2 }}
           >
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold mb-4" style={{ color: theme.colors.text }}>
+              <h1
+                className="text-4xl font-bold mb-4"
+                style={{ color: theme.colors.text }}
+              >
                 Donation Centers
               </h1>
               <p className="text-xl" style={{ color: theme.colors.text }}>
-                Find a donation center near you and contribute to sustainable fashion
+                Find a donation center near you and contribute to sustainable
+                fashion
               </p>
             </div>
-            
+
             {!selectedCenter && (
               <NeoButton
                 onClick={() => setShowRegisterCenter(true)}
@@ -601,8 +655,14 @@ const DonationPage: React.FC = () => {
           <GlassCard className="p-8">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <Building2 className="w-6 h-6" style={{ color: theme.colors.text }} />
-                <h2 className="text-2xl font-semibold" style={{ color: theme.colors.text }}>
+                <Building2
+                  className="w-6 h-6"
+                  style={{ color: theme.colors.text }}
+                />
+                <h2
+                  className="text-2xl font-semibold"
+                  style={{ color: theme.colors.text }}
+                >
                   {selectedCenter.name}
                 </h2>
               </div>
@@ -628,9 +688,7 @@ const DonationPage: React.FC = () => {
 
             <div className="flex gap-4 mb-6">
               {selectedCenter.acceptsTokens && (
-                <NeoButton
-                  onClick={() => setActiveForm("donation")}
-                >
+                <NeoButton onClick={() => setActiveForm("donation")}>
                   <span className="flex items-center gap-2">
                     Make Donation
                     <Package className="w-5 h-5" />
@@ -676,7 +734,7 @@ const DonationPage: React.FC = () => {
         {/* Register Center Modal */}
         <AnimatePresence>
           {showRegisterCenter && (
-            <motion.div 
+            <motion.div
               className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -697,7 +755,7 @@ const DonationPage: React.FC = () => {
           )}
         </AnimatePresence>
       </motion.div>
-      
+
       <Footer />
     </div>
   );

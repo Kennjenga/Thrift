@@ -28,11 +28,6 @@ const Navbar = () => {
       path: "../../marketplace",
     },
     {
-      name: "thrift",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "../../thrift",
-    },
-    {
       name: "Donate",
       icon: <Heart className="w-5 h-5" />,
       path: "../../donate",
