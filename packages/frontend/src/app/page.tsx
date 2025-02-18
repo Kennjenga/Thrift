@@ -2,13 +2,9 @@
 
 import type { NextPage } from "next";
 import React, { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import Navbar from "@/components/navbar";
-import {
-  motion,
-  AnimatePresence,
-  useScroll,
-  useTransform,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import Footer from "@/components/footer";
 import EcoCharacter from "@/components/eco-character";
@@ -384,8 +380,6 @@ const GlassCard: React.FC<{
 
 // Enhanced Hero Section with interactive elements
 const HeroSection: React.FC = () => {
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 500], [0, 200]);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const heroContent = [
@@ -491,10 +485,12 @@ const HeroSection: React.FC = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
               >
-                <img
+                <Image
                   src={heroContent[activeIndex].image}
                   alt={heroContent[activeIndex].title}
-                  className="w-full h-full object-cover object-center rounded-2xl"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-2xl"
                   style={{
                     boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
                   }}

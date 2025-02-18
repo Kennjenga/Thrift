@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import Navbar from "@/components/navbar";
+import Navbar from "./_components/navbar";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
 import { formatTokenAmount, formatETHPrice } from "@/utils/token-utils";
