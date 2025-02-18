@@ -8,16 +8,10 @@ import EcoCharacter from "@/components/eco-character";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
 import { formatTokenAmount, formatETHPrice } from "@/utils/token-utils";
-import { useRef, useEffect } from 'react';
-import { useState } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import {
-  ShoppingBag,
-  AlertCircle,
-  Plus,
-  Package,
-  Coins,
-} from "lucide-react";
+import { useRef, useEffect } from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingBag, AlertCircle, Plus, Package, Coins } from "lucide-react";
 
 // Matching theme colors
 const theme = {
@@ -48,7 +42,7 @@ const GlassCard: React.FC<{
     const rect = card.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    
+
     setRotation({
       x: (y - 0.5) * 20,
       y: (x - 0.5) * 20,
@@ -76,7 +70,7 @@ const GlassCard: React.FC<{
         setRotation({ x: 0, y: 0 });
       }}
     >
-      <div 
+      <div
         className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"
         style={{
           borderTop: isHovered ? `1px solid ${theme.colors.goldLight}` : "none",
@@ -116,8 +110,8 @@ const NeoButton: React.FC<{
       style={{
         boxShadow: isHovered
           ? `0 10px 20px -10px ${theme.colors.gold}40`
-          : '8px 8px 16px #d1d9d9,-8px -8px 16px #ffffff',
-        transform: isPressed ? 'translateY(2px)' : 'translateY(0)',
+          : "8px 8px 16px #d1d9d9,-8px -8px 16px #ffffff",
+        transform: isPressed ? "translateY(2px)" : "translateY(0)",
       }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -131,7 +125,7 @@ const NeoButton: React.FC<{
       }}
     >
       <div className="absolute inset-0 rounded-xl overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"
           style={{
             opacity: isHovered ? 0.8 : 0.5,
@@ -144,16 +138,16 @@ const NeoButton: React.FC<{
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div 
+            <div
               className="absolute top-0 left-0 w-full h-px"
               style={{
-                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`
+                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`,
               }}
             />
-            <div 
+            <div
               className="absolute bottom-0 left-0 w-full h-px"
               style={{
-                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`
+                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`,
               }}
             />
           </motion.div>
@@ -171,13 +165,13 @@ const AnimatedBackground = () => {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       if (gradientRef.current) {
         const { clientX, clientY } = e;
         const x = clientX / window.innerWidth;
         const y = clientY / window.innerHeight;
-        
+
         gradientRef.current.style.background = `
           radial-gradient(
             circle at ${x * 100}% ${y * 100}%,
@@ -189,21 +183,24 @@ const AnimatedBackground = () => {
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   if (!mounted) {
     return (
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0" style={{
-          background: `radial-gradient(
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(
             circle at 50% 50%,
             ${theme.colors.goldLight},
             ${theme.colors.secondary},
             ${theme.colors.background}
-          )`
-        }} />
+          )`,
+          }}
+        />
       </div>
     );
   }
@@ -219,7 +216,7 @@ const AnimatedBackground = () => {
             ${theme.colors.goldLight},
             ${theme.colors.secondary},
             ${theme.colors.background}
-          )`
+          )`,
         }}
       />
       <div className="absolute inset-0">
@@ -228,12 +225,14 @@ const AnimatedBackground = () => {
             key={i}
             className="floating-particle"
             initial={{
-              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 500),
+              x:
+                Math.random() *
+                (typeof window !== "undefined" ? window.innerWidth : 500),
               y: -20,
               rotate: 0,
             }}
             animate={{
-              y: typeof window !== 'undefined' ? window.innerHeight + 20 : 800,
+              y: typeof window !== "undefined" ? window.innerHeight + 20 : 800,
               rotate: 360,
               x: `${Math.sin(i) * 200}px`,
             }}
@@ -246,7 +245,8 @@ const AnimatedBackground = () => {
             <div
               className="w-2 h-2 rounded-full"
               style={{
-                background: i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
+                background:
+                  i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
                 opacity: 0.3,
               }}
             />
@@ -265,20 +265,20 @@ export default function MarketplacePage() {
   if (error) {
     return (
       <AnimatePresence>
-      <div className="min-h-screen relative" >
-        <AnimatedBackground />
-        <EcoCharacter />
-        <Navbar />
-        <div className="container mx-auto p-4">
-          <GlassCard className="p-4 border-l-4 border-red-500 flex items-center gap-3">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-            <p style={{ color: theme.colors.text }}>
-              Error loading products: {error.message}
-            </p>
-          </GlassCard>
+        <div className="min-h-screen relative">
+          <AnimatedBackground />
+          <EcoCharacter />
+          <Navbar />
+          <div className="container mx-auto p-4">
+            <GlassCard className="p-4 border-l-4 border-red-500 flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-red-500" />
+              <p style={{ color: theme.colors.text }}>
+                Error loading products: {error.message}
+              </p>
+            </GlassCard>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
       </AnimatePresence>
     );
   }
@@ -316,18 +316,25 @@ export default function MarketplacePage() {
                       repeatType: "reverse",
                     }}
                   >
-                    <ShoppingBag className="w-full h-full" style={{ color: theme.colors.gold }} />
+                    <ShoppingBag
+                      className="w-full h-full"
+                      style={{ color: theme.colors.gold }}
+                    />
                   </motion.div>
-                  <h1 className="text-4xl font-bold mb-6 text-center"
-                    style={{ 
+                  <h1
+                    className="text-4xl font-bold mb-6 text-center"
+                    style={{
                       background: `linear-gradient(135deg, ${theme.colors.text}, ${theme.colors.gold})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent'
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
                     }}
                   >
                     Thrift Marketplace
                   </h1>
-                  <p className="text-xl text-center" style={{ color: theme.colors.text }}>
+                  <p
+                    className="text-xl text-center"
+                    style={{ color: theme.colors.text }}
+                  >
                     Discover sustainable fashion at great prices
                   </p>
                 </div>
@@ -372,30 +379,45 @@ export default function MarketplacePage() {
                             />
                           </div>
                           <div className="p-6">
-                            <h3 className="text-xl font-semibold truncate"
+                            <h3
+                              className="text-xl font-semibold truncate"
                               style={{ color: theme.colors.text }}
                             >
                               {product.name}
                             </h3>
-                            <p className="truncate mt-1" style={{ color: theme.colors.text }}>
+                            <p
+                              className="truncate mt-1"
+                              style={{ color: theme.colors.text }}
+                            >
                               {product.brand}
                             </p>
                             <div className="mt-4 space-y-2">
                               <div className="flex items-center gap-2">
-                                <Coins className="w-4 h-4" style={{ color: theme.colors.gold }} />
-                                <p className="text-lg font-bold" style={{ color: theme.colors.text }}>
+                                <Coins
+                                  className="w-4 h-4"
+                                  style={{ color: theme.colors.gold }}
+                                />
+                                <p
+                                  className="text-lg font-bold"
+                                  style={{ color: theme.colors.text }}
+                                >
                                   {formatETHPrice(product.ethPrice)} ETH
                                 </p>
                               </div>
-                              <p className="text-sm" style={{ color: theme.colors.text }}>
-                                or {formatTokenAmount(product.tokenPrice)} Tokens
+                              <p
+                                className="text-sm"
+                                style={{ color: theme.colors.text }}
+                              >
+                                or {formatTokenAmount(product.tokenPrice)}{" "}
+                                Tokens
                               </p>
                             </div>
                             <div className="mt-4 flex justify-between items-center">
-                              <span className="text-sm px-4 py-1 rounded-full"
-                                style={{ 
+                              <span
+                                className="text-sm px-4 py-1 rounded-full"
+                                style={{
                                   background: `${theme.colors.primary}20`,
-                                  color: theme.colors.text 
+                                  color: theme.colors.text,
                                 }}
                               >
                                 {product.condition}
@@ -415,7 +437,10 @@ export default function MarketplacePage() {
 
             {!isLoading && (!products || products.length === 0) && (
               <GlassCard className="p-12 rounded-3xl text-center">
-                <Package className="w-12 h-12 mx-auto mb-4" style={{ color: theme.colors.gold }} />
+                <Package
+                  className="w-12 h-12 mx-auto mb-4"
+                  style={{ color: theme.colors.gold }}
+                />
                 <p style={{ color: theme.colors.text }} className="mb-6">
                   No products found in the marketplace
                 </p>
@@ -441,5 +466,3 @@ export default function MarketplacePage() {
     </AnimatePresence>
   );
 }
-
-

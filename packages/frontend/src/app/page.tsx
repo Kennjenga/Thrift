@@ -254,13 +254,13 @@ const AnimatedBackground = () => {
 
   useEffect(() => {
     setMounted(true);
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       if (gradientRef.current) {
         const { clientX, clientY } = e;
         const x = clientX / window.innerWidth;
         const y = clientY / window.innerHeight;
-        
+
         gradientRef.current.style.background = `
           radial-gradient(
             circle at ${x * 100}% ${y * 100}%,
@@ -272,21 +272,24 @@ const AnimatedBackground = () => {
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   if (!mounted) {
     return (
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0" style={{
-          background: `radial-gradient(
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(
             circle at 50% 50%,
             ${theme.colors.goldLight},
             ${theme.colors.secondary},
             ${theme.colors.background}
-          )`
-        }} />
+          )`,
+          }}
+        />
       </div>
     );
   }
@@ -302,7 +305,7 @@ const AnimatedBackground = () => {
             ${theme.colors.goldLight},
             ${theme.colors.secondary},
             ${theme.colors.background}
-          )`
+          )`,
         }}
       />
       <div className="absolute inset-0">
@@ -311,12 +314,14 @@ const AnimatedBackground = () => {
             key={i}
             className="floating-particle"
             initial={{
-              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 500),
+              x:
+                Math.random() *
+                (typeof window !== "undefined" ? window.innerWidth : 500),
               y: -20,
               rotate: 0,
             }}
             animate={{
-              y: typeof window !== 'undefined' ? window.innerHeight + 20 : 800,
+              y: typeof window !== "undefined" ? window.innerHeight + 20 : 800,
               rotate: 360,
               x: `${Math.sin(i) * 200}px`,
             }}
@@ -329,7 +334,8 @@ const AnimatedBackground = () => {
             <div
               className="w-2 h-2 rounded-full"
               style={{
-                background: i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
+                background:
+                  i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
                 opacity: 0.3,
               }}
             />
@@ -433,7 +439,7 @@ const HeroSection: React.FC = () => {
       setActiveIndex((prev) => (prev + 1) % heroContent.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroContent.length]);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">

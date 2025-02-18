@@ -1,6 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
+import EcoCharacter from "@/components/eco-character";
 import { formatTokenAmount } from "@/utils/token-utils";
 import { useDonationContract } from "@/blockchain/hooks/useDonationCenter";
 import { Recycle, Package, Building2, ChevronRight } from "lucide-react";
@@ -10,11 +14,6 @@ import {
   RecyclingData,
   NewDonationCenterData,
 } from "@/types/donate";
-import Navbar from "@/components/navbar";
-import Footer from "@/components/footer";
-import EcoCharacter from "@/components/eco-character";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useRef } from "react";
 
 // Theme configuration
 const theme = {
@@ -35,28 +34,51 @@ const theme = {
 // Enhanced Animated Background with gold particles
 const AnimatedBackground = () => {
   const gradientRef = useRef<HTMLDivElement>(null);
+  // Use state to hold window dimensions (with sensible fallbacks)
+  const [dimensions, setDimensions] = useState<{
+    width: number;
+    height: number;
+  }>({
+    width: 0,
+    height: 0,
+  });
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (gradientRef.current) {
-        const { clientX, clientY } = e;
-        const x = clientX / window.innerWidth;
-        const y = clientY / window.innerHeight;
+    if (typeof window !== "undefined") {
+      // Update dimensions on mount and when resized
+      const updateDimensions = () => {
+        setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      };
+      updateDimensions();
 
-        gradientRef.current.style.background = `
-          radial-gradient(
-            circle at ${x * 100}% ${y * 100}%,
-            ${theme.colors.goldLight},
-            ${theme.colors.secondary},
-            ${theme.colors.background}
-          )
-        `;
-      }
-    };
+      const handleMouseMove = (e: MouseEvent) => {
+        if (gradientRef.current) {
+          const { clientX, clientY } = e;
+          const x = clientX / window.innerWidth;
+          const y = clientY / window.innerHeight;
+          gradientRef.current.style.background = `
+            radial-gradient(
+              circle at ${x * 100}% ${y * 100}%,
+              ${theme.colors.goldLight},
+              ${theme.colors.secondary},
+              ${theme.colors.background}
+            )
+          `;
+        }
+      };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("resize", updateDimensions);
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("resize", updateDimensions);
+      };
+    }
   }, []);
+
+  // Use fallback values if dimensions are not yet available
+  const width = dimensions.width || 1000;
+  const height = dimensions.height || 800;
 
   return (
     <div className="fixed inset-0 -z-10">
@@ -70,12 +92,12 @@ const AnimatedBackground = () => {
             key={i}
             className="floating-particle"
             initial={{
-              x: Math.random() * window.innerWidth,
+              x: Math.random() * width,
               y: -20,
               rotate: 0,
             }}
             animate={{
-              y: window.innerHeight + 20,
+              y: height + 20,
               rotate: 360,
               x: `${Math.sin(i) * 200}px`,
             }}
@@ -133,24 +155,22 @@ interface RecyclingFormState extends Omit<RecyclingData, "weightInKg"> {
 const GlassCard: React.FC<{
   children: React.ReactNode;
   className?: string;
-}> = ({ children, className = "" }) => {
-  return (
-    <motion.div
-      className={`
-        backdrop-blur-lg bg-white/10 
-        border border-white/30 
-        shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-        rounded-2xl
-        ${className}
-      `}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {children}
-    </motion.div>
-  );
-};
+}> = ({ children, className = "" }) => (
+  <motion.div
+    className={`
+      backdrop-blur-lg bg-white/10
+      border border-white/30
+      shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
+      rounded-2xl
+      ${className}
+    `}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+  >
+    {children}
+  </motion.div>
+);
 
 // Enhanced Button Component
 const NeoButton: React.FC<{
@@ -158,95 +178,91 @@ const NeoButton: React.FC<{
   onClick?: () => void;
   className?: string;
   type?: "button" | "submit";
-}> = ({ children, onClick, className = "", type = "button" }) => {
-  return (
-    <motion.button
-      type={type}
-      className={`
-        px-6 py-3 rounded-xl
-        bg-gradient-to-r from-primary to-secondary
-        text-white font-medium
-        transition-all duration-300
-        ${className}
-      `}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      style={{
-        background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-      }}
-    >
-      {children}
-    </motion.button>
-  );
-};
+}> = ({ children, onClick, className = "", type = "button" }) => (
+  <motion.button
+    type={type}
+    className={`
+      px-6 py-3 rounded-xl
+      bg-gradient-to-r from-primary to-secondary
+      text-white font-medium
+      transition-all duration-300
+      ${className}
+    `}
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={onClick}
+    style={{
+      background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+    }}
+  >
+    {children}
+  </motion.button>
+);
 
 // Enhanced DonationCentersList Component
 const DonationCentersList: React.FC<DonationCentersListProps> = ({
   centers,
   onSelect,
-}) => {
-  return (
-    <motion.div
-      className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ staggerChildren: 0.1 }}
-    >
-      {centers?.map((center) => (
-        <GlassCard
-          key={Number(center.id)}
-          className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300"
+}) => (
+  <motion.div
+    className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ staggerChildren: 0.1 }}
+  >
+    {centers?.map((center) => (
+      <GlassCard
+        key={center.id}
+        className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300"
+      >
+        <motion.div
+          onClick={() => onSelect(center)}
+          whileHover={{ scale: 1.02 }}
         >
-          <motion.div
-            onClick={() => onSelect(center)}
-            whileHover={{ scale: 1.02 }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <Building2
-                className="w-6 h-6"
-                style={{ color: theme.colors.text }}
-              />
-              <h3
-                className="text-xl font-semibold"
-                style={{ color: theme.colors.text }}
+          <div className="flex items-center gap-3 mb-4">
+            <Building2
+              className="w-6 h-6"
+              style={{ color: theme.colors.text }}
+            />
+            <h3
+              className="text-xl font-semibold"
+              style={{ color: theme.colors.text }}
+            >
+              {center.name}
+            </h3>
+          </div>
+          <p className="mb-4" style={{ color: theme.colors.text }}>
+            {center.location}
+          </p>
+          <div className="flex gap-2">
+            {center.acceptsTokens && (
+              <span
+                className="px-4 py-1 rounded-full text-sm"
+                style={{
+                  background: `${theme.colors.primary}20`,
+                  color: theme.colors.text,
+                }}
               >
-                {center.name}
-              </h3>
-            </div>
-            <p className="mb-4" style={{ color: theme.colors.text }}>
-              {center.location}
-            </p>
-            <div className="flex gap-2">
-              {center.acceptsTokens && (
-                <span
-                  className="px-4 py-1 rounded-full text-sm"
-                  style={{
-                    background: `${theme.colors.primary}20`,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Accepts Tokens
-                </span>
-              )}
-              {center.acceptsRecycling && (
-                <span
-                  className="px-4 py-1 rounded-full text-sm"
-                  style={{
-                    background: `${theme.colors.primary}20`,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Accepts Recycling
-                </span>
-              )}
-            </div>
-          </motion.div>
-        </GlassCard>
-      ))}
-    </motion.div>
-  );
-};
+                Accepts Tokens
+              </span>
+            )}
+            {center.acceptsRecycling && (
+              <span
+                className="px-4 py-1 rounded-full text-sm"
+                style={{
+                  background: `${theme.colors.primary}20`,
+                  color: theme.colors.text,
+                }}
+              >
+                Accepts Recycling
+              </span>
+            )}
+          </div>
+        </motion.div>
+      </GlassCard>
+    ))}
+  </motion.div>
+);
 
 // Enhanced DonationForm Component
 const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
@@ -291,7 +307,6 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           Register Donation
         </h2>
       </div>
-
       <motion.div className="space-y-4">
         <input
           type="number"
@@ -350,7 +365,6 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           required
         />
       </motion.div>
-
       {estimatedReward != null && (
         <motion.div
           className="p-4 rounded-full"
@@ -364,7 +378,6 @@ const DonationForm: React.FC<DonationFormProps> = ({ centerId, onClose }) => {
           </p>
         </motion.div>
       )}
-
       <NeoButton type="submit" className="w-full">
         <span className="flex items-center justify-center gap-2">
           Register Donation
@@ -413,7 +426,6 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
           Register Recycling
         </h2>
       </div>
-
       <motion.div className="space-y-4">
         <input
           type="text"
@@ -444,7 +456,6 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
           required
         />
       </motion.div>
-
       {estimatedReward != null && (
         <motion.div
           className="p-4 rounded-full"
@@ -458,7 +469,6 @@ const RecyclingForm: React.FC<RecyclingFormProps> = ({ centerId, onClose }) => {
           </p>
         </motion.div>
       )}
-
       <NeoButton type="submit" className="w-full">
         <span className="flex items-center justify-center gap-2">
           Register Recycling
@@ -510,7 +520,6 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
           Register Donation Center
         </h2>
       </div>
-
       <motion.div className="space-y-4">
         <input
           type="text"
@@ -552,7 +561,6 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
           }}
           required
         />
-
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">
             <input
@@ -580,7 +588,6 @@ const RegisterCenterForm: React.FC<RegisterCenterFormProps> = ({ onClose }) => {
           </label>
         </div>
       </motion.div>
-
       <NeoButton type="submit" className="w-full">
         <span className="flex items-center justify-center gap-2">
           Register Center
@@ -609,7 +616,6 @@ const DonationPage: React.FC = () => {
       <AnimatedBackground />
       <EcoCharacter />
       <Navbar />
-
       <motion.div
         className="container mx-auto px-4 py-16"
         initial={{ opacity: 0 }}
@@ -635,7 +641,6 @@ const DonationPage: React.FC = () => {
                 fashion
               </p>
             </div>
-
             {!selectedCenter && (
               <NeoButton
                 onClick={() => setShowRegisterCenter(true)}
@@ -676,7 +681,6 @@ const DonationPage: React.FC = () => {
                 ← Back to list
               </button>
             </div>
-
             <div className="mb-6">
               <p style={{ color: theme.colors.text }} className="mb-2">
                 {selectedCenter.description}
@@ -685,7 +689,6 @@ const DonationPage: React.FC = () => {
                 {selectedCenter.location}
               </p>
             </div>
-
             <div className="flex gap-4 mb-6">
               {selectedCenter.acceptsTokens && (
                 <NeoButton onClick={() => setActiveForm("donation")}>
@@ -707,7 +710,6 @@ const DonationPage: React.FC = () => {
                 </NeoButton>
               )}
             </div>
-
             {activeForm && (
               <div className="mt-8 border-t border-[#DBE0E2] pt-8">
                 {activeForm === "donation" ? (
@@ -755,7 +757,6 @@ const DonationPage: React.FC = () => {
           )}
         </AnimatePresence>
       </motion.div>
-
       <Footer />
     </div>
   );
