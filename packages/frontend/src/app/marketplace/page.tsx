@@ -257,6 +257,173 @@ const AnimatedBackground = () => {
   );
 };
 
+// Enhanced Product Card Component with 3D and Neumorphism effects
+const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+  const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    
+    const rect = cardRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const mouseX = e.clientX - centerX;
+    const mouseY = e.clientY - centerY;
+    
+    // Calculate rotation based on mouse position
+    const rotateX = (mouseY / (rect.height / 2)) * 10;
+    const rotateY = -(mouseX / (rect.width / 2)) * 10;
+    
+    setRotation({ x: rotateX, y: rotateY, z: 0 });
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      className="group relative w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setRotation({ x: 0, y: 0, z: 0 });
+      }}
+      style={{
+        transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+        transition: 'transform 0.3s ease-out',
+      }}
+    >
+      <div className="relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-lg">
+        {/* 3D Border Effect */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 to-transparent" 
+          style={{
+            boxShadow: `
+              inset -2px -2px 6px rgba(255,255,255,0.1),
+              inset 2px 2px 6px rgba(0,0,0,0.1),
+              8px 8px 16px rgba(0,0,0,0.1),
+              -8px -8px 16px rgba(255,255,255,0.1)
+            `
+          }}
+        />
+
+        {/* Product Image Container */}
+        <div className="relative h-48 overflow-hidden">
+          <motion.div
+            animate={{
+              scale: isHovered ? 1.1 : 1,
+            }}
+            transition={{ duration: 0.3 }}
+          >
+            <Image
+              src={product.image}
+              alt={product.name}
+              layout="fill"
+              objectFit="cover"
+              className="transition-all duration-300"
+            />
+          </motion.div>
+          
+          {/* Floating Price Tag */}
+          <motion.div
+            className="absolute top-4 right-4 px-4 py-2 rounded-full"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+            }}
+          >
+            <p className="text-white font-bold">
+              {formatETHPrice(product.ethPrice)} ETH
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Content Container */}
+        <div className="p-6 relative z-10">
+          {/* Product Details */}
+          <motion.div
+            animate={{
+              y: isHovered ? -5 : 0,
+            }}
+            transition={{ duration: 0.3 }}
+          >
+            <h3 className="text-xl font-semibold text-white mb-2">
+              {product.name}
+            </h3>
+            <p className="text-white/80 mb-4">{product.brand}</p>
+
+            {/* Stats Container */}
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                >
+                  <Package className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-white/80">
+                  Qty: {product.quantity}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                >
+                  <Coins className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-white/80">
+                  {formatTokenAmount(product.tokenPrice)} Tokens
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Condition Badge */}
+          <motion.div
+            className="absolute bottom-6 right-6"
+            animate={{
+              scale: isHovered ? 1.1 : 1,
+            }}
+          >
+            <span className="px-4 py-1 rounded-full text-sm"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(4px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'white',
+              }}
+            >
+              {product.condition}
+            </span>
+          </motion.div>
+        </div>
+
+        {/* Hover Overlay */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+    </motion.div>
+  );
+};
+
 export default function MarketplacePage() {
   const { useGetAllProducts } = useMarketplace();
   const { data: productsData, isLoading, error } = useGetAllProducts();
@@ -368,66 +535,7 @@ export default function MarketplacePage() {
                       transition={{ delay: index * 0.1 }}
                     >
                       <Link href={`/marketplace/product/${product.id}`}>
-                        <GlassCard className="overflow-hidden">
-                          <div className="h-48 relative overflow-hidden">
-                            <Image
-                              src={product.image}
-                              alt={product.name}
-                              layout="fill"
-                              objectFit="cover"
-                              className="transition-transform duration-300 hover:scale-105"
-                            />
-                          </div>
-                          <div className="p-6">
-                            <h3
-                              className="text-xl font-semibold truncate"
-                              style={{ color: theme.colors.text }}
-                            >
-                              {product.name}
-                            </h3>
-                            <p
-                              className="truncate mt-1"
-                              style={{ color: theme.colors.text }}
-                            >
-                              {product.brand}
-                            </p>
-                            <div className="mt-4 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Coins
-                                  className="w-4 h-4"
-                                  style={{ color: theme.colors.gold }}
-                                />
-                                <p
-                                  className="text-lg font-bold"
-                                  style={{ color: theme.colors.text }}
-                                >
-                                  {formatETHPrice(product.ethPrice)} ETH
-                                </p>
-                              </div>
-                              <p
-                                className="text-sm"
-                                style={{ color: theme.colors.text }}
-                              >
-                                or {formatTokenAmount(product.tokenPrice)}{" "}
-                                Tokens
-                              </p>
-                            </div>
-                            <div className="mt-4 flex justify-between items-center">
-                              <span
-                                className="text-sm px-4 py-1 rounded-full"
-                                style={{
-                                  background: `${theme.colors.primary}20`,
-                                  color: theme.colors.text,
-                                }}
-                              >
-                                {product.condition}
-                              </span>
-                              <span style={{ color: theme.colors.text }}>
-                                Qty: {product.quantity.toString()}
-                              </span>
-                            </div>
-                          </div>
-                        </GlassCard>
+                      <ProductCard product={product} />
                       </Link>
                     </motion.div>
                   ))}

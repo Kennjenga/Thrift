@@ -1,8 +1,32 @@
-import React from "react";
+import React, { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
-import { House, ShoppingBag, Heart, LayoutDashboard, Mail } from "lucide-react";
+import { House, ShoppingBag, Heart, LayoutDashboard, Mail, Menu, X } from "lucide-react";
 import { CartButton } from "@/components/cartButton";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Color System
+const COLORS = {
+  primary: {
+    main: '#7B42FF',
+    light: '#8A2BE2',
+    dark: '#4A00E0',
+  },
+  secondary: {
+    main: '#00FFD1',
+    light: '#00FFFF',
+    dark: '#00E6BD',
+  },
+  background: {
+    dark: '#1A0B3B',
+    light: '#2A1B54',
+  },
+  text: {
+    primary: '#FFFFFF',
+    secondary: 'rgba(255, 255, 255, 0.7)',
+    muted: 'rgba(255, 255, 255, 0.5)',
+  }
+};
 
 interface NavLink {
   name: string;
@@ -11,76 +35,323 @@ interface NavLink {
 }
 
 const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeLink, setActiveLink] = useState("");
+
   const navLinks: NavLink[] = [
-    { name: "Home", icon: <House className="w-5 h-5" />, path: "./" },
-    {
-      name: "Shop",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "./marketplace",
-    },
-    {
-      name: "Donate",
-      icon: <Heart className="w-5 h-5" />,
-      path: "./donate",
-    },
-    {
-      name: "Dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
-      path: "./dashboard",
-    },
-    { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
+    { name: "Home", icon: <House className="w-6 h-6" />, path: "/" },
+    { name: "Shop", icon: <ShoppingBag className="w-6 h-6" />, path: "/marketplace" },
+    { name: "Donate", icon: <Heart className="w-6 h-6" />, path: "/donate" },
+    { name: "Dashboard", icon: <LayoutDashboard className="w-6 h-6" />, path: "/dashboard" },
+    { name: "Contact", icon: <Mail className="w-6 h-6" />, path: "#" },
   ];
 
   return (
     <>
-      {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/50 border-b border-[#5E6C58]/10 shadow-soft">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center">
-            {/* Logo Container */}
-            <div className="flex items-center group hover-lift">
-              <div className="relative">
-                <Image
-                  src="/my-business-name-high-resolution-logo-transparent.png"
-                  alt="Ace Logo"
-                  width={45}
-                  height={45}
-                  className="mr-2 rounded-lg shine-effect"
-                  priority
-                />
-                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-[#C0B283] to-[#DCD0C0] opacity-30 blur group-hover:opacity-40 transition duration-300"></div>
-              </div>
-              <h1 className="text-2xl font-bold text-[#162A2C] ml-2 gold-gradient">
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap');
+
+        .navbar {
+          background: rgba(26, 11, 59, 0.98);
+          backdrop-filter: blur(25px);
+          border-bottom: 1px solid rgba(123, 66, 255, 0.25);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+          font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .logo-container {
+          position: relative;
+          z-index: 20;
+        }
+
+        .logo-gradient {
+          background: linear-gradient(
+            135deg,
+            ${COLORS.secondary.main},
+            ${COLORS.primary.main},
+            ${COLORS.secondary.light}
+          );
+          background-size: 300% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: shine 4s ease infinite;
+        }
+
+        @keyframes shine {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        .nav-link {
+          position: relative;
+          padding: 0.75rem 1.25rem;
+          border-radius: 12px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          background: transparent;
+          overflow: hidden;
+        }
+
+        .nav-link:hover {
+          background: rgba(123, 66, 255, 0.15);
+          transform: translateY(-2px) scale(1.02);
+        }
+
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          width: 0;
+          height: 2px;
+          background: linear-gradient(
+            90deg,
+            ${COLORS.secondary.main},
+            ${COLORS.primary.main}
+          );
+          transition: all 0.3s ease;
+          transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+          width: 80%;
+        }
+
+        .nav-link.active {
+          background: rgba(123, 66, 255, 0.2);
+          box-shadow: 0 0 15px rgba(123, 66, 255, 0.3);
+        }
+
+        .nav-icon {
+          transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover .nav-icon {
+          transform: scale(1.1) rotate(-5deg);
+        }
+
+.mobile-menu {
+            box-shadow: 
+              0 10px 30px -10px rgba(0, 0, 0, 0.3),
+              0 0 20px rgba(123, 66, 255, 0.1);
+          }
+
+          .nav-icon {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(123, 66, 255, 0.1);
+          }
+
+          .active .nav-icon {
+            background: rgba(123, 66, 255, 0.2);
+            box-shadow: 
+              0 0 15px rgba(123, 66, 255, 0.2),
+              inset 0 0 10px rgba(123, 66, 255, 0.1);
+          }
+
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .mobile-menu .nav-link {
+            position: relative;
+            overflow: hidden;
+          }
+
+          .mobile-menu .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 2px;
+            width: 0;
+            background: linear-gradient(
+              90deg,
+              ${COLORS.secondary.main},
+              ${COLORS.primary.main}
+            );
+            transition: width 0.3s ease;
+          }
+
+          .mobile-menu .nav-link:hover::before {
+            width: 100%;
+          }
+
+          .mobile-menu .nav-link.active::before {
+            width: 100%;
+          }
+        `}</style>
+
+      <nav className="navbar sticky top-0 z-50">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <motion.div 
+              className="logo-container flex items-center"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Image
+                src="/my-business-name-high-resolution-logo-transparent.png"
+                alt="Ace Logo"
+                width={45}
+                height={45}
+                className="rounded-full hover:animate-spin"
+                priority
+              />
+              <h1 className="logo-gradient text-2xl font-bold ml-3">
                 Ace
               </h1>
-            </div>
-          </div>
+            </motion.div>
 
-          {/* Navigation Links */}
-          <div className="flex space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                className="nav-link group flex items-center space-x-2 text-[#162A2C]"
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-6">
+              {navLinks.map((link) => (
+                <motion.a
+                  key={link.name}
+                  href={link.path}
+                  className={`nav-link flex items-center space-x-3 text-white font-medium
+                    ${activeLink === link.name ? 'active' : ''}`}
+                  onClick={() => setActiveLink(link.name)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="nav-icon">{link.icon}</span>
+                  <span>{link.name}</span>
+                </motion.a>
+              ))}
+              <motion.div 
+                className="flex items-center space-x-4"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <span className="text-lg group-hover:text-[#C0B283] transition-colors duration-300">
-                  {link.icon}
-                </span>
-                <span className="relative">
-                  {link.name}
-                  <span className="nav-link-underline"></span>
-                </span>
-              </a>
-            ))}
-          </div>
+                <ConnectButton 
+                  accountStatus="avatar"
+                  chainStatus="icon"
+                  showBalance={false}
+                />
+                <CartButton />
+              </motion.div>
+            </div>
 
-          {/* Connect Button */}
-          <div className="connect-button-wrapper flex gap-0.5 sm:gap-2">
-            <ConnectButton accountStatus="avatar" chainStatus="icon" />
-            <CartButton />
+            {/* Mobile Menu Button */}
+            <motion.button
+              className="md:hidden menu-button text-white"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              whileTap={{ scale: 0.9 }}
+            >
+              <motion.div
+                animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </motion.div>
+            </motion.button>
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="mobile-menu fixed inset-x-0 top-[80px] z-10"
+            >
+              <div className="container mx-auto px-6 py-4 bg-gradient-to-b from-[rgba(26,11,59,0.98)] to-[rgba(26,11,59,0.95)] backdrop-blur-xl border-t border-[rgba(123,66,255,0.15)]">
+                <motion.div 
+                  className="grid gap-3"
+                  initial="closed"
+                  animate="open"
+                  variants={{
+                    open: {
+                      transition: { staggerChildren: 0.1 }
+                    },
+                    closed: {
+                      transition: { 
+                        staggerChildren: 0.05,
+                        staggerDirection: -1
+                      }
+                    }
+                  }}
+                >
+                  {navLinks.map((link) => (
+                    <motion.a
+                      key={link.name}
+                      href={`@/link.path`}
+                      className={`nav-link flex items-center justify-between text-white p-4 rounded-xl
+                        ${activeLink === link.name ? 'active bg-[rgba(123,66,255,0.2)]' : ''}
+                        hover:bg-[rgba(123,66,255,0.15)] transition-all duration-300`}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setActiveLink(link.name);
+                      }}
+                      variants={{
+                        open: {
+                          opacity: 1,
+                          y: 0,
+                          transition: { duration: 0.4 }
+                        },
+                        closed: {
+                          opacity: 0,
+                          y: -20,
+                          transition: { duration: 0.3 }
+                        }
+                      }}
+                      whileHover={{ scale: 1.02, translateX: 10 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <span className="nav-icon p-2 rounded-lg bg-[rgba(123,66,255,0.1)]">
+                          {link.icon}
+                        </span>
+                        <span className="font-medium text-base">{link.name}</span>
+                      </div>
+                      <motion.span
+                        className="text-[rgba(255,255,255,0.3)]"
+                        whileHover={{ scale: 1.2 }}
+                      >
+                        →
+                      </motion.span>
+                    </motion.a>
+                  ))}
+                  
+                  <motion.div 
+                    className="mt-4 p-4 flex flex-col space-y-4"
+                    variants={{
+                      open: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { delay: 0.3, duration: 0.4 }
+                      },
+                      closed: {
+                        opacity: 0,
+                        y: -20,
+                        transition: { duration: 0.3 }
+                      }
+                    }}
+                  >
+                    <ConnectButton 
+                      accountStatus="avatar"
+                      chainStatus="icon"
+                      showBalance={false}
+                    />
+                    <CartButton />
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </>
   );

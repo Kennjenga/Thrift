@@ -1,743 +1,905 @@
 "use client";
 
 import type { NextPage } from "next";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Navbar from "@/components/navbar";
 import { motion, AnimatePresence } from "framer-motion";
-import * as LucideIcons from "lucide-react";
-import Footer from "@/components/footer";
+import Navbar from "@/components/navbar";
 import EcoCharacter from "@/components/eco-character";
+import { ArrowRight, Clock, Heart, Repeat } from "lucide-react";
+// import Footer from "@/components/footer";
 
-// Updated color palette with soft gold accents
-const theme = {
-  colors: {
-    primary: "#B5C7C4", // Soft grey-green
-    secondary: "#C7D4D2", // Light grey-green
-    accent: "#DBE2E0", // Pale grey-green
-    gold: "#E2D9C9", // Warm grey (kept for warmth)
-    goldLight: "#F0EBE3", // Light beige
-    background: "#FBFBFB", // Pure white
-    text: "#6B7F7C", // Deep grey-green
-    blush: "#D4DCDA", // Soft grey-green
-    highlight: "#96A7A4", // Medium grey-green
-    glass: "rgba(255, 255, 255, 0.15)",
+// Color System
+const COLORS = {
+  primary: {
+    main: '#7B42FF',
+    light: '#8A2BE2',
+    dark: '#4A00E0',
   },
+  secondary: {
+    main: '#00FFD1',
+    light: '#00FFFF',
+    dark: '#00E6BD',
+  },
+  accent: {
+    pink: '#FF00FF',
+    red: '#FF1B6B',
+  },
+  background: {
+    dark: '#1A0B3B',
+    light: '#2A1B54',
+  },
+  text: {
+    primary: '#FFFFFF',
+    secondary: 'rgba(255, 255, 255, 0.7)',
+    muted: 'rgba(255, 255, 255, 0.5)',
+    pink: '#FF00FF',
+    red: '#FF1B6B',
+  },
+  glass: {
+    background: 'rgba(42, 27, 84, 0.2)',
+    border: 'rgba(123, 66, 255, 0.1)',
+  }
 };
 
-// Main Page Implementation
+// Global Styles
+const GlobalStyles = `
+  :root {
+    --primary-main: ${COLORS.primary.main};
+    --primary-light: ${COLORS.primary.light};
+    --primary-dark: ${COLORS.primary.dark};
+    --secondary-main: ${COLORS.secondary.main};
+    --secondary-light: ${COLORS.secondary.light};
+    --secondary-dark: ${COLORS.secondary.dark};
+    --background-dark: ${COLORS.background.dark};
+    --background-light: ${COLORS.background.light};
+  }
+
+  body {
+    background: var(--background-dark);
+    color: ${COLORS.text.primary};
+  }
+
+  .glass-card {
+    background: ${COLORS.glass.background};
+    backdrop-filter: blur(16px);
+    border: 1px solid ${COLORS.glass.border};
+    box-shadow: 0 8px 32px ${COLORS.primary.main}1A;
+  }
+
+  .glass-card:hover {
+    background: rgba(42, 27, 84, 0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px ${COLORS.primary.main}26;
+  }
+
+  .bg-gradient-dark {
+    background: linear-gradient(180deg, ${COLORS.background.light} 0%, ${COLORS.background.dark} 100%);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: var(--tw-opacity); }
+    50% { opacity: calc(var(--tw-opacity) * 0.6); }
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-pulse {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient 8s ease infinite;
+}
+`;
+
+// Styles object
+const styles = {
+  glassCard: `
+    backdrop-blur-md
+    bg-[${COLORS.glass.background}]
+    border border-[${COLORS.glass.border}]
+    rounded-xl
+    overflow-hidden
+    card-hover-effect
+    shadow-[0_8px_32px_${COLORS.primary.main}1A]
+  `,
+  glassEffect: `
+    backdrop-blur-lg
+    bg-[${COLORS.glass.background}]
+    border border-[${COLORS.glass.border}]
+    rounded-lg
+    p-4
+  `,
+  backgroundGradient: `
+    bg-gradient-to-b from-[${COLORS.background.light}] to-[${COLORS.background.dark}]
+    relative
+  `,
+  gradientText: `
+    bg-clip-text text-transparent 
+    bg-gradient-to-r from-[${COLORS.text.muted}] to-[${COLORS.text.secondary}]
+  `,
+  gridItem: `
+    relative
+    rounded-2xl
+    overflow-hidden
+    transition-transform
+    duration-300
+    hover:scale-105
+    hover:z-10
+  `,
+  glowEffect: `
+    absolute
+    inset-0
+    bg-gradient-to-br
+    from-white/5
+    to-transparent
+    opacity-0
+    group-hover:opacity-100
+    transition-opacity
+    duration-300
+  `
+};
+
+const BackgroundElements = () => {
+  return (
+    <>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute inset-0 ${styles.backgroundGradient}`} />
+        
+        <div className={`absolute top-0 right-0 w-[300px] h-[300px] bg-[${COLORS.accent.pink}] rounded-full filter blur-[120px] opacity-[0.15] animate-pulse`} />
+        <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] bg-[${COLORS.primary.main}] rounded-full filter blur-[150px] opacity-[0.12] animate-pulse`} />
+        <div className={`absolute top-1/3 left-1/4 w-[250px] h-[250px] bg-[${COLORS.secondary.light}] rounded-full filter blur-[100px] opacity-[0.1] animate-pulse`} />
+        <div className={`absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-[${COLORS.accent.red}] rounded-full filter blur-[130px] opacity-[0.08] animate-pulse`} />
+        <div className={`absolute top-1/2 left-1/3 w-[200px] h-[200px] bg-[${COLORS.primary.dark}] rounded-full filter blur-[90px] opacity-[0.07] animate-pulse`} />
+        <div className={`absolute bottom-1/3 right-1/3 w-[280px] h-[280px] bg-[${COLORS.primary.light}] rounded-full filter blur-[110px] opacity-[0.09] animate-pulse`} />
+      </div>
+    </>
+  );
+};
+
+const StyleSheet = () => (
+  <style jsx global>{GlobalStyles}</style>
+);
+
+const HeroSection = () => {
+  return (
+    <section className="pt-16 pb-16 container mx-auto px-4 relative">
+      <div className="flex flex-col lg:flex-row items-center justify-between">
+        {/* Left Content */}
+        <div className="w-full lg:w-1/2 pr-0 lg:pr-12">
+        <h1 className="text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-green via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient">
+          Collect Extra<br />
+          Ordinary<br />
+          Fashion & Tokens
+        </h1>
+          <p className={`text-[${COLORS.text.secondary}] text-lg mb-8 max-w-xl`}>
+            Swap clothes, earn tokens, and make sustainable fashion choices 
+            with ACE's Web3-powered thrift platform.
+          </p>
+          
+          <div className="flex gap-4 mb-12">
+            {/* Start Swapping Button */}
+          <button className={`
+            px-8 py-3.5
+            bg-gradient-to-r from-[${COLORS.secondary.main}] to-[${COLORS.secondary.light}]
+            text-[${COLORS.background.dark}]
+            rounded-full font-medium
+            relative
+            overflow-hidden
+            transform transition-all duration-300
+            hover:scale-105
+            hover:shadow-[0_0_20px_rgba(0,255,209,0.4)]
+            active:scale-95
+            before:content-['']
+            before:absolute
+            before:top-0 before:left-0
+            before:w-full before:h-full
+            before:bg-white
+            before:opacity-0
+            before:transition-opacity
+            before:duration-300
+            hover:before:opacity-20
+          `}>
+            <span className="relative z-10">Start Swapping</span>
+          </button>
+
+          {/* Learn More Button */}
+          <button className={`
+            px-8 py-3.5
+            border border-[${COLORS.secondary.main}]
+            text-[${COLORS.secondary.main}]
+            rounded-full font-medium
+            relative
+            overflow-hidden
+            transform transition-all duration-300
+            hover:scale-105
+            hover:border-opacity-80
+            hover:shadow-[0_0_20px_rgba(0,255,209,0.2)]
+            active:scale-95
+            before:content-['']
+            before:absolute
+            before:top-0 before:left-0
+            before:w-full before:h-full
+            before:bg-[${COLORS.secondary.main}]
+            before:opacity-0
+            before:transition-opacity
+            before:duration-300
+            hover:before:opacity-10
+          `}>
+            <span className="relative z-10">Learn More</span>
+          </button>
+          </div>
+
+            {/* Community Stats Section */}
+          <div className="flex items-center gap-6">
+              {/* Avatar Group Icons */}
+              <div className="flex -space-x-3">
+                {[...Array(4)].map((_, index) => (
+                  <div
+                    key={index}
+                    className={`
+                      w-10 h-10
+                      rounded-full
+                      flex items-center justify-center
+                      ${index === 0 ? 'bg-purple-500' : 
+                        index === 1 ? 'bg-pink-500' : 
+                        index === 2 ? 'bg-blue-500' : 'bg-green-500'}
+                      border-2 border-[${COLORS.background.dark}]
+                      relative
+                      hover:transform hover:scale-110
+                      transition-all duration-300
+                      z-[${4 - index}]
+                    `}
+                  >
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                ))}
+                {/* More Users Circle */}
+                <div className={`
+                  w-10 h-10
+                  rounded-full
+                  flex items-center justify-center
+                  bg-[${COLORS.glass.background}]
+                  backdrop-blur-sm
+                  border-2 border-[${COLORS.background.dark}]
+                  text-white text-sm font-medium
+                  hover:transform hover:scale-110
+                  transition-all duration-300
+                  z-0
+                `}>
+                  +2k
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className={`text-xl font-bold text-[${COLORS.secondary.main}]`}>
+                    2.5k+
+                  </span>
+                  <div className={`
+                    px-2 py-1
+                    rounded-full
+                    bg-[${COLORS.secondary.main}]/10
+                    text-[${COLORS.secondary.main}]
+                    text-xs
+                    font-medium
+                  `}>
+                    +12% ↑
+                  </div>
+                </div>
+                <p className={`text-[${COLORS.text.secondary}] text-sm`}>
+                  Active Swappers
+                </p>
+              </div>
+
+              {/* Vertical Divider */}
+              <div className={`h-12 w-px bg-[${COLORS.text.secondary}]/20`}></div>
+
+              {/* Additional Stats */}
+              <div className="flex items-center gap-3">
+                <div className={`
+                  w-12 h-12
+                  rounded-full
+                  flex items-center justify-center
+                  bg-[${COLORS.glass.background}]
+                  backdrop-blur-sm
+                  border border-[${COLORS.glass.border}]
+                `}>
+                  <Clock className={`w-6 h-6 text-[${COLORS.secondary.main}]`} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xl font-bold text-[${COLORS.secondary.main}]`}>
+                      24/7
+                    </span>
+                  </div>
+                  <p className={`text-[${COLORS.text.secondary}] text-sm`}>
+                    Always Active
+                  </p>
+                </div>
+              </div>
+          </div>
+        </div>
+
+        {/* Right Content - Fashion Grid */}
+        <div className="w-full lg:w-1/2 mt-12 lg:mt-0">
+              <FashionGrid/>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FashionGrid = () => {
+  const gridItems = [
+    { 
+      id: 1,
+      size: 'col-span-1 row-span-1',
+      scale: 'scale-100',
+      offset: 'translate-y-0',
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQM5gjG8J1vcqUrsAsbi2YxCqcFuklMh0p3Tw&s"
+    },
+    { 
+      id: 2,
+      size: 'col-span-2 row-span-1',
+      scale: 'scale-110',
+      offset: '-translate-y-4',
+      image: "https://cdn.dribbble.com/userupload/3605379/file/original-6ee09c18336d4046b43f19820b361db2.png?resize=400x0"
+    },
+    { 
+      id: 3,
+      size: 'col-span-1 row-span-2',
+      scale: 'scale-105',
+      offset: 'translate-x-4',
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVa2vjKhPWJaNFBB1h_GMCisHkN7LLvp2YLg&s"
+    },
+    { 
+      id: 4,
+      size: 'col-span-1 row-span-1',
+      scale: 'scale-125',
+      offset: 'translate-y-6',
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s"
+    },
+  ];
+
+  return (
+    <div className="relative w-full max-w-[600px] mx-auto overflow-visible">
+      {/* Main Grid Container */}
+      <div className="grid grid-cols-3 gap-4 relative z-10">
+        {gridItems.map((item, index) => (
+          <motion.div
+            key={item.id}
+            className={`
+              relative
+              ${item.size}
+              ${item.offset}
+              ${item.scale}
+              transform-gpu
+              hover:z-20
+              transition-all
+              duration-500
+            `}
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: 1,
+              y: [0, -8, 0],
+              scale: [1, 1.02, 1],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: index * 0.3,
+              ease: "easeInOut"
+            }}
+          >
+            <div className="
+              relative 
+              w-full 
+              h-full 
+              rounded-2xl 
+              overflow-hidden 
+              group
+              hover:scale-105
+              transition-transform
+              duration-300
+            ">
+              {/* Image Container */}
+              <div className="relative w-full h-0 pb-[100%]">
+                <Image
+                  src={item.image}
+                  alt={`Grid Item ${item.id}`}
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-2xl"
+                />
+                
+                {/* Glass Morphism Effect */}
+                <div className="
+                  absolute 
+                  inset-0 
+                  bg-gradient-to-br 
+                  from-white/10 
+                  to-black/30
+                  backdrop-blur-sm
+                  opacity-0
+                  group-hover:opacity-100
+                  transition-opacity
+                  duration-300
+                  rounded-2xl
+                "/>
+
+                {/* Border Glow */}
+                <div className="
+                  absolute 
+                  inset-0 
+                  rounded-2xl 
+                  border 
+                  border-white/20
+                  group-hover:border-purple-500/50
+                  transition-colors
+                  duration-300
+                "/>
+
+                {/* Content Overlay */}
+                <div className="
+                  absolute 
+                  bottom-0 
+                  left-0 
+                  right-0 
+                  p-4 
+                  bg-gradient-to-t 
+                  from-black/60 
+                  to-transparent
+                  opacity-0
+                  group-hover:opacity-100
+                  transition-opacity
+                  duration-300
+                ">
+                  <div className="flex justify-between items-center">
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }}
+                      className="
+                        w-8 
+                        h-8 
+                        flex 
+                        items-center 
+                        justify-center 
+                        bg-white/10 
+                        backdrop-blur-md 
+                        rounded-full
+                    ">
+                      <Heart size={16} className="text-white" />
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Ambient Glow Effects */}
+      <div className="
+        absolute 
+        -top-32 
+        -right-32 
+        w-[400px] 
+        h-[400px] 
+        bg-purple-500/20 
+        rounded-full 
+        blur-[120px]
+        mix-blend-screen
+      "/>
+      <div className="
+        absolute 
+        -bottom-32 
+        -left-32 
+        w-[400px] 
+        h-[400px] 
+        bg-pink-500/20 
+        rounded-full 
+        blur-[120px]
+        mix-blend-screen
+      "/>
+    </div>
+  );
+};
+export { FashionGrid };
+
+
+
 const Home: NextPage = () => {
   return (
-    <AnimatePresence>
-      <div className="min-h-screen relative">
-        <AnimatedBackground />
+    <>
+      <StyleSheet />
+      <div className={`min-h-screen relative overflow-hidden text-[${COLORS.text.primary}] ${styles.backgroundGradient}`}>
+        <BackgroundElements />
         <EcoCharacter />
         <Navbar />
-
-        <main>
+        <main className="relative z-10">
           <HeroSection />
-          <FeatureSection />
-          <NewsletterSection />
+          <FashionMarquee />
+          <FeaturedCollection />
+          <TopFashionItems />
         </main>
-
-        <Footer />
+        {/* <Footer /> */}
       </div>
-    </AnimatePresence>
+    </>
   );
 };
 
 export default Home;
 
-// Enhanced NeoButton with gold accents
-const NeoButton: React.FC<{
-  children: React.ReactNode;
-  onClick?: () => void;
-  className?: string;
-}> = ({ children, onClick, className = "" }) => {
-  const [isPressed, setIsPressed] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+// Continuing from Part 1, here's Part 2 with FashionMarquee, FeaturedCollection, and related components:
+
+const FashionMarquee = () => {
+  const brands = [
+    "Sustainable Fashion", "Eco-Friendly", "Web3 Fashion", "Digital Wardrobe",
+    "Fashion NFTs", "Circular Economy", "Swap & Earn", "Community Driven"
+  ];
 
   return (
-    <motion.button
-      className={`
-        relative px-6 py-3 rounded-xl
-        transition-all duration-300
-        ${className}
-      `}
-      style={{
-        boxShadow: isHovered
-          ? `0 10px 20px -10px ${theme.colors.gold}40`
-          : "8px 8px 16px #d1d9d9,-8px -8px 16px #ffffff",
-        transform: isPressed ? "translateY(2px)" : "translateY(0)",
-      }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setIsPressed(false);
-      }}
-    >
-      <div className="absolute inset-0 rounded-xl overflow-hidden">
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"
-          style={{
-            opacity: isHovered ? 0.8 : 0.5,
-          }}
-        />
-        {isHovered && (
-          <motion.div
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    <div className="py-12 overflow-hidden bg-[${COLORS.background.light}]/30">
+      <div className="flex animate-marquee whitespace-nowrap">
+        {[...brands, ...brands].map((brand, index) => (
+          <div
+            key={index}
+            className={`
+              mx-8 py-2 px-6
+              rounded-full
+              text-[${COLORS.text.secondary}]
+              border border-[${COLORS.primary.main}]/20
+              bg-[${COLORS.glass.background}]
+              backdrop-blur-sm
+            `}
           >
-            <div
-              className="absolute top-0 left-0 w-full h-px"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`,
-              }}
-            />
-            <div
-              className="absolute bottom-0 left-0 w-full h-px"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${theme.colors.gold}40, transparent)`,
-              }}
-            />
-          </motion.div>
-        )}
-      </div>
-      <div className="relative z-10">{children}</div>
-    </motion.button>
-  );
-};
-
-// Enhanced InteractiveFeatureCard with 3D effects and animations
-const InteractiveFeatureCard: React.FC<{
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  stats: { label: string; value: string }[];
-}> = ({ icon, title, description, stats }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-
-    setRotation({
-      x: (y - 0.5) * 10,
-      y: (x - 0.5) * 10,
-    });
-  };
-
-  return (
-    <motion.div
-      className="h-full"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setRotation({ x: 0, y: 0 });
-      }}
-      onMouseMove={handleMouseMove}
-      style={{
-        perspective: "1000px",
-      }}
-    >
-      <motion.div
-        className="h-full"
-        style={{
-          transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-          transition: "transform 0.3s ease-out",
-        }}
-      >
-        <GlassCard className="p-8 h-full">
-          <motion.div
-            className="w-16 h-16 rounded-full mx-auto mb-6 relative"
-            animate={{
-              rotate: isHovered ? [0, 360] : 0,
-            }}
-            transition={{
-              duration: 0.6,
-            }}
-          >
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `linear-gradient(135deg, ${theme.colors.gold}, ${theme.colors.primary})`,
-                opacity: 0.2,
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              {icon}
-            </div>
-          </motion.div>
-
-          <h3
-            className="text-xl font-bold text-center mb-4"
-            style={{ color: theme.colors.text }}
-          >
-            {title}
-          </h3>
-
-          <p className="text-gray-600 text-center mb-6">{description}</p>
-
-          <motion.div
-            className="grid grid-cols-2 gap-4"
-            animate={{
-              opacity: isHovered ? 1 : 0.7,
-              y: isHovered ? 0 : 10,
-            }}
-          >
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="text-center p-3 rounded-lg"
-                style={{
-                  background: isHovered
-                    ? `linear-gradient(135deg, ${theme.colors.primary}10, ${theme.colors.gold}10)`
-                    : "transparent",
-                }}
-              >
-                <motion.p
-                  className="text-2xl font-bold"
-                  animate={{
-                    color: isHovered ? theme.colors.gold : theme.colors.text,
-                  }}
-                >
-                  {stat.value}
-                </motion.p>
-                <p className="text-sm text-gray-600">{stat.label}</p>
-              </div>
-            ))}
-          </motion.div>
-
-          {isHovered && (
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div
-                className="absolute top-0 left-0 w-full h-px"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${theme.colors.gold}30, transparent)`,
-                }}
-              />
-              <div
-                className="absolute bottom-0 left-0 w-full h-px"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${theme.colors.gold}30, transparent)`,
-                }}
-              />
-            </motion.div>
-          )}
-        </GlassCard>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-// [Previous imports and theme remain the same...]
-
-// Enhanced Animated Background with gold particles
-const AnimatedBackground = () => {
-  const gradientRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (gradientRef.current) {
-        const { clientX, clientY } = e;
-        const x = clientX / window.innerWidth;
-        const y = clientY / window.innerHeight;
-
-        gradientRef.current.style.background = `
-          radial-gradient(
-            circle at ${x * 100}% ${y * 100}%,
-            ${theme.colors.goldLight},
-            ${theme.colors.secondary},
-            ${theme.colors.background}
-          )
-        `;
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="fixed inset-0 -z-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(
-            circle at 50% 50%,
-            ${theme.colors.goldLight},
-            ${theme.colors.secondary},
-            ${theme.colors.background}
-          )`,
-          }}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 -z-10">
-      <div
-        ref={gradientRef}
-        className="absolute inset-0 transition-all duration-300 ease-out"
-        style={{
-          background: `radial-gradient(
-            circle at 50% 50%,
-            ${theme.colors.goldLight},
-            ${theme.colors.secondary},
-            ${theme.colors.background}
-          )`,
-        }}
-      />
-      <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="floating-particle"
-            initial={{
-              x:
-                Math.random() *
-                (typeof window !== "undefined" ? window.innerWidth : 500),
-              y: -20,
-              rotate: 0,
-            }}
-            animate={{
-              y: typeof window !== "undefined" ? window.innerHeight + 20 : 800,
-              rotate: 360,
-              x: `${Math.sin(i) * 200}px`,
-            }}
-            transition={{
-              duration: 15 + Math.random() * 10,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          >
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{
-                background:
-                  i % 2 === 0 ? theme.colors.gold : theme.colors.primary,
-                opacity: 0.3,
-              }}
-            />
-          </motion.div>
+            {brand}
+          </div>
         ))}
       </div>
     </div>
   );
 };
 
-// Enhanced Glass Card with gold highlights
-const GlassCard: React.FC<{
-  children: React.ReactNode;
-  className?: string;
-}> = ({ children, className = "" }) => {
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-
-    setRotation({
-      x: (y - 0.5) * 20,
-      y: (x - 0.5) * 20,
-    });
-  };
+const FeaturedCollection = () => {
+  const collections = [
+    {
+      id: 1,
+      title: "Old Money Aesthetic",
+      items: 45,
+      value: "2.5k ACE",
+      image: "https://i.pinimg.com/736x/e9/4d/48/e94d48756de583d8495b6e095d4aee8a.jpg"
+    },
+    {
+      id: 2,
+      title: "Street Aesthetic",
+      items: 32,
+      value: "1.8k ACE",
+      image: "https://aesthetic-clothing.com/cdn/shop/products/aesthetic-clothing-smile-pants-157.jpg?v=1635414457"
+    },
+    {
+      id: 3,
+      title: "Y2K Aesthetic",
+      items: 28,
+      value: "2.2k ACE",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG5FTrv-fUnwLgCoCKNzKrneZiYqjNYg30eA&s"
+    }
+  ];
 
   return (
+    <section className="py-20 container mx-auto px-4">
+      <div className="flex justify-between items-end mb-12">
+        <div>
+          <h2 className={`text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-green via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient`}>
+            Featured Collections
+          </h2>
+          <p className={`text-[${COLORS.text.secondary}] max-w-xl`}>
+            Explore curated collections from top sustainable fashion creators and brands.
+            Each piece tells a unique story of style and sustainability.
+          </p>
+        </div>
+        <button className={`
+          flex items-center gap-2
+          px-6 py-3
+          rounded-lg
+          border border-[${COLORS.secondary.main}]
+          text-[${COLORS.secondary.main}]
+          hover:bg-[${COLORS.secondary.main}]/10
+          transition-colors
+        `}>
+          View All
+          <ArrowRight size={20} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {collections.map((collection) => (
+          <FeaturedItemCard key={collection.id} collection={collection} />
+        ))}
+      </div>
+    </section>
+  );
+};
+
+interface Collection {
+  id: number;
+  title: string;
+  items: number;
+  value: string;
+  image: string;
+}
+
+const FeaturedItemCard: React.FC<{ collection: Collection }> = ({ collection }) => {
+  return (
     <motion.div
-      className={`
-        relative overflow-hidden
-        backdrop-blur-lg bg-white/10
-        border border-white/30
-        shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-        rounded-2xl
-        ${className}
-      `}
-      style={{
-        transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-        transition: "transform 0.3s ease-out",
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setRotation({ x: 0, y: 0 });
-      }}
+      className={styles.glassCard}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3 }}
     >
-      <div
-        className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"
-        style={{
-          borderTop: isHovered ? `1px solid ${theme.colors.goldLight}` : "none",
-        }}
-      />
-      {children}
-      {isHovered && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
-          <div className="absolute bottom-0 right-0 w-full h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
-        </motion.div>
-      )}
+      <div className="relative aspect-[4/3]">
+        <Image
+          src={collection.image}
+          alt={collection.title}
+          layout="fill"
+          objectFit="cover"
+          className="transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
+      </div>
+      
+      <div className="p-6">
+        <h3 className="text-xl font-bold mb-3">{collection.title}</h3>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <TimeBox value={collection.items} label="Items" />
+            <TimeBox value={collection.value} label="Value" />
+          </div>
+          <button className={`
+            p-3 rounded-full
+            bg-[${COLORS.primary.main}]/10
+            hover:bg-[${COLORS.primary.main}]/20
+            text-[${COLORS.primary.main}]
+            transition-colors
+          `}>
+            <Heart size={20} />
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 };
 
-// Enhanced Hero Section with interactive elements
-const HeroSection: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+const TimeBox: React.FC<{ value: string | number; label: string }> = ({ value, label }) => {
+  return (
+    <div className={`
+      px-4 py-2 rounded-lg
+      bg-[${COLORS.glass.background}]
+      backdrop-blur-sm
+      border border-[${COLORS.glass.border}]
+    `}>
+      <div className={`text-[${COLORS.text.primary}] font-bold`}>{value}</div>
+      <div className={`text-[${COLORS.text.secondary}] text-sm`}>{label}</div>
+    </div>
+  );
+};
 
-  const heroContent = [
+// Additional utility components
+
+const GlassButton: React.FC<{ children: React.ReactNode; onClick: () => void; className?: string }> = ({ children, onClick, className = "" }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        ${styles.glassEffect}
+        hover:bg-[${COLORS.glass.background}]/40
+        transition-colors
+        ${className}
+      `}
+    >
+      {children}
+    </button>
+  );
+};
+
+const Badge: React.FC<{ children: React.ReactNode; color?: string }> = ({ children, color = COLORS.primary.main }) => {
+  return (
+    <span className={`
+      px-3 py-1
+      rounded-full
+      text-sm
+      bg-[${color}]/10
+      text-[${color}]
+      border border-[${color}]/20
+    `}>
+      {children}
+    </span>
+  );
+};
+
+
+const TopFashionItems = () => {
+  const fashionItems = [
     {
-      title: "Sustainable Fashion for a Better Tomorrow",
-      subtitle: "Join our eco-conscious community",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQhH6MUt16EJdLbLEfZ26Iod6UaoAdwMKUFA&s",
+      id: 1,
+      title: "Vintage Leather Jacket",
+      description: "Authentic 1970s leather jacket with unique patina",
+      price: "120 ACE",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
+      owner: "vintage.eth",
+      likes: 234,
+      timeLeft: "2 days",
+      tags: ["Vintage", "Leather", "Outerwear"]
     },
     {
-      title: "Style Meets Sustainability",
-      subtitle: "Discover our eco-friendly collection",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDN1l5Ni0n2uXdUHmHnh0cin-19u11RID1rA&s",
+      id: 2,
+      title: "Eco-friendly Denim Set",
+      description: "Sustainable denim collection made from recycled materials",
+      price: "85 ACE",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
+      owner: "sustainable.eth",
+      likes: 189,
+      timeLeft: "4 days",
+      tags: ["Sustainable", "Denim", "Set"]
     },
     {
-      title: "Fashion with Purpose",
-      subtitle: "Making a difference, one piece at a time",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQI5O3lJtn0FwOVOPU28r-KiqKg7W2fokDIkA&s",
+      id: 3,
+      title: "Designer Silk Scarf",
+      description: "Limited edition silk scarf with digital art print",
+      price: "95 ACE",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
+      owner: "artfashion.eth",
+      likes: 156,
+      timeLeft: "1 day",
+      tags: ["Designer", "Accessories", "Limited"]
     },
+    {
+      id: 4,
+      title: "Smart Casual Blazer",
+      description: "Tech-integrated blazer with temperature regulation",
+      price: "150 ACE",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
+      owner: "future.eth",
+      likes: 278,
+      timeLeft: "3 days",
+      tags: ["Smart", "Formal", "Innovation"]
+    }
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % heroContent.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [heroContent.length]);
-
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
-      <div className="container mx-auto px-4 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          {/* Left side - Text content */}
-          <motion.div
-            className="max-w-xl"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.h1
-                key={`title-${activeIndex}`}
-                className="text-6xl font-bold mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                style={{
-                  background: `linear-gradient(135deg, ${theme.colors.text}, ${theme.colors.gold})`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                {heroContent[activeIndex].title}
-              </motion.h1>
-            </AnimatePresence>
-
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={`subtitle-${activeIndex}`}
-                className="text-xl text-gray-600 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                {heroContent[activeIndex].subtitle}
-              </motion.p>
-            </AnimatePresence>
-
-            <div className="flex gap-6">
-              <NeoButton
-                className="bg-gradient-to-r from-primary to-secondary text-green"
-                onClick={() => {}}
-              >
-                <span className="flex items-center">
-                  Explore Collection
-                  <LucideIcons.ArrowRight className="w-5 h-5 ml-2" />
-                </span>
-              </NeoButton>
-              <NeoButton
-                className="bg-gradient-to-r from-goldLight to-gold text-text"
-                onClick={() => {}}
-              >
-                <span className="flex items-center">
-                  Our Impact
-                  <LucideIcons.LineChart className="w-5 h-5 ml-2" />
-                </span>
-              </NeoButton>
-            </div>
-          </motion.div>
-
-          {/* Right side - Image */}
-          <div className="hidden md:block relative h-[500px] w-full">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`image-${activeIndex}`}
-                className="absolute inset-0"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Image
-                  src={heroContent[activeIndex].image}
-                  alt={heroContent[activeIndex].title}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-2xl"
-                  style={{
-                    boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-              </motion.div>
-            </AnimatePresence>
-          </div>
+    <section className="py-20 container mx-auto px-4">
+      <div className="flex justify-between items-end mb-12">
+        <div>
+          <h2 className={`text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-green via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient`}>
+            Top Fashion Items
+          </h2>
+          <p className={`text-[${COLORS.text.secondary}] max-w-xl`}>
+            Discover the most sought-after pieces in our community marketplace.
+            Each item is verified for authenticity and quality.
+          </p>
         </div>
+        <div className="flex gap-4">
+          <GlassButton onClick={() => {}}>
+            <Repeat size={20} />
+            <span>Refresh</span>
+          </GlassButton>
+          <button className={`
+            flex items-center gap-2
+            px-6 py-3
+            rounded-lg
+            bg-[${COLORS.primary.main}]
+            text-white
+            hover:bg-[${COLORS.primary.dark}]
+            transition-colors
+          `}>
+            View All Items
+            <ArrowRight size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {fashionItems.map((item) => (
+          <FashionItemCard key={item.id} item={item} />
+        ))}
       </div>
     </section>
   );
 };
 
-// [To be continued in Part 2...]
-// Enhanced Feature Section with interactive elements
-const FeatureSection: React.FC = () => {
-  const features = [
-    {
-      icon: (
-        <LucideIcons.Leaf
-          className="w-8 h-8"
-          style={{ color: theme.colors.gold }}
-        />
-      ),
-      title: "Eco-Friendly Materials",
-      description:
-        "Our products are crafted from sustainable and recycled materials, giving new life to existing resources.",
-      stats: [
-        { label: "Recycled Materials", value: "85%" },
-        { label: "CO₂ Reduction", value: "60%" },
-      ],
-    },
-    {
-      icon: (
-        <LucideIcons.Droplets
-          className="w-8 h-8"
-          style={{ color: theme.colors.primary }}
-        />
-      ),
-      title: "Water Conservation",
-      description:
-        "Our production process saves millions of liters of water annually through innovative techniques.",
-      stats: [
-        { label: "Water Saved", value: "2M L" },
-        { label: "Ocean Impact", value: "90%" },
-      ],
-    },
-    {
-      icon: (
-        <LucideIcons.Heart
-          className="w-8 h-8"
-          style={{ color: theme.colors.secondary }}
-        />
-      ),
-      title: "Fair Trade Certified",
-      description:
-        "Supporting ethical labor practices and sustainable communities worldwide.",
-      stats: [
-        { label: "Worker Benefits", value: "100%" },
-        { label: "Community Impact", value: "75%" },
-      ],
-    },
-  ];
+interface FashionItem {
+  id: number;
+  title: string;
+  description: string;
+  price: string;
+  image: string;
+  owner: string;
+  likes: number;
+  timeLeft: string;
+  tags: string[];
+}
 
+const FashionItemCard = ({ item }: { item: FashionItem }) => {
   return (
-    <section className="py-24 relative">
-      <div className="container mx-auto px-4">
-        <motion.h2
-          className="text-4xl font-bold text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          style={{
-            background: `linear-gradient(135deg, ${theme.colors.text}, ${theme.colors.gold})`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          Why Choose Sustainable Fashion?
-        </motion.h2>
+    <motion.div
+      className={styles.glassCard}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="relative aspect-square">
+        <Image
+          src={item.image}
+          alt={item.title}
+          layout="fill"
+          objectFit="cover"
+          className="transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <InteractiveFeatureCard {...feature} />
-            </motion.div>
-          ))}
+      <div className="p-6">
+        
+        <p className={`text-sm text-[${COLORS.text.secondary}] mb-4`}>
+          {item.description}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+            {item.tags.map((tag: string, index: number) => (
+            <Badge key={index}>{tag}</Badge>
+            ))}
+        </div>
+
+        <div className="flex justify-between items-center">
+          <div>
+            <div className={`text-[${COLORS.secondary.main}] font-bold`}>
+              {item.price}
+            </div>
+            <div className={`text-sm text-[${COLORS.text.secondary}]`}>
+              @{item.owner}
+            </div>
+          </div>
+          <button className={`
+            px-4 py-2
+            rounded-lg
+            bg-[${COLORS.secondary.main}]
+            text-[${COLORS.background.dark}]
+            font-medium
+            hover:bg-[${COLORS.secondary.dark}]
+            transition-colors
+          `}>
+            Swap Now
+          </button>
         </div>
       </div>
-    </section>
+    </motion.div>
   );
 };
 
-// Enhanced Newsletter Section with animated elements
-const NewsletterSection: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    setEmail("");
-    setTimeout(() => setIsSuccess(false), 3000);
-  };
-
-  return (
-    <section className="py-24 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
-
-      <motion.div
-        className="container mx-auto px-4"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-      >
-        <GlassCard className="max-w-3xl mx-auto p-12">
-          <div className="text-center mb-8">
-            <motion.div
-              className="w-20 h-20 mx-auto mb-6 relative"
-              animate={{
-                rotate: [0, 360],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatType: "reverse",
-              }}
-            >
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: `linear-gradient(135deg, ${theme.colors.gold}, ${theme.colors.primary})`,
-                  opacity: 0.2,
-                }}
-              />
-              <LucideIcons.Mail
-                className="w-10 h-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                style={{ color: theme.colors.text }}
-              />
-            </motion.div>
-
-            <h3
-              className="text-3xl font-bold mb-4"
-              style={{ color: theme.colors.text }}
-            >
-              Join Our Eco-Community
-            </h3>
-            <p className="text-gray-600">
-              Get sustainable fashion tips and exclusive offers delivered to
-              your inbox
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="relative">
-            <div className="flex gap-4">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 rounded-xl bg-white/50 backdrop-blur-sm border border-white/30 focus:outline-none focus:ring-2"
-                style={{
-                  color: theme.colors.text,
-                }}
-              />
-              <NeoButton
-                className="bg-gradient-to-r from-primary to-secondary text-green"
-                onClick={() => {}}
-              >
-                {isSubmitting ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                  >
-                    <LucideIcons.Loader className="w-5 h-5" />
-                  </motion.div>
-                ) : (
-                  <span className="flex items-center">
-                    Subscribe
-                    <LucideIcons.Send className="w-5 h-5 ml-2" />
-                  </span>
-                )}
-              </NeoButton>
-            </div>
-          </form>
-
-          <AnimatePresence>
-            {isSuccess && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="text-center mt-4 text-green-600"
-              >
-                Thanks for subscribing! 🌱
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </GlassCard>
-      </motion.div>
-    </section>
-  );
+// Export all components
+export {
+  TopFashionItems,
+  FashionItemCard,
+  GlassButton,
+  Badge
 };
