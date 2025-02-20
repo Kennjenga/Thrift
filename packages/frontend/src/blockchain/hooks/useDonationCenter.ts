@@ -3,7 +3,7 @@ import { Address } from 'viem'
 import { DONATION_ABI, DONATION_ADDRESS } from '@/blockchain/abis/thrift'
 
 export function useDonationContract() {
-  useAccount()
+  const { address } = useAccount()
   const { writeContract } = useWriteContract()
 
   // Read functions for counts
@@ -14,62 +14,57 @@ export function useDonationContract() {
     chainId: 11155111,
   })
 
-  const { data: donationCount } = useReadContract({
+  const { data: pendingDonationCount } = useReadContract({
     address: DONATION_ADDRESS,
-    functionName: 'donationCount',
+    functionName: 'pendingDonationCount',
     abi: DONATION_ABI,
     chainId: 11155111,
   })
+
+  const { data: approvedDonationCount } = useReadContract({
+    address: DONATION_ADDRESS,
+    functionName: 'approvedDonationCount',
+    abi: DONATION_ABI,
+    chainId: 11155111,
+  })
+
+  // Reward rates
+  const { data: rewardRates } = useReadContract({
+    address: DONATION_ADDRESS,
+    functionName: 'getRewardRates',
+    abi: DONATION_ABI,
+    chainId: 11155111,
+  })
+
+  // User donation history
+  const useUserPendingDonations = () => {
+    return useReadContract({
+      address: DONATION_ADDRESS,
+      functionName: 'getUserPendingDonations',
+      args: [address as Address],
+      abi: DONATION_ABI,
+      chainId: 11155111,
+    })
+  }
+
+  const useUserApprovedDonations = () => {
+    return useReadContract({
+      address: DONATION_ADDRESS,
+      functionName: 'getUserApprovedDonations',
+      args: [address as Address],
+      abi: DONATION_ABI,
+      chainId: 11155111,
+    })
+  }
 
   // Donation centers read functions
-  const { data: allDonationCenters } = useReadContract({
+  const { data: approvedCreators, refetch: refetchApprovedCreators } = useReadContract({
     address: DONATION_ADDRESS,
-    functionName: 'getAllDonationCenters',
+    functionName: 'approvedCreators',
+    args: [address as Address],
     abi: DONATION_ABI,
     chainId: 11155111,
   })
-
-  const { data: activeDonationCenters } = useReadContract({
-    address: DONATION_ADDRESS,
-    functionName: 'getActiveDonationCenters',
-    abi: DONATION_ABI,
-    chainId: 11155111,
-  })
-
-  const { data: totalActiveDonationCenters } = useReadContract({
-    address: DONATION_ADDRESS,
-    functionName: 'getTotalActiveDonationCenters',
-    abi: DONATION_ABI,
-    chainId: 11155111,
-  })
-
-  const { data: totalDonationCenters } = useReadContract({
-    address: DONATION_ADDRESS,
-    functionName: 'getTotalDonationCenters',
-    abi: DONATION_ABI,
-    chainId: 11155111,
-  })
-
-  // Custom hooks for specific data
-  const useDonationCenter = (centerId: bigint) => {
-    return useReadContract({
-      address: DONATION_ADDRESS,
-      functionName: 'getDonationCenter',
-      args: [centerId],
-      abi: DONATION_ABI,
-      chainId: 11155111,
-    })
-  }
-
-  const useDonation = (donationId: bigint) => {
-    return useReadContract({
-      address: DONATION_ADDRESS,
-      functionName: 'donations',
-      args: [donationId],
-      abi: DONATION_ABI,
-      chainId: 11155111,
-    })
-  }
 
   // Reward calculation functions
   const useCalculateClothingReward = (itemCount: bigint, weightInKg: bigint) => {
@@ -92,7 +87,40 @@ export function useDonationContract() {
     })
   }
 
+  // Donation center CRUD
+  const useDonationCenter = (centerId: bigint) => {
+    return useReadContract({
+      address: DONATION_ADDRESS,
+      functionName: 'getDonationCenter',
+      args: [centerId],
+      abi: DONATION_ABI,
+      chainId: 11155111,
+    })
+  }
+
+  // Donation data
+  const usePendingDonation = (donationId: bigint) => {
+    return useReadContract({
+      address: DONATION_ADDRESS,
+      functionName: 'getPendingDonation',
+      args: [donationId],
+      abi: DONATION_ABI,
+      chainId: 11155111,
+    })
+  }
+
+  const useApprovedDonation = (donationId: bigint) => {
+    return useReadContract({
+      address: DONATION_ADDRESS,
+      functionName: 'getApprovedDonation',
+      args: [donationId],
+      abi: DONATION_ABI,
+      chainId: 11155111,
+    })
+  }
+
   // Write functions
+  // Center management
   const addDonationCenter = async (
     name: string,
     description: string,
@@ -122,7 +150,36 @@ export function useDonationContract() {
     })
   }
 
-  const registerDonation = async (
+  const transferCenterOwnership = async (centerId: bigint, newOwner: Address) => {
+    return writeContract({
+      address: DONATION_ADDRESS,
+      functionName: 'transferCenterOwnership',
+      abi: DONATION_ABI,
+      args: [centerId, newOwner]
+    })
+  }
+
+  // Creator management
+  const approveCreator = async (creator: Address) => {
+    return writeContract({
+      address: DONATION_ADDRESS,
+      functionName: 'approveCreator',
+      abi: DONATION_ABI,
+      args: [creator]
+    })
+  }
+
+  const revokeCreator = async (creator: Address) => {
+    return writeContract({
+      address: DONATION_ADDRESS,
+      functionName: 'revokeCreator',
+      abi: DONATION_ABI,
+      args: [creator]
+    })
+  }
+
+  // Donation submission
+  const submitDonation = async (
     centerId: bigint,
     itemCount: bigint,
     itemType: string,
@@ -131,25 +188,64 @@ export function useDonationContract() {
   ) => {
     return writeContract({
       address: DONATION_ADDRESS,
-      functionName: 'registerDonation',
+      functionName: 'submitDonation',
       abi: DONATION_ABI,
       args: [centerId, itemCount, itemType, description, weightInKg]
     })
   }
 
-  const registerRecycling = async (
+  const submitRecycling = async (
     centerId: bigint,
     description: string,
     weightInKg: bigint
   ) => {
     return writeContract({
       address: DONATION_ADDRESS,
-      functionName: 'registerRecycling',
+      functionName: 'submitRecycling',
       abi: DONATION_ABI,
       args: [centerId, description, weightInKg]
     })
   }
 
+  const donateTokens = async (
+    centerId: bigint,
+    tokenAmount: bigint
+  ) => {
+    return writeContract({
+      address: DONATION_ADDRESS,
+      functionName: 'donateTokens',
+      abi: DONATION_ABI,
+      args: [centerId, tokenAmount]
+    })
+  }
+
+  // Donation approval/rejection
+  const approveDonation = async (
+    pendingDonationId: bigint,
+    verifiedItemCount: bigint,
+    verifiedWeightInKg: bigint
+  ) => {
+    return writeContract({
+      address: DONATION_ADDRESS,
+      functionName: 'approveDonation',
+      abi: DONATION_ABI,
+      args: [pendingDonationId, verifiedItemCount, verifiedWeightInKg]
+    })
+  }
+
+  const rejectDonation = async (
+    pendingDonationId: bigint,
+    reason: string
+  ) => {
+    return writeContract({
+      address: DONATION_ADDRESS,
+      functionName: 'rejectDonation',
+      abi: DONATION_ABI,
+      args: [pendingDonationId, reason]
+    })
+  }
+
+  // Reward rate management
   const updateRewardRates = async (
     clothingItemRewardNumerator: bigint,
     clothingItemRewardDenominator: bigint,
@@ -175,54 +271,69 @@ export function useDonationContract() {
     })
   }
 
-  const transferCenterOwnership = async (centerId: bigint, newOwner: Address) => {
+  // Contract ownership
+  const transferOwnership = async (newOwner: Address) => {
     return writeContract({
       address: DONATION_ADDRESS,
-      functionName: 'transferCenterOwnership',
+      functionName: 'transferOwnership',
       abi: DONATION_ABI,
-      args: [centerId, newOwner]
+      args: [newOwner]
     })
   }
 
-  const approveCreator = async (creator: Address) => {
+  const renounceOwnership = async () => {
     return writeContract({
       address: DONATION_ADDRESS,
-      functionName: 'approveCreator',
+      functionName: 'renounceOwnership',
       abi: DONATION_ABI,
-      args: [creator]
-    })
-  }
-
-  const revokeCreator = async (creator: Address) => {
-    return writeContract({
-      address: DONATION_ADDRESS,
-      functionName: 'revokeCreator',
-      abi: DONATION_ABI,
-      args: [creator]
     })
   }
 
   return {
     // Read functions
     donationCenterCount,
-    donationCount,
-    allDonationCenters,
-    activeDonationCenters,
-    totalActiveDonationCenters,
-    totalDonationCenters,
+    pendingDonationCount,
+    approvedDonationCount,
+    rewardRates,
+    approvedCreators,
+    
+    // User specific hooks
+    useUserPendingDonations,
+    useUserApprovedDonations,
+    
+    // Custom data fetching hooks
     useDonationCenter,
-    useDonation,
+    usePendingDonation,
+    useApprovedDonation,
     useCalculateClothingReward,
     useCalculateRecyclingReward,
     
-    // Write functions
+    // Donation center management
     addDonationCenter,
     updateDonationCenter,
-    registerDonation,
-    registerRecycling,
-    updateRewardRates,
     transferCenterOwnership,
+    
+    // Creator management
     approveCreator,
-    revokeCreator
+    revokeCreator,
+    
+    // Donation submission
+    submitDonation,
+    submitRecycling,
+    donateTokens,
+    
+    // Donation approval/rejection
+    approveDonation,
+    rejectDonation,
+    
+    // Reward rate management
+    updateRewardRates,
+    
+    // Contract ownership
+    transferOwnership,
+    renounceOwnership,
+    
+    // Refetch functions
+    refetchApprovedCreators,
   }
 }

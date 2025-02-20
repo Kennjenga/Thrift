@@ -657,7 +657,12 @@ export const MARKETPLACE_ABI = [
     "inputs": [
       {
         "internalType": "address payable",
-        "name": "_thriftTokenAddress",
+        "name": "_thriftToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_userAesthetics",
         "type": "address"
       },
       {
@@ -686,12 +691,100 @@ export const MARKETPLACE_ABI = [
       },
       {
         "indexed": false,
+        "internalType": "uint256[]",
+        "name": "quantities",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "escrowIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "BulkPurchaseInitiated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "uint256",
-        "name": "totalAmount",
+        "name": "escrowId",
         "type": "uint256"
       }
     ],
-    "name": "BulkPurchaseCompleted",
+    "name": "EscrowCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "confirmer",
+        "type": "address"
+      }
+    ],
+    "name": "EscrowConfirmed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "EscrowCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "EscrowRefunded",
     "type": "event"
   },
   {
@@ -700,13 +793,13 @@ export const MARKETPLACE_ABI = [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "product1",
+        "name": "offeredProductId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "product2",
+        "name": "wantedProductId",
         "type": "uint256"
       },
       {
@@ -724,7 +817,7 @@ export const MARKETPLACE_ABI = [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "exchangedQuantity",
+        "name": "quantity",
         "type": "uint256"
       },
       {
@@ -734,7 +827,7 @@ export const MARKETPLACE_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "EnhancedExchangeCompleted",
+    "name": "ExchangeCompleted",
     "type": "event"
   },
   {
@@ -761,7 +854,7 @@ export const MARKETPLACE_ABI = [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "offeredQuantity",
+        "name": "quantity",
         "type": "uint256"
       },
       {
@@ -769,126 +862,115 @@ export const MARKETPLACE_ABI = [
         "internalType": "uint256",
         "name": "tokenTopUp",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
       }
     ],
-    "name": "EnhancedExchangeOfferCreated",
+    "name": "ExchangeOfferCreated",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
         "indexed": false,
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      }
+    ],
+    "name": "ProductCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "productId",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "newQuantity",
+        "type": "uint256"
       }
     ],
-    "name": "ListingDeleted",
+    "name": "ProductQuantityUpdated",
     "type": "event"
   },
   {
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
-        "name": "id",
+        "name": "productId",
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "seller",
         "type": "address"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "tokenPrice",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ethPrice",
-        "type": "uint256"
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
       }
     ],
-    "name": "ProductListed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "buyer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "ProductSoldForEth",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "buyer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "seller",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "ProductSoldForTokens",
+    "name": "ProductUpdated",
     "type": "event"
   },
   {
     "inputs": [],
     "name": "BURN_PERCENTAGE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_BULK_PURCHASE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_ESCROW_DURATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -929,7 +1011,7 @@ export const MARKETPLACE_ABI = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "productId",
+        "name": "wantedProductId",
         "type": "uint256"
       },
       {
@@ -938,7 +1020,7 @@ export const MARKETPLACE_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "acceptEnhancedExchangeOffer",
+    "name": "acceptExchangeOffer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -946,17 +1028,83 @@ export const MARKETPLACE_ABI = [
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "aestheticsStats",
+    "outputs": [
+      {
         "internalType": "uint256",
-        "name": "productId",
+        "name": "productCount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "quantity",
+        "name": "purchaseCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastUpdated",
         "type": "uint256"
       }
     ],
-    "name": "buyWithEth",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "categoryToProducts",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "confirmEscrow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "productIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "quantities",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "createBulkEscrowWithEth",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -974,7 +1122,25 @@ export const MARKETPLACE_ABI = [
         "type": "uint256[]"
       }
     ],
-    "name": "buyWithEthBulk",
+    "name": "createBulkEscrowWithTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "createEscrowWithEth",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -992,25 +1158,7 @@ export const MARKETPLACE_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "buyWithTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "productIds",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "quantities",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "buyWithTokensBulk",
+    "name": "createEscrowWithTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1029,17 +1177,91 @@ export const MARKETPLACE_ABI = [
       },
       {
         "internalType": "uint256",
-        "name": "offeredQuantity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "tokenTopUp",
         "type": "uint256"
       }
     ],
-    "name": "createEnhancedExchangeOffer",
+    "name": "createExchangeOffer",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "size",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "condition",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "brand",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string",
+        "name": "gender",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAvailableForExchange",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "exchangePreference",
+        "type": "string"
+      }
+    ],
+    "name": "createProduct",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1051,9 +1273,118 @@ export const MARKETPLACE_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "deleteListing",
+    "name": "deleteProduct",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyWithdrawEth",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyWithdrawTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "escrows",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "buyerConfirmed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "sellerConfirmed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "completed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "refunded",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isToken",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isExchange",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "exchangeProductId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenTopUp",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1106,13 +1437,109 @@ export const MARKETPLACE_ABI = [
       },
       {
         "internalType": "uint256",
-        "name": "offeredQuantity",
+        "name": "tokenTopUp",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "tokenTopUp",
+        "name": "escrowId",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "escrowIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getEscrowsBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "escrowId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "productId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "buyer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "buyerConfirmed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "sellerConfirmed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "completed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "refunded",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isToken",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isExchange",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "exchangeProductId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenTopUp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Marketplace.Escrow[]",
+        "name": "",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -1126,7 +1553,7 @@ export const MARKETPLACE_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "getAllExchangeOffersForProduct",
+    "name": "getExchangeOffersForProduct",
     "outputs": [
       {
         "components": [
@@ -1152,12 +1579,12 @@ export const MARKETPLACE_ABI = [
           },
           {
             "internalType": "uint256",
-            "name": "offeredQuantity",
+            "name": "tokenTopUp",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "tokenTopUp",
+            "name": "escrowId",
             "type": "uint256"
           }
         ],
@@ -1171,7 +1598,41 @@ export const MARKETPLACE_ABI = [
   },
   {
     "inputs": [],
-    "name": "getAllProducts",
+    "name": "getMarketplaceStats",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalProducts",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "activeListings",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalCompletedEscrows",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalVolume",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "productIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "getProductsBatch",
     "outputs": [
       {
         "components": [
@@ -1226,9 +1687,9 @@ export const MARKETPLACE_ABI = [
             "type": "string"
           },
           {
-            "internalType": "string",
+            "internalType": "string[]",
             "name": "categories",
-            "type": "string"
+            "type": "string[]"
           },
           {
             "internalType": "string",
@@ -1259,6 +1720,11 @@ export const MARKETPLACE_ABI = [
             "internalType": "bool",
             "name": "isDeleted",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inEscrowQuantity",
+            "type": "uint256"
           }
         ],
         "internalType": "struct Marketplace.Product[]",
@@ -1272,130 +1738,22 @@ export const MARKETPLACE_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
-        "name": "productId",
+        "name": "limit",
         "type": "uint256"
       }
     ],
-    "name": "getProduct",
+    "name": "getProductsByAestheticPreference",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "seller",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokenPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ethPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "quantity",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "size",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "condition",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "brand",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "categories",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "gender",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "image",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "isAvailableForExchange",
-            "type": "bool"
-          },
-          {
-            "internalType": "string",
-            "name": "exchangePreference",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "isSold",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "isDeleted",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct Marketplace.Product",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalActiveProducts",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalProducts",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -1405,83 +1763,77 @@ export const MARKETPLACE_ABI = [
     "inputs": [
       {
         "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "description",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "size",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "condition",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "brand",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "categories",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "gender",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "image",
+        "name": "category",
         "type": "string"
       },
       {
         "internalType": "uint256",
-        "name": "tokenPrice",
+        "name": "limit",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "ethPrice",
+        "name": "offset",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quantity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "isAvailableForExchange",
-        "type": "bool"
-      },
-      {
-        "internalType": "string",
-        "name": "exchangePreference",
-        "type": "string"
       }
     ],
-    "name": "listProduct",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "getProductsByCategory",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "productCount",
+    "name": "getTopAesthetics",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "string[]",
         "name": "",
-        "type": "uint256"
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserEscrows",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserProducts",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -1549,11 +1901,6 @@ export const MARKETPLACE_ABI = [
       },
       {
         "internalType": "string",
-        "name": "categories",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
         "name": "gender",
         "type": "string"
       },
@@ -1581,9 +1928,117 @@ export const MARKETPLACE_ABI = [
         "internalType": "bool",
         "name": "isDeleted",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inEscrowQuantity",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "refundEscrow",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "searchTerm",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string",
+        "name": "gender",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "brand",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "useTokenPrice",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "offset",
+        "type": "uint256"
+      }
+    ],
+    "name": "searchProducts",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newTokenFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newEthFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPlatformFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newTreasuryWallet",
+        "type": "address"
+      }
+    ],
+    "name": "setTreasuryWallet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1624,11 +2079,179 @@ export const MARKETPLACE_ABI = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "size",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "condition",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "brand",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string",
+        "name": "gender",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAvailableForExchange",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "exchangePreference",
+        "type": "string"
+      }
+    ],
+    "name": "updateProduct",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newQuantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateProductQuantity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newUserAesthetics",
+        "type": "address"
+      }
+    ],
+    "name": "updateUserAestheticsContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "userAesthetics",
+    "outputs": [
+      {
+        "internalType": "contract UserAesthetics",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "userEscrows",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "userProducts",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
 
-export const MARKETPLACE_ADDRESS = "0x3616330653bF9A38EFB5a2DD17E6d9B74739969d"
-
+export const MARKETPLACE_ADDRESS = "0x1A89a6405160224BcD3E6acF937ae56Eb9900ffe"
 export const DONATION_ABI = [
   {
     "inputs": [
@@ -1673,23 +2296,23 @@ export const DONATION_ABI = [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "id",
+        "name": "pendingDonationId",
         "type": "uint256"
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "approvedDonationId",
+        "type": "uint256"
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "location",
-        "type": "string"
+        "indexed": true,
+        "internalType": "address",
+        "name": "approver",
+        "type": "address"
       }
     ],
-    "name": "DonationCenterAdded",
+    "name": "DonationApproved",
     "type": "event"
   },
   {
@@ -1778,6 +2401,12 @@ export const DONATION_ABI = [
       },
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "donor",
         "type": "address"
@@ -1802,6 +2431,56 @@ export const DONATION_ABI = [
       }
     ],
     "name": "DonationRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "pendingDonationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "rejector",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "DonationRejected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "pendingDonationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      }
+    ],
+    "name": "DonationSubmitted",
     "type": "event"
   },
   {
@@ -1834,6 +2513,12 @@ export const DONATION_ABI = [
       },
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "donor",
         "type": "address"
@@ -1852,6 +2537,37 @@ export const DONATION_ABI = [
       }
     ],
     "name": "RecyclingRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "donationId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "TokenDonationRegistered",
     "type": "event"
   },
   {
@@ -1916,6 +2632,29 @@ export const DONATION_ABI = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "pendingDonationId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "verifiedItemCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "verifiedWeightInKg",
+        "type": "uint256"
+      }
+    ],
+    "name": "approveDonation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -1926,6 +2665,93 @@ export const DONATION_ABI = [
       {
         "internalType": "bool",
         "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "approvedDonationCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "approvedDonations",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "itemCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "itemType",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRecycling",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "weightInKg",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isTokenDonation",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isApproved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isProcessed",
         "type": "bool"
       }
     ],
@@ -2028,6 +2854,24 @@ export const DONATION_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "donateTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "donationCenterCount",
     "outputs": [
@@ -2084,18 +2928,20 @@ export const DONATION_ABI = [
         "internalType": "address",
         "name": "owner",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "donationCount",
-    "outputs": [
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "totalDonationsReceived",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalRecyclingReceived",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalTokenDonationsReceived",
         "type": "uint256"
       }
     ],
@@ -2106,11 +2952,11 @@ export const DONATION_ABI = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "donationId",
         "type": "uint256"
       }
     ],
-    "name": "donations",
+    "name": "getApprovedDonation",
     "outputs": [
       {
         "internalType": "address",
@@ -2151,106 +2997,26 @@ export const DONATION_ABI = [
         "internalType": "uint256",
         "name": "weightInKg",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getActiveDonationCenters",
-    "outputs": [
+      },
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "location",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "isActive",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "acceptsTokens",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "acceptsRecycling",
-            "type": "bool"
-          },
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct DonationAndRecycling.DonationCenter[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getAllDonationCenters",
-    "outputs": [
+        "internalType": "bool",
+        "name": "isTokenDonation",
+        "type": "bool"
+      },
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "location",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "isActive",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "acceptsTokens",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "acceptsRecycling",
-            "type": "bool"
-          },
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct DonationAndRecycling.DonationCenter[]",
-        "name": "",
-        "type": "tuple[]"
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isApproved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isProcessed",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -2267,58 +3033,53 @@ export const DONATION_ABI = [
     "name": "getDonationCenter",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "description",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "location",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "isActive",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "acceptsTokens",
-            "type": "bool"
-          },
-          {
-            "internalType": "bool",
-            "name": "acceptsRecycling",
-            "type": "bool"
-          },
-          {
-            "internalType": "address",
-            "name": "owner",
-            "type": "address"
-          }
-        ],
-        "internalType": "struct DonationAndRecycling.DonationCenter",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getTotalActiveDonationCenters",
-    "outputs": [
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isActive",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "acceptsTokens",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "acceptsRecycling",
+        "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "totalDonationsReceived",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalRecyclingReceived",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalTokenDonationsReceived",
         "type": "uint256"
       }
     ],
@@ -2326,13 +3087,155 @@ export const DONATION_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "donationId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPendingDonation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "itemCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "itemType",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRecycling",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "weightInKg",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isTokenDonation",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isApproved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isProcessed",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
-    "name": "getTotalDonationCenters",
+    "name": "getRewardRates",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_clothingItemRewardNumerator",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_clothingItemRewardDenominator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_clothingWeightRewardNumerator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_clothingWeightRewardDenominator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recyclingRewardNumerator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_recyclingRewardDenominator",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxDonationReward",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserApprovedDonations",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserPendingDonations",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -2359,6 +3262,93 @@ export const DONATION_ABI = [
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingDonationCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "pendingDonations",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "donor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "itemCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "itemType",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRecycling",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "weightInKg",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isTokenDonation",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isApproved",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isProcessed",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -2394,6 +3384,44 @@ export const DONATION_ABI = [
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "pendingDonationId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "rejectDonation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      }
+    ],
+    "name": "revokeCreator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "centerId",
         "type": "uint256"
       },
@@ -2418,7 +3446,7 @@ export const DONATION_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "registerDonation",
+    "name": "submitDonation",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2441,27 +3469,7 @@ export const DONATION_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "registerRecycling",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "creator",
-        "type": "address"
-      }
-    ],
-    "name": "revokeCreator",
+    "name": "submitRecycling",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2580,13 +3588,140 @@ export const DONATION_ABI = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "userDonations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "userPendingDonations",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]
 
-export const DONATION_ADDRESS = "0xcb21f93ED8A01aff099f09E5396848A43335Ce0c"
+export const DONATION_ADDRESS = "0x194b6a6E5109337c74b6CbA7E1b519eBdFcaE71D"
+
+export const USERAESTHETICS_ADDRESS = "0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925"
+export const USERAESTHETICS_ABI =  [
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "aesthetics",
+        "type": "string[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "AestheticsUpdated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "deleteUserAesthetics",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserAesthetics",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "aesthetics",
+        "type": "string[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "isSet",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastUpdated",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "aesthetics",
+        "type": "string[]"
+      }
+    ],
+    "name": "setUserAesthetics",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
 
 // Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
 // ThriftToken deployed to: 0xCD6152307d4b223C00D1beF239F401101e4FBE78
 // Marketplace deployed to: 0x3616330653bF9A38EFB5a2DD17E6d9B74739969d
 // DonationAndRecycling deployed to:  0xcb21f93ED8A01aff099f09E5396848A43335Ce0c
+// Userprofile deployed to : 0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925
 // Deployment complete!

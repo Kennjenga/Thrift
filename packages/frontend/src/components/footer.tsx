@@ -1,30 +1,31 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 
 // Color System
 const COLORS = {
   primary: {
-    main: '#B5C7C4',
-    light: '#C7D4D2',
-    dark: '#96A7A4',
+    main: "#B5C7C4",
+    light: "#C7D4D2",
+    dark: "#96A7A4",
   },
   accent: {
-    gold: '#E2D9C9',
-    goldLight: '#F0EBE3',
-    blush: '#D4DCDA',
+    gold: "#E2D9C9",
+    goldLight: "#F0EBE3",
+    blush: "#D4DCDA",
   },
   text: {
-    primary: '#6B7F7C',
-    secondary: '#8A9D9A',
-    muted: '#A5B4B1',
+    primary: "#6B7F7C",
+    secondary: "#8A9D9A",
+    muted: "#A5B4B1",
   },
   background: {
-    light: '#FBFBFB',
-    dark: '#F5F7F7',
-  }
+    light: "#FBFBFB",
+    dark: "#F5F7F7",
+  },
 };
 
 const Footer: React.FC = () => {
@@ -96,7 +97,7 @@ const Footer: React.FC = () => {
         }
 
         .section-title::after {
-          content: '';
+          content: "";
           flex-grow: 1;
           height: 1px;
           background: linear-gradient(
@@ -121,7 +122,7 @@ const Footer: React.FC = () => {
         }
 
         .footer-link::before {
-          content: '→';
+          content: "→";
           opacity: 0;
           transition: all 0.3s ease;
         }
@@ -197,25 +198,27 @@ const Footer: React.FC = () => {
 
       <footer className="footer-container relative pt-24 pb-12">
         <div className="footer-gradient absolute inset-0" />
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="space-y-6">
-              <motion.div 
+              <motion.div
                 className="logo-container"
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="logo-glow" />
-                <img 
-                  src="/my-business-name-high-resolution-logo-transparent.png" 
-                  alt="Logo" 
+                <Image
+                  src="/my-business-name-high-resolution-logo-transparent.png"
+                  alt="Logo"
+                  width={40}
+                  height={40}
                   className="h-10"
                 />
               </motion.div>
-              
+
               <p className="text-[${COLORS.text.secondary}] leading-relaxed">
-                Committed to sustainable fashion and environmental preservation. 
-                Join us in making a difference, one eco-friendly choice at a time.
+                Committed to sustainable fashion and environmental preservation.
+                Join us in making a difference, one eco-friendly choice at a
+                time.
               </p>
 
               <div className="space-y-4">
@@ -233,7 +236,7 @@ const Footer: React.FC = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="flex gap-4">
                 {socialLinks.map((link, index) => (
                   <motion.a

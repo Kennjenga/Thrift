@@ -1,25 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import {
-  House,
-  ShoppingBag,
-  Heart,
-  Mail,
-  Upload,
-  RefreshCw,
-} from "lucide-react";
+import { Upload, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { parseEther } from "viem";
 import { parseTokenAmount } from "@/utils/token-utils";
 import Navbar from "../_components/navbar";
-
-interface NavLink {
-  name: string;
-  icon: React.ReactNode;
-  path: string;
-}
 
 export default function CreateProduct() {
   const sizeOptions = {
@@ -177,22 +163,6 @@ export default function CreateProduct() {
         return [];
     }
   };
-
-  const navLinks: NavLink[] = [
-    { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    {
-      name: "Shop",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/marketplace",
-    },
-    {
-      name: "Thrift",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/thrift",
-    },
-    { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
-    { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FEFCF6] to-[#F4EFE6]">

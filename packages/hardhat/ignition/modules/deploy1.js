@@ -3,17 +3,20 @@ const hre = require("hardhat");
 async function main() {
   try {
     console.log("Starting deployment process...");
+    const [deployer] = await ethers.getSigners();
+    console.log("Deploying contracts with the account:", deployer.address);
 
     // Get the contract factory
-    const donationFactory = await hre.ethers.getContractFactory(
-      "DonationAndRecycling"
-    );
+    const donationFactory = await hre.ethers.getContractFactory("Marketplace");
     console.log("Contract factory created successfully");
 
     // Deploy the contract
     console.log("Deploying contract...");
+    // const donationContract = await donationFactory.deploy();
     const donationContract = await donationFactory.deploy(
-      "0xCD6152307d4b223C00D1beF239F401101e4FBE78"
+      "0xCD6152307d4b223C00D1beF239F401101e4FBE78",
+      "0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925",
+      deployer.address
     );
     console.log("Contract deployment initiated");
 

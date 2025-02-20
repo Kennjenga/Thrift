@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract DonationAndRecycling is Ownable, ReentrancyGuard {
     ThriftToken public thriftToken;
 
-    // Add mapping for approved center creators
+    // Mapping for approved center creators
     mapping(address => bool) public approvedCreators;
 
     struct DonationCenter {
@@ -19,45 +19,88 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         bool acceptsTokens;
         bool acceptsRecycling;
         address owner;
+        uint256 totalDonationsReceived;
+        uint256 totalRecyclingReceived;
+        uint256 totalTokenDonationsReceived;
     }
 
-    struct Donation {
+    struct PendingDonation {
         address donor;
         uint256 itemCount;
         string itemType;
         string description;
         uint256 timestamp;
         bool isRecycling;
-        uint256 tokenAmount;
+        uint256 tokenAmount; // For token donations
         uint256 weightInKg;
+        bool isTokenDonation; // Track token donations
+        uint256 centerId; // Track which center received the donation
+        bool isApproved; // Track approval status
+        bool isProcessed; // Track if donation has been processed
     }
 
     mapping(uint256 => DonationCenter) public donationCenters;
-    mapping(uint256 => Donation) public donations;
+    mapping(uint256 => PendingDonation) public pendingDonations;
+    mapping(uint256 => PendingDonation) public approvedDonations;
+    mapping(address => uint256[]) public userDonations; // Track approved donations by user
+    mapping(address => uint256[]) public userPendingDonations; // Track pending donations by user
     uint256 public donationCenterCount;
-    uint256 public donationCount;
+    uint256 public pendingDonationCount;
+    uint256 public approvedDonationCount;
+
+    // Reward constants
+    uint256 public constant REWARD_BASE = 10 ** 18;
+    uint256 public clothingItemRewardNumerator = REWARD_BASE;
+    uint256 public clothingItemRewardDenominator = 15;
+    uint256 public clothingWeightRewardNumerator = REWARD_BASE;
+    uint256 public clothingWeightRewardDenominator = 10;
+    uint256 public recyclingRewardNumerator = REWARD_BASE;
+    uint256 public recyclingRewardDenominator = 30;
+    uint256 public maxDonationReward = 200 * 10 ** 18; // 200 tokens
 
     // Events
-    event DonationCenterAdded(uint256 indexed id, string name, string location);
-    event DonationCenterUpdated(uint256 indexed id, bool isActive);
-    event DonationRegistered(
-        uint256 indexed donationId,
-        address indexed donor,
-        uint256 itemCount,
-        uint256 weightInKg,
-        uint256 rewardAmount
-    );
-    event RecyclingRegistered(
-        uint256 indexed donationId,
-        address indexed donor,
-        uint256 weightInKg,
-        uint256 rewardAmount
-    );
     event DonationCenterAdded(
         uint256 indexed id,
         string name,
         string location,
         address owner
+    );
+    event DonationCenterUpdated(uint256 indexed id, bool isActive);
+    event DonationSubmitted(
+        uint256 indexed pendingDonationId,
+        uint256 indexed centerId,
+        address indexed donor
+    );
+    event DonationApproved(
+        uint256 indexed pendingDonationId,
+        uint256 indexed approvedDonationId,
+        address indexed approver
+    );
+    event DonationRejected(
+        uint256 indexed pendingDonationId,
+        address indexed rejector,
+        string reason
+    );
+    event DonationRegistered(
+        uint256 indexed donationId,
+        uint256 indexed centerId,
+        address indexed donor,
+        uint256 itemCount,
+        uint256 weightInKg,
+        uint256 rewardAmount
+    );
+    event TokenDonationRegistered(
+        uint256 indexed donationId,
+        uint256 indexed centerId,
+        address indexed donor,
+        uint256 tokenAmount
+    );
+    event RecyclingRegistered(
+        uint256 indexed donationId,
+        uint256 indexed centerId,
+        address indexed donor,
+        uint256 weightInKg,
+        uint256 rewardAmount
     );
     event CreatorApproved(address indexed creator);
     event CreatorRevoked(address indexed creator);
@@ -67,32 +110,19 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         address indexed newOwner
     );
 
-    // Rest of the reward constants remain the same
-    uint256 public constant REWARD_BASE = 10 ** 18;
-    uint256 public clothingItemRewardNumerator = REWARD_BASE;
-    uint256 public clothingItemRewardDenominator = 15;
-    uint256 public clothingWeightRewardNumerator = REWARD_BASE;
-    uint256 public clothingWeightRewardDenominator = 10;
-    uint256 public recyclingRewardNumerator = REWARD_BASE;
-    uint256 public recyclingRewardDenominator = 30;
-    // Maximum reward
-    uint256 public maxDonationReward = 200 * 10 ** 18; // 200 tokens
-
     constructor(address payable _thriftTokenAddress) {
         _transferOwnership(msg.sender);
         thriftToken = ThriftToken(_thriftTokenAddress);
-        // Add contract deployer as an approved creator
         approvedCreators[msg.sender] = true;
         emit CreatorApproved(msg.sender);
     }
 
-    // Modifier to check if sender is approved creator
+    // Modifiers
     modifier onlyApprovedCreator() {
         require(approvedCreators[msg.sender], "Not approved to create centers");
         _;
     }
 
-    // Modifier to check if sender is center owner
     modifier onlyCenterOwner(uint256 centerId) {
         require(
             donationCenters[centerId].owner == msg.sender,
@@ -101,19 +131,18 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         _;
     }
 
-    // Function to approve new center creators
+    // Creator management functions
     function approveCreator(address creator) external onlyOwner {
         approvedCreators[creator] = true;
         emit CreatorApproved(creator);
     }
 
-    // Function to revoke creator approval
     function revokeCreator(address creator) external onlyOwner {
         approvedCreators[creator] = false;
         emit CreatorRevoked(creator);
     }
 
-    // Modified addDonationCenter function
+    // Donation center management functions
     function addDonationCenter(
         string memory name,
         string memory description,
@@ -129,7 +158,10 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             true,
             acceptsTokens,
             acceptsRecycling,
-            msg.sender // Set the creator as the owner
+            msg.sender,
+            0,
+            0,
+            0
         );
 
         emit DonationCenterAdded(
@@ -140,7 +172,6 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         );
     }
 
-    // Modified updateDonationCenter function
     function updateDonationCenter(
         uint256 centerId,
         bool isActive,
@@ -157,7 +188,6 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         emit DonationCenterUpdated(centerId, isActive);
     }
 
-    // New function to transfer center ownership
     function transferCenterOwnership(
         uint256 centerId,
         address newOwner
@@ -174,109 +204,9 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             newOwner
         );
     }
-    // New function to get total donation centers
-    function getTotalDonationCenters() external view returns (uint256) {
-        return donationCenterCount;
-    }
 
-    // New function to get total active donation centers
-    function getTotalActiveDonationCenters() external view returns (uint256) {
-        uint256 activeCount = 0;
-        for (uint256 i = 1; i <= donationCenterCount; i++) {
-            if (donationCenters[i].isActive) {
-                activeCount++;
-            }
-        }
-        return activeCount;
-    }
-
-    // Get all donation centers
-    function getAllDonationCenters()
-        external
-        view
-        returns (DonationCenter[] memory)
-    {
-        DonationCenter[] memory centers = new DonationCenter[](
-            donationCenterCount
-        );
-        for (uint256 i = 1; i <= donationCenterCount; i++) {
-            centers[i - 1] = donationCenters[i];
-        }
-        return centers;
-    }
-
-    // Get active donation centers
-    function getActiveDonationCenters()
-        external
-        view
-        returns (DonationCenter[] memory)
-    {
-        uint256 activeCount = 0;
-
-        // First count active centers
-        for (uint256 i = 1; i <= donationCenterCount; i++) {
-            if (donationCenters[i].isActive) {
-                activeCount++;
-            }
-        }
-
-        // Create array of correct size and populate
-        DonationCenter[] memory activeCenters = new DonationCenter[](
-            activeCount
-        );
-        uint256 currentIndex = 0;
-
-        for (uint256 i = 1; i <= donationCenterCount; i++) {
-            if (donationCenters[i].isActive) {
-                activeCenters[currentIndex] = donationCenters[i];
-                currentIndex++;
-            }
-        }
-
-        return activeCenters;
-    }
-
-    // Get a specific donation center
-    function getDonationCenter(
-        uint256 centerId
-    ) external view returns (DonationCenter memory) {
-        require(
-            centerId <= donationCenterCount && centerId > 0,
-            "Invalid center ID"
-        );
-        return donationCenters[centerId];
-    }
-
-    function calculateClothingReward(
-        uint256 itemCount,
-        uint256 weightInKg
-    ) public view returns (uint256) {
-        // Calculate item-based reward
-        uint256 itemBasedReward = (itemCount * clothingItemRewardNumerator) /
-            clothingItemRewardDenominator;
-
-        // Calculate weight-based reward
-        uint256 weightBasedReward = (weightInKg *
-            clothingWeightRewardNumerator) / clothingWeightRewardDenominator;
-
-        // Take the higher of the two rewards
-        uint256 reward = itemBasedReward > weightBasedReward
-            ? itemBasedReward
-            : weightBasedReward;
-
-        // Cap the reward
-        return reward > maxDonationReward ? maxDonationReward : reward;
-    }
-
-    function calculateRecyclingReward(
-        uint256 weightInKg
-    ) public view returns (uint256) {
-        uint256 reward = (weightInKg * recyclingRewardNumerator) /
-            recyclingRewardDenominator;
-        return reward > maxDonationReward ? maxDonationReward : reward;
-    }
-
-    function registerDonation(
+    // Donation submission functions
+    function submitDonation(
         uint256 centerId,
         uint256 itemCount,
         string memory itemType,
@@ -290,34 +220,28 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             "Must specify items or weight"
         );
 
-        uint256 rewardAmount = calculateClothingReward(itemCount, weightInKg);
+        pendingDonationCount++;
+        pendingDonations[pendingDonationCount] = PendingDonation({
+            donor: msg.sender,
+            itemCount: itemCount,
+            itemType: itemType,
+            description: description,
+            timestamp: block.timestamp,
+            isRecycling: false,
+            tokenAmount: 0,
+            weightInKg: weightInKg,
+            isTokenDonation: false,
+            centerId: centerId,
+            isApproved: false,
+            isProcessed: false
+        });
 
-        donationCount++;
-        donations[donationCount] = Donation(
-            msg.sender,
-            itemCount,
-            itemType,
-            description,
-            block.timestamp,
-            false,
-            0,
-            weightInKg
-        );
+        userPendingDonations[msg.sender].push(pendingDonationCount);
 
-        if (rewardAmount > 0) {
-            thriftToken.mintReward(msg.sender, rewardAmount);
-        }
-
-        emit DonationRegistered(
-            donationCount,
-            msg.sender,
-            itemCount,
-            weightInKg,
-            rewardAmount
-        );
+        emit DonationSubmitted(pendingDonationCount, centerId, msg.sender);
     }
 
-    function registerRecycling(
+    function submitRecycling(
         uint256 centerId,
         string memory description,
         uint256 weightInKg
@@ -330,32 +254,189 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         );
         require(weightInKg > 0, "Weight must be greater than 0");
 
-        uint256 rewardAmount = calculateRecyclingReward(weightInKg);
+        pendingDonationCount++;
+        pendingDonations[pendingDonationCount] = PendingDonation({
+            donor: msg.sender,
+            itemCount: 0,
+            itemType: "RECYCLING",
+            description: description,
+            timestamp: block.timestamp,
+            isRecycling: true,
+            tokenAmount: 0,
+            weightInKg: weightInKg,
+            isTokenDonation: false,
+            centerId: centerId,
+            isApproved: false,
+            isProcessed: false
+        });
 
-        donationCount++;
-        donations[donationCount] = Donation(
-            msg.sender,
-            0,
-            "RECYCLING",
-            description,
-            block.timestamp,
-            true,
-            0,
-            weightInKg
+        userPendingDonations[msg.sender].push(pendingDonationCount);
+
+        emit DonationSubmitted(pendingDonationCount, centerId, msg.sender);
+    }
+
+    function donateTokens(
+        uint256 centerId,
+        uint256 tokenAmount
+    ) external nonReentrant {
+        require(centerId <= donationCenterCount, "Invalid center ID");
+        require(donationCenters[centerId].isActive, "Center not active");
+        require(
+            donationCenters[centerId].acceptsTokens,
+            "Center doesn't accept tokens"
+        );
+        require(tokenAmount > 0, "Token amount must be greater than 0");
+
+        require(
+            thriftToken.transferFrom(
+                msg.sender,
+                donationCenters[centerId].owner,
+                tokenAmount
+            ),
+            "Token transfer failed"
         );
 
-        if (rewardAmount > 0) {
-            thriftToken.mintReward(msg.sender, rewardAmount);
-        }
+        approvedDonationCount++;
+        approvedDonations[approvedDonationCount] = PendingDonation({
+            donor: msg.sender,
+            itemCount: 0,
+            itemType: "TOKEN_DONATION",
+            description: "Token Donation",
+            timestamp: block.timestamp,
+            isRecycling: false,
+            tokenAmount: tokenAmount,
+            weightInKg: 0,
+            isTokenDonation: true,
+            centerId: centerId,
+            isApproved: true,
+            isProcessed: true
+        });
 
-        emit RecyclingRegistered(
-            donationCount,
+        userDonations[msg.sender].push(approvedDonationCount);
+        donationCenters[centerId].totalTokenDonationsReceived += tokenAmount;
+
+        emit TokenDonationRegistered(
+            approvedDonationCount,
+            centerId,
             msg.sender,
-            weightInKg,
-            rewardAmount
+            tokenAmount
         );
     }
 
+    // Donation approval functions
+    function approveDonation(
+        uint256 pendingDonationId,
+        uint256 verifiedItemCount,
+        uint256 verifiedWeightInKg
+    )
+        external
+        nonReentrant
+        onlyCenterOwner(pendingDonations[pendingDonationId].centerId)
+    {
+        require(
+            pendingDonationId <= pendingDonationCount,
+            "Invalid pending donation ID"
+        );
+        PendingDonation storage pending = pendingDonations[pendingDonationId];
+        require(!pending.isProcessed, "Donation already processed");
+        require(!pending.isTokenDonation, "Cannot approve token donations");
+
+        pending.isApproved = true;
+        pending.isProcessed = true;
+        pending.itemCount = verifiedItemCount;
+        pending.weightInKg = verifiedWeightInKg;
+
+        // Calculate and issue reward
+        uint256 rewardAmount;
+        if (pending.isRecycling) {
+            rewardAmount = calculateRecyclingReward(verifiedWeightInKg);
+            donationCenters[pending.centerId]
+                .totalRecyclingReceived += verifiedWeightInKg;
+
+            approvedDonationCount++;
+            approvedDonations[approvedDonationCount] = pending;
+            userDonations[pending.donor].push(approvedDonationCount);
+
+            emit RecyclingRegistered(
+                approvedDonationCount,
+                pending.centerId,
+                pending.donor,
+                verifiedWeightInKg,
+                rewardAmount
+            );
+        } else {
+            rewardAmount = calculateClothingReward(
+                verifiedItemCount,
+                verifiedWeightInKg
+            );
+            donationCenters[pending.centerId].totalDonationsReceived++;
+
+            approvedDonationCount++;
+            approvedDonations[approvedDonationCount] = pending;
+            userDonations[pending.donor].push(approvedDonationCount);
+
+            emit DonationRegistered(
+                approvedDonationCount,
+                pending.centerId,
+                pending.donor,
+                verifiedItemCount,
+                verifiedWeightInKg,
+                rewardAmount
+            );
+        }
+
+        if (rewardAmount > 0) {
+            thriftToken.mintReward(pending.donor, rewardAmount);
+        }
+
+        emit DonationApproved(
+            pendingDonationId,
+            approvedDonationCount,
+            msg.sender
+        );
+    }
+
+    function rejectDonation(
+        uint256 pendingDonationId,
+        string memory reason
+    ) external onlyCenterOwner(pendingDonations[pendingDonationId].centerId) {
+        require(
+            pendingDonationId <= pendingDonationCount,
+            "Invalid pending donation ID"
+        );
+        PendingDonation storage pending = pendingDonations[pendingDonationId];
+        require(!pending.isProcessed, "Donation already processed");
+
+        pending.isProcessed = true;
+        pending.isApproved = false;
+
+        emit DonationRejected(pendingDonationId, msg.sender, reason);
+    }
+
+    // Reward calculation functions
+    function calculateClothingReward(
+        uint256 itemCount,
+        uint256 weightInKg
+    ) public view returns (uint256) {
+        uint256 itemBasedReward = (itemCount * clothingItemRewardNumerator) /
+            clothingItemRewardDenominator;
+        uint256 weightBasedReward = (weightInKg *
+            clothingWeightRewardNumerator) / clothingWeightRewardDenominator;
+        uint256 reward = itemBasedReward > weightBasedReward
+            ? itemBasedReward
+            : weightBasedReward;
+        return reward > maxDonationReward ? maxDonationReward : reward;
+    }
+
+    function calculateRecyclingReward(
+        uint256 weightInKg
+    ) public view returns (uint256) {
+        uint256 reward = (weightInKg * recyclingRewardNumerator) /
+            recyclingRewardDenominator;
+        return reward > maxDonationReward ? maxDonationReward : reward;
+    }
+
+    // Reward rate management
     function updateRewardRates(
         uint256 _clothingItemRewardNumerator,
         uint256 _clothingItemRewardDenominator,
@@ -382,5 +463,150 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         recyclingRewardNumerator = _recyclingRewardNumerator;
         recyclingRewardDenominator = _recyclingRewardDenominator;
         maxDonationReward = _maxDonationReward;
+    }
+
+    // Getter functions for transparency and frontend integration
+    function getDonationCenter(
+        uint256 centerId
+    )
+        external
+        view
+        returns (
+            string memory name,
+            string memory description,
+            string memory location,
+            bool isActive,
+            bool acceptsTokens,
+            bool acceptsRecycling,
+            address owner,
+            uint256 totalDonationsReceived,
+            uint256 totalRecyclingReceived,
+            uint256 totalTokenDonationsReceived
+        )
+    {
+        DonationCenter storage center = donationCenters[centerId];
+        return (
+            center.name,
+            center.description,
+            center.location,
+            center.isActive,
+            center.acceptsTokens,
+            center.acceptsRecycling,
+            center.owner,
+            center.totalDonationsReceived,
+            center.totalRecyclingReceived,
+            center.totalTokenDonationsReceived
+        );
+    }
+
+    function getUserPendingDonations(
+        address user
+    ) external view returns (uint256[] memory) {
+        return userPendingDonations[user];
+    }
+
+    function getUserApprovedDonations(
+        address user
+    ) external view returns (uint256[] memory) {
+        return userDonations[user];
+    }
+
+    function getPendingDonation(
+        uint256 donationId
+    )
+        external
+        view
+        returns (
+            address donor,
+            uint256 itemCount,
+            string memory itemType,
+            string memory description,
+            uint256 timestamp,
+            bool isRecycling,
+            uint256 tokenAmount,
+            uint256 weightInKg,
+            bool isTokenDonation,
+            uint256 centerId,
+            bool isApproved,
+            bool isProcessed
+        )
+    {
+        PendingDonation storage donation = pendingDonations[donationId];
+        return (
+            donation.donor,
+            donation.itemCount,
+            donation.itemType,
+            donation.description,
+            donation.timestamp,
+            donation.isRecycling,
+            donation.tokenAmount,
+            donation.weightInKg,
+            donation.isTokenDonation,
+            donation.centerId,
+            donation.isApproved,
+            donation.isProcessed
+        );
+    }
+
+    function getApprovedDonation(
+        uint256 donationId
+    )
+        external
+        view
+        returns (
+            address donor,
+            uint256 itemCount,
+            string memory itemType,
+            string memory description,
+            uint256 timestamp,
+            bool isRecycling,
+            uint256 tokenAmount,
+            uint256 weightInKg,
+            bool isTokenDonation,
+            uint256 centerId,
+            bool isApproved,
+            bool isProcessed
+        )
+    {
+        PendingDonation storage donation = approvedDonations[donationId];
+        return (
+            donation.donor,
+            donation.itemCount,
+            donation.itemType,
+            donation.description,
+            donation.timestamp,
+            donation.isRecycling,
+            donation.tokenAmount,
+            donation.weightInKg,
+            donation.isTokenDonation,
+            donation.centerId,
+            donation.isApproved,
+            donation.isProcessed
+        );
+    }
+
+    // Function to get current reward rates
+    function getRewardRates()
+        external
+        view
+        returns (
+            uint256 _clothingItemRewardNumerator,
+            uint256 _clothingItemRewardDenominator,
+            uint256 _clothingWeightRewardNumerator,
+            uint256 _clothingWeightRewardDenominator,
+            uint256 _recyclingRewardNumerator,
+            uint256 _recyclingRewardDenominator,
+            uint256 _maxDonationReward
+        )
+    {
+        return (
+            clothingItemRewardNumerator,
+            clothingItemRewardDenominator,
+            clothingWeightRewardNumerator,
+            clothingWeightRewardDenominator,
+            recyclingRewardNumerator,
+            recyclingRewardDenominator,
+            maxDonationReward
+        );
     }
 }

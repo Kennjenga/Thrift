@@ -3,44 +3,44 @@ import React from "react";
 import Link from "next/link";
 import Navbar from "./navbar";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from 'next/navigation';
-import { Home, Wallet, Shirt, Heart, Settings, Bell, Search } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Home, Wallet, Shirt, Heart, Settings } from "lucide-react";
 
 // Enhanced Color System
 const COLORS = {
   primary: {
-    main: '#7B42FF',
-    light: '#8A2BE2',
-    dark: '#4A00E0',
-    gradient: 'rgba(123, 66, 255, 0.15)',
+    main: "#7B42FF",
+    light: "#8A2BE2",
+    dark: "#4A00E0",
+    gradient: "rgba(123, 66, 255, 0.15)",
   },
   secondary: {
-    main: '#00FFD1',
-    light: '#00FFFF',
-    dark: '#00E6BD',
-    gradient: 'rgba(0, 255, 209, 0.15)',
+    main: "#00FFD1",
+    light: "#00FFFF",
+    dark: "#00E6BD",
+    gradient: "rgba(0, 255, 209, 0.15)",
   },
   accent: {
-    pink: '#FF00FF',
-    red: '#FF1B6B',
-    pinkGradient: 'rgba(255, 0, 255, 0.15)',
-    redGradient: 'rgba(255, 27, 107, 0.15)',
+    pink: "#FF00FF",
+    red: "#FF1B6B",
+    pinkGradient: "rgba(255, 0, 255, 0.15)",
+    redGradient: "rgba(255, 27, 107, 0.15)",
   },
   background: {
-    dark: '#1A0B3B',
-    light: '#2A1B54',
-    glass: 'rgba(42, 27, 84, 0.25)',
+    dark: "#1A0B3B",
+    light: "#2A1B54",
+    glass: "rgba(42, 27, 84, 0.25)",
   },
   text: {
-    primary: '#FFFFFF',
-    secondary: 'rgba(255, 255, 255, 0.7)',
-    muted: 'rgba(255, 255, 255, 0.5)',
+    primary: "#FFFFFF",
+    secondary: "rgba(255, 255, 255, 0.7)",
+    muted: "rgba(255, 255, 255, 0.5)",
   },
   glass: {
-    background: 'rgba(42, 27, 84, 0.2)',
-    border: 'rgba(123, 66, 255, 0.1)',
-    highlight: 'rgba(255, 255, 255, 0.05)',
-    shadow: 'rgba(0, 0, 0, 0.1)',
+    background: "rgba(42, 27, 84, 0.2)",
+    border: "rgba(123, 66, 255, 0.1)",
+    highlight: "rgba(255, 255, 255, 0.05)",
+    shadow: "rgba(0, 0, 0, 0.1)",
   },
 };
 
@@ -129,7 +129,7 @@ const BackgroundElements = () => {
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
       <div className={`absolute inset-0 ${styles.backgroundGradient}`} />
-      
+
       {/* Ambient Glows */}
       <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#FF00FF] rounded-full filter blur-[120px] opacity-[0.15] animate-pulse" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#7B42FF] rounded-full filter blur-[150px] opacity-[0.12] animate-pulse" />
@@ -144,13 +144,19 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/dashboard/thrift", label: "Thrift Tokens", icon: Wallet },
   { href: "/dashboard/manage-clothes", label: "Manage Clothes", icon: Shirt },
-  { href: "/dashboard/manage-donation", label: "Donation Centers", icon: Heart },
+  {
+    href: "/dashboard/manage-donation",
+    label: "Donation Centers",
+    icon: Heart,
+  },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-
 // Glass Card Component
-const GlassCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => {
+const GlassCard: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = "" }) => {
   return (
     <div
       className={`
@@ -176,16 +182,13 @@ const GlassCard: React.FC<{ children: React.ReactNode; className?: string }> = (
 function SideNav() {
   return (
     <GlassCard className="h-[calc(100vh-64px)] p-6">
-
       {/* Navigation Links */}
       <nav className="space-y-2">
         {navItems.map((item) => (
           <Link key={item.label} href={item.href}>
-            <motion.div
-              whileHover={{ x: 5 }}
-              className="relative group"
-            >
-              <div className={`
+            <motion.div whileHover={{ x: 5 }} className="relative group">
+              <div
+                className={`
                 flex items-center gap-3
                 px-4 py-3
                 rounded-lg
@@ -193,10 +196,11 @@ function SideNav() {
                 hover:text-white
                 transition-all duration-300
                 hover:bg-[${COLORS.primary.main}]/10
-              `}>
+              `}
+              >
                 <item.icon size={20} />
                 <span>{item.label}</span>
-                
+
                 {/* Hover Gradient */}
                 <motion.div
                   className="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-lg"
@@ -212,7 +216,6 @@ function SideNav() {
           </Link>
         ))}
       </nav>
-
     </GlassCard>
   );
 }
@@ -223,15 +226,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   const pathname = usePathname();
 
   return (
     <>
-      <style jsx global>{GlobalStyles}</style>
+      <style jsx global>
+        {GlobalStyles}
+      </style>
       <div className={`min-h-screen ${styles.backgroundGradient}`}>
         <BackgroundElements />
-        
+
         <div className="relative z-10">
           {/* Top Navigation */}
           <Navbar />
@@ -253,11 +257,8 @@ export default function DashboardLayout({
                   transition={{ duration: 0.3 }}
                 >
                   <GlassCard className="p-6">
-
                     {/* Main Content */}
-                    <div className="relative">
-                      {children}
-                    </div>
+                    <div className="relative">{children}</div>
                   </GlassCard>
                 </motion.div>
               </AnimatePresence>
