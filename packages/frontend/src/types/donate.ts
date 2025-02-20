@@ -7,6 +7,7 @@ export interface DonationCenter {
     location: string;
     acceptsTokens: boolean;
     acceptsRecycling: boolean;
+    acceptsDonations: boolean; // Add this new field
     isActive: boolean;
   }
   
@@ -28,6 +29,8 @@ export interface DonationCenter {
     location: string;
     acceptsTokens: boolean;
     acceptsRecycling: boolean;
+    acceptsDonations: boolean; // Add this new field
+    centerType: 'donation' | 'recycling' | ''; // Add this to track center type
   }
   
   export interface DonationCenterHookResult {

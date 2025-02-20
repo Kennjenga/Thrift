@@ -4,16 +4,13 @@ import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { formatTokenAmount, formatETHPrice } from "@/utils/token-utils";
-import { CartButton } from "@/components/cartButton";
+import Navbar from "@/app/marketplace/_components/navbar";
 import {
   ShoppingCart,
   X,
   AlertTriangle,
   RefreshCw,
-  House,
   ShoppingBag,
-  Heart,
-  Mail,
   Tag,
   Package,
   Coins,
@@ -32,15 +29,6 @@ const PageContainer = styled.div`
   background: linear-gradient(135deg, #fefcf6 0%, #f4efe6 100%);
 `;
 
-const NavigationBar = styled.nav`
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.5);
-  border-bottom: 1px solid rgba(94, 108, 88, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-`;
 
 const Logo = styled.div`
   display: flex;
@@ -53,41 +41,6 @@ const Logo = styled.div`
   }
 `;
 
-const LogoText = styled.h1`
-  font-size: 2rem;
-  font-weight: bold;
-  color: #162a2c;
-  background: linear-gradient(to right, #c0b283, #dcd0c0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const NavLink = styled.a`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #162a2c;
-  position: relative;
-
-  &:after {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -2px;
-    left: 0;
-    background: #c0b283;
-    transition: width 0.3s ease;
-  }
-
-  &:hover:after {
-    width: 100%;
-  }
-
-  &:hover svg {
-    color: #c0b283;
-  }
-`;
 
 const GlassCard = styled.div`
   background: rgba(255, 255, 255, 0.1);
@@ -276,16 +229,6 @@ export default function ProductPage() {
   const [exchangeQuantity, setExchangeQuantity] = useState(1);
   const [tokenTopUp, setTokenTopUp] = useState<bigint>(BigInt(0));
 
-  const navLinks: NavLink[] = [
-    { name: "Home", icon: <House className="w-5 h-5" />, path: "/" },
-    {
-      name: "Shop",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      path: "/marketplace",
-    },
-    { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "/donate" },
-    { name: "Contact", icon: <Mail className="w-5 h-5" />, path: "#" },
-  ];
 
   // Context and Hook Integrations
   const { addToCart } = useCart();
@@ -377,31 +320,7 @@ export default function ProductPage() {
 
   return (
     <PageContainer>
-      <NavigationBar>
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <Logo>
-            <Image
-              src="/my-business-name-high-resolution-logo-transparent.png"
-              alt="Ace Logo"
-              width={45}
-              height={45}
-              priority
-            />
-            <LogoText>Ace</LogoText>
-          </Logo>
-
-          <div className="flex space-x-8">
-            {navLinks.map((link) => (
-              <NavLink key={link.name} href={link.path}>
-                {link.icon}
-                <span>{link.name}</span>
-              </NavLink>
-            ))}
-          </div>
-
-          <CartButton />
-        </div>
-      </NavigationBar>
+      <Navbar/>
 
       <div className="container mx-auto px-4 py-16">
         <div className="grid lg:grid-cols-2 gap-12">

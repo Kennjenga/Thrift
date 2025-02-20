@@ -4,7 +4,7 @@ import { MARKETPLACE_ABI, MARKETPLACE_ADDRESS } from '@/blockchain/abis/thrift'
 // import { Product, ExchangeOffer, Escrow, MarketplaceStats } from '@/types/market'
 import { sepolia } from 'wagmi/chains'
 
-export function useMarketplaceEnhanced() {
+export function useMarketplace() {
   const { address } = useAccount()
   const { writeContract } = useWriteContract()
 
@@ -31,7 +31,7 @@ export function useMarketplaceEnhanced() {
   })
 
   // Marketplace Statistics
-  const useGetMarketplaceStats = () => {
+  const useGetMarketplaceStats = (): ReturnType<typeof useReadContract> => {
     return useReadContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
