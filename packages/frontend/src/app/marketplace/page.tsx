@@ -2,22 +2,21 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { StaticImageData } from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ShoppingBag,
+  // ShoppingBag,
   AlertCircle,
   Plus,
   Package,
-  Coins,
+  // Coins,
   Heart,
   Clock,
   TrendingUp,
-  Users,
+  // Users,
   Leaf,
   Recycle,
-  ArrowRight,
+  // ArrowRight,
   Star,
   Shield,
 } from "lucide-react";
@@ -25,7 +24,7 @@ import Navbar from "@/components/navbar";
 import EcoCharacter from "@/components/eco-character";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
-import { formatTokenAmount, formatETHPrice } from "@/utils/token-utils";
+import { formatETHPrice } from "@/utils/token-utils";
 
 // Color System
 const COLORS = {
