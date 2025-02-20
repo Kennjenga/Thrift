@@ -41,6 +41,17 @@ export function useMarketplace() {
   }
 
   // Product Read Functions
+  function useGetAllProducts(limit: bigint = BigInt(100), offset: bigint = BigInt(0)) {
+    // Use empty strings/arrays for the search parameters to get all products
+    return useReadContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'searchProducts',
+      args: ['', [], '', '', BigInt(0), BigInt(0), false, limit, offset],
+      chainId: sepolia.id,
+    })
+  }
+
   const useGetProduct = (productId: bigint) => {
     return useReadContract({
       address: MARKETPLACE_ADDRESS,
@@ -359,6 +370,7 @@ export function useMarketplace() {
     
     // Hooks
     useGetMarketplaceStats,
+    useGetAllProducts,
     useGetProduct,
     useGetProductsBatch,
     useGetUserProducts,

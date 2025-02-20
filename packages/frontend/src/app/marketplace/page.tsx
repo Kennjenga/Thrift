@@ -5,21 +5,22 @@ import Image from "next/image";
 import { StaticImageData } from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ShoppingBag, 
-  AlertCircle, 
-  Plus, 
-  Package, 
-  Coins, 
-  Heart, 
-  Clock,TrendingUp, 
-  Users, 
-  Leaf, 
+import {
+  ShoppingBag,
+  AlertCircle,
+  Plus,
+  Package,
+  Coins,
+  Heart,
+  Clock,
+  TrendingUp,
+  Users,
+  Leaf,
   Recycle,
-  ArrowRight, 
+  ArrowRight,
   Star,
   Shield,
- } from "lucide-react";
+} from "lucide-react";
 import Navbar from "@/components/navbar";
 import EcoCharacter from "@/components/eco-character";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
@@ -29,34 +30,34 @@ import { formatTokenAmount, formatETHPrice } from "@/utils/token-utils";
 // Color System
 const COLORS = {
   primary: {
-    main: '#7B42FF',
-    light: '#8A2BE2',
-    dark: '#4A00E0',
+    main: "#7B42FF",
+    light: "#8A2BE2",
+    dark: "#4A00E0",
   },
   secondary: {
-    main: '#00FFD1',
-    light: '#00FFFF',
-    dark: '#00E6BD',
+    main: "#00FFD1",
+    light: "#00FFFF",
+    dark: "#00E6BD",
   },
   accent: {
-    pink: '#FF00FF',
-    red: '#FF1B6B',
+    pink: "#FF00FF",
+    red: "#FF1B6B",
   },
   background: {
-    dark: '#1A0B3B',
-    light: '#2A1B54',
+    dark: "#1A0B3B",
+    light: "#2A1B54",
   },
   text: {
-    primary: '#FFFFFF',
-    secondary: 'rgba(255, 255, 255, 0.7)',
-    muted: 'rgba(255, 255, 255, 0.5)',
-    pink: '#FF00FF',
-    red: '#FF1B6B',
+    primary: "#FFFFFF",
+    secondary: "rgba(255, 255, 255, 0.7)",
+    muted: "rgba(255, 255, 255, 0.5)",
+    pink: "#FF00FF",
+    red: "#FF1B6B",
   },
   glass: {
-    background: 'rgba(42, 27, 84, 0.2)',
-    border: 'rgba(123, 66, 255, 0.1)',
-  }
+    background: "rgba(42, 27, 84, 0.2)",
+    border: "rgba(123, 66, 255, 0.1)",
+  },
 };
 // Styles object
 const styles = {
@@ -88,24 +89,32 @@ const styles = {
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 }
+  exit: { opacity: 0, y: -20 },
 };
 
 const pageTransition = {
   type: "tween",
   ease: "anticipate",
-  duration: 0.5
+  duration: 0.5,
 };
 
 const BackgroundElements = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <div className={`absolute inset-0 ${styles.backgroundGradient}`} />
-      
-      <div className={`absolute top-0 right-0 w-[300px] h-[300px] bg-[${COLORS.accent.pink}] rounded-full filter blur-[120px] opacity-[0.15] animate-pulse`} />
-      <div className={`absolute bottom-0 left-0 w-[400px] h-[400px] bg-[${COLORS.primary.main}] rounded-full filter blur-[150px] opacity-[0.12] animate-pulse`} />
-      <div className={`absolute top-1/3 left-1/4 w-[250px] h-[250px] bg-[${COLORS.secondary.light}] rounded-full filter blur-[100px] opacity-[0.1] animate-pulse`} />
-      <div className={`absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-[${COLORS.accent.red}] rounded-full filter blur-[130px] opacity-[0.08] animate-pulse`} />
+
+      <div
+        className={`absolute top-0 right-0 w-[300px] h-[300px] bg-[${COLORS.accent.pink}] rounded-full filter blur-[120px] opacity-[0.15] animate-pulse`}
+      />
+      <div
+        className={`absolute bottom-0 left-0 w-[400px] h-[400px] bg-[${COLORS.primary.main}] rounded-full filter blur-[150px] opacity-[0.12] animate-pulse`}
+      />
+      <div
+        className={`absolute top-1/3 left-1/4 w-[250px] h-[250px] bg-[${COLORS.secondary.light}] rounded-full filter blur-[100px] opacity-[0.1] animate-pulse`}
+      />
+      <div
+        className={`absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-[${COLORS.accent.red}] rounded-full filter blur-[130px] opacity-[0.08] animate-pulse`}
+      />
     </div>
   );
 };
@@ -153,7 +162,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-purple-400/50 rounded-tr" />
           <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-purple-400/50 rounded-bl" />
           <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-purple-400/50 rounded-br" />
-          
+
           {/* Main Image Container */}
           <div className="relative w-full h-full rounded-[1.5rem] overflow-hidden">
             <Image
@@ -175,12 +184,8 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
         {/* Product Info */}
         <div className="text-center">
-          <h3 className="text-xl font-bold text-white mb-2">
-            {product.name}
-          </h3>
-          <p className="text-purple-200/80 text-sm mb-4">
-            {product.brand}
-          </p>
+          <h3 className="text-xl font-bold text-white mb-2">{product.name}</h3>
+          <p className="text-purple-200/80 text-sm mb-4">{product.brand}</p>
 
           {/* Status Tags */}
           <div className="flex justify-center gap-2 mb-6">
@@ -188,7 +193,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
               {formatETHPrice(product.ethPrice)} ETH
             </span>
             <span className="px-4 py-1 bg-pink-500/20 rounded-full text-sm text-pink-200">
-              #{product.id.toString().padStart(4, '0')}
+              #{product.id.toString().padStart(4, "0")}
             </span>
           </div>
 
@@ -196,15 +201,11 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           <div className="flex justify-center gap-4 text-purple-200/80">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4" />
-              <span className="text-sm">
-                Qty: {product.quantity}
-              </span>
+              <span className="text-sm">Qty: {product.quantity}</span>
             </div>
             <div className="flex items-center gap-2">
               <Heart className="w-4 h-4" />
-              <span className="text-sm">
-                {Math.floor(Math.random() * 100)}
-              </span>
+              <span className="text-sm">{Math.floor(Math.random() * 100)}</span>
             </div>
           </div>
         </div>
@@ -231,7 +232,9 @@ const LoadingSkeleton = () => {
 };
 
 const ErrorMessage = ({ message }: { message: string }) => (
-  <div className={`${styles.glassCard} p-4 border-l-4 border-red-500 flex items-center gap-3`}>
+  <div
+    className={`${styles.glassCard} p-4 border-l-4 border-red-500 flex items-center gap-3`}
+  >
     <AlertCircle className="w-6 h-6 text-red-500" />
     <p className="text-white/80">{message}</p>
   </div>
@@ -242,40 +245,41 @@ const marketStats = {
   activeUsers: "2.5K+",
   totalItems: "10K+",
   sustainabilityScore: "95%",
-  averageSavings: "60%"
+  averageSavings: "60%",
 };
 
 const features = [
   {
     icon: <Leaf className="w-6 h-6" />,
     title: "Eco-Friendly",
-    description: "All items verified for sustainability"
+    description: "All items verified for sustainability",
   },
   {
     icon: <Recycle className="w-6 h-6" />,
     title: "Circular Fashion",
-    description: "Reduce waste through clothing recycling"
+    description: "Reduce waste through clothing recycling",
   },
   {
     icon: <Shield className="w-6 h-6" />,
     title: "Verified Quality",
-    description: "Each item carefully inspected"
+    description: "Each item carefully inspected",
   },
   {
     icon: <Star className="w-6 h-6" />,
     title: "Swap Tokens",
-    description: "Use tokens for sustainable clothing choices"
-  }
+    description: "Use tokens for sustainable clothing choices",
+  },
 ];
 
 // Avatar data
-const avatarImage = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSheI9UkWllIpSNbs2UdE18KLLswgDON9qzXg&s";
+const avatarImage =
+  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSheI9UkWllIpSNbs2UdE18KLLswgDON9qzXg&s";
 
 const avatarColors = [
-  'bg-purple-500',
-  'bg-pink-500',
-  'bg-blue-500',
-  'bg-green-500'
+  "bg-purple-500",
+  "bg-pink-500",
+  "bg-blue-500",
+  "bg-green-500",
 ];
 
 // Updated Trust Indicators section with new avatars
@@ -321,14 +325,16 @@ const TrustIndicators = () => {
                   objectFit="cover"
                   className="rounded-full"
                 />
-                <div className={`
+                <div
+                  className={`
                   absolute inset-0
                   bg-gradient-to-tr from-${color}/30 to-transparent
                   mix-blend-overlay
-                `}/>
+                `}
+                />
               </motion.div>
             ))}
-            
+
             {/* More Users Circle */}
             <motion.div
               className={`
@@ -424,13 +430,15 @@ const EnhancedHeroSection = () => {
               transition={{ duration: 0.6 }}
             >
               <div className="flex items-center gap-2 mb-6">
-                <div className={`
+                <div
+                  className={`
                   px-4 py-2 rounded-full
                   bg-[${COLORS.glass.background}]
                   backdrop-blur-md
                   border border-[${COLORS.glass.border}]
                   flex items-center gap-2
-                `}>
+                `}
+                >
                   <TrendingUp className="w-4 h-4 text-[${COLORS.secondary.main}]" />
                   <span className="text-sm text-[${COLORS.text.secondary}]">
                     Trending Marketplace
@@ -449,25 +457,28 @@ const EnhancedHeroSection = () => {
               </h1>
 
               <p className="text-[${COLORS.text.secondary}] text-xl mb-8 max-w-xl">
-                Join the revolution in sustainable fashion. 
-                <br/>
+                Join the revolution in sustainable fashion.
+                <br />
                 Shop eco-friendly clothing, accessories, and more.
               </p>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-6">
                 {Object.entries(marketStats).map(([key, value]) => (
-                  <div key={key} className={`
+                  <div
+                    key={key}
+                    className={`
                     p-4 rounded-xl
                     bg-[${COLORS.glass.background}]
                     backdrop-blur-md
                     border border-[${COLORS.glass.border}]
-                  `}>
+                  `}
+                  >
                     <div className="text-2xl font-bold text-white mb-1">
                       {value}
                     </div>
                     <div className="text-sm text-[${COLORS.text.secondary}]">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                      {key.replace(/([A-Z])/g, " $1").trim()}
                     </div>
                   </div>
                 ))}
@@ -499,13 +510,15 @@ const EnhancedHeroSection = () => {
                     group
                   `}
                 >
-                  <div className={`
+                  <div
+                    className={`
                     w-12 h-12 rounded-full
                     bg-[${COLORS.primary.main}]/20
                     flex items-center justify-center
                     mb-4 group-hover:scale-110
                     transition-transform
-                  `}>
+                  `}
+                  >
                     {feature.icon}
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-2">
@@ -525,7 +538,7 @@ const EnhancedHeroSection = () => {
         </div>
 
         {/* Trust Indicators */}
-              <TrustIndicators />
+        <TrustIndicators />
       </div>
     </section>
   );
@@ -538,7 +551,7 @@ export default function MarketplacePage() {
 
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
         className={`min-h-screen relative overflow-hidden text-[${COLORS.text.primary}] ${styles.backgroundGradient}`}
         initial="initial"
         animate="animate"
@@ -551,8 +564,8 @@ export default function MarketplacePage() {
         <Navbar />
 
         <main className="relative z-10">
-           {/* Hero Section */}
-          <EnhancedHeroSection/>
+          {/* Hero Section */}
+          <EnhancedHeroSection />
 
           <div className="container mx-auto px-4 py-16">
             {/* Main Content */}
@@ -580,12 +593,14 @@ export default function MarketplacePage() {
 
             {/* Empty State */}
             {!isLoading && (!products || products.length === 0) && (
-              <motion.div 
+              <motion.div
                 className={`${styles.glassCard} p-12 text-center`}
                 variants={fadeInUp}
               >
                 <Package className="w-12 h-12 mx-auto mb-4 text-[${COLORS.secondary.main}]" />
-                <p className="text-white/80 mb-6">No products found in the marketplace</p>
+                <p className="text-white/80 mb-6">
+                  No products found in the marketplace
+                </p>
                 <Link href="/marketplace/create">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -607,7 +622,6 @@ export default function MarketplacePage() {
             )}
           </div>
         </main>
-
       </motion.div>
     </AnimatePresence>
   );
