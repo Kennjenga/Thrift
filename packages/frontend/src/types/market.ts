@@ -1,20 +1,67 @@
 // types/market.ts
-export interface ExchangeOffer {
-  offeredProductId: bigint
-  wantedProductId: bigint
-  offerer: `0x${string}`
-  isActive: boolean
-  offeredQuantity: bigint
-  tokenTopUp: bigint
-}
-
-export interface CartItem {
-  product: Product
-  quantity: number
-  paymentMethod: 'ETH' | 'TOKEN'
-}
-
 import { type Address } from 'viem'
+
+export type Aesthetics =
+  | 'Minimalist'
+  | 'Old Money'
+  | 'Vintage'
+  | 'Dark Academia'
+  | 'Light Academia'
+  | 'Romantic Academia'
+  | 'Bohemian'
+  | 'Cottagecore'
+  | 'Fairycore'
+  | 'Goblincore'
+  | 'Witchy'
+  | 'Grunge'
+  | 'Soft Grunge'
+  | 'Punk'
+  | 'Gothic'
+  | 'Nu-Goth'
+  | 'Pastel Goth'
+  | 'Cyberpunk'
+  | 'Y2K'
+  | 'E-Girl'
+  | 'E-Boy'
+  | 'Baddie'
+  | 'Streetwear'
+  | 'Athleisure'
+  | 'Techwear'
+  | 'Art Hoe'
+  | 'Indie'
+  | 'Retro Futurism'
+  | 'Mod'
+  | 'Barbiecore'
+  | 'Kawaii'
+  | 'Classic Lolita'
+  | 'Sweet Lolita'
+  | 'Gothic Lolita'
+  | 'Decora'
+  | 'Kidcore'
+  | 'Harajuku'
+  | 'Scene'
+  | 'Emo'
+  | 'Hippie'
+  | 'Mermaidcore'
+  | 'Dark Fantasy'
+  | 'Pastelcore'
+  | 'Soft Girl'
+  | 'Camp'
+  | 'Coastal Grandmother'
+  | 'Balletcore'
+  | 'Angelcore'
+  | 'Gyaru'
+  | 'Cowboycore'
+  | 'Rocker Chic'
+  | 'Mafia Chic'
+  | 'Royalcore'
+  | 'Regencore'
+  | 'Steampunk'
+  | 'Dieselpunk';
+
+export type ProductCondition = 'New' | 'Like New' | 'Very Good' | 'Good' | 'Fair';
+export type ProductGender = 'Men' | 'Women' | 'Unisex' | 'Kids';
+export type PaymentMethod = 'ETH' | 'TOKEN';
 
 export interface Product {
   id: bigint
@@ -25,16 +72,17 @@ export interface Product {
   name: string
   description: string
   size: string
-  condition: string
+  condition: ProductCondition
   brand: string
   categories: string[]
-  gender: string
+  gender: ProductGender
   image: string
   isAvailableForExchange: boolean
   exchangePreference: string
   isSold: boolean
   isDeleted: boolean
   inEscrowQuantity: bigint
+  aesthetics: Aesthetics[]
 }
 
 export interface ExchangeOffer {
@@ -44,6 +92,13 @@ export interface ExchangeOffer {
   isActive: boolean
   tokenTopUp: bigint
   escrowId: bigint
+  offeredQuantity: bigint
+}
+
+export interface CartItem {
+  product: Product
+  quantity: bigint
+  paymentMethod: PaymentMethod
 }
 
 export interface Escrow {
@@ -76,55 +131,3 @@ export interface AestheticStat {
   purchaseCount: bigint
   lastUpdated: bigint
 }
-
-export type Aesthetics =
-  | 'Minimalist'
-  | 'Old Money (Preppy/Classic Chic)'
-  | 'Vintage'
-  | 'Academia (Dark, Light, Romantic)'
-  | 'Bohemian (Boho)'
-  | 'Cottagecore'
-  | 'Fairycore'
-  | 'Goblincore'
-  | 'Witchy'
-  | 'Grunge'
-  | 'Soft Grunge'
-  | 'Punk'
-  | 'Gothic (Traditional, Nu-Goth, Pastel Goth)'
-  | 'Cyberpunk'
-  | 'Y2K'
-  | 'E-Girl / E-Boy'
-  | 'Baddie'
-  | 'Streetwear'
-  | 'Athleisure'
-  | 'Techwear'
-  | 'Art Hoe'
-  | 'Indie'
-  | 'Retro Futurism'
-  | 'Mod'
-  | 'Barbiecore'
-  | 'Kawaii'
-  | 'Lolita (Classic, Sweet, Gothic)'
-  | 'Decora'
-  | 'Kidcore'
-  | 'Harajuku'
-  | 'Scene'
-  | 'Emo'
-  | 'Hippie'
-  | 'Mermaidcore'
-  | 'Dark Fantasy'
-  | 'Pastelcore'
-  | 'Soft Girl'
-  | 'Camp'
-  | 'Coastal Grandmother'
-  | 'Balletcore'
-  | 'Angelcore'
-  | 'Gyaru'
-  | 'Cowboycore (Western)'
-  | 'Rocker Chic'
-  | 'Mafia Chic'
-  | 'Royalcore'
-  | 'Regencore'
-  | 'Steampunk'
-  | 'Dieselpunk'
-  | 'Light Academia';

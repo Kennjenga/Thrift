@@ -39,17 +39,52 @@ export function useMarketplace() {
       chainId: sepolia.id,
     })
   }
-
-  // Product Read Functions
-  function useGetAllProducts(limit: bigint = BigInt(100), offset: bigint = BigInt(0)) {
-    // Use empty strings/arrays for the search parameters to get all products
-    return useReadContract({
+  const useGetAllProducts = (currentPage: number, pageSize: number) => {
+    // Convert page and size to BigInt for contract interaction
+    const offset = BigInt(currentPage * pageSize)
+    const limit = BigInt(pageSize)
+  
+    // First get product IDs using searchProducts with empty filters
+    const {
+      data: productIds,
+      isLoading: isLoadingIds,
+      error: idsError
+    } = useReadContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'searchProducts',
-      args: ['', [], '', '', BigInt(0), BigInt(0), false, limit, offset],
+      args: [
+        '', // empty search term
+        [], // empty categories
+        '', // empty gender
+        '', // empty brand
+        BigInt(0), // min price
+        BigInt(0), // max price
+        true, // useTokenPrice (doesn't matter here)
+        limit,
+        offset
+      ],
       chainId: sepolia.id,
     })
+  
+    // Then get full product details if we have IDs
+    const {
+      data: products,
+      isLoading: isLoadingProducts,
+      error: productsError
+    } = useReadContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'getProductsBatch',
+      args: [productIds as bigint[]],
+      chainId: sepolia.id,
+    })
+  
+    return {
+      data: products,
+      isLoading: isLoadingIds || isLoadingProducts,
+      error: idsError || productsError
+    }
   }
 
   const useGetProduct = (productId: bigint) => {

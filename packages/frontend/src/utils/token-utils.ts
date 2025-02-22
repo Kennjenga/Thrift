@@ -41,19 +41,26 @@ import { formatEther } from "ethers";
   }
 
   // formating ethereum
-  export const formatETHPrice = (ethPrice: bigint): string => {
-    const formatted = formatEther(ethPrice);
-    // Convert to number for easier manipulation
-    const num = parseFloat(formatted);
+  export const formatETHPrice = (ethPrice: bigint | null | undefined): string => {
+    if (!ethPrice) return '0.00'; // Return default value if ethPrice is null or undefined
     
-    if (num < 0.0001) {
-      // Use scientific notation for very small numbers
-      return num.toExponential(4);
-    } else if (num < 1) {
-      // Show up to 4 decimal places for small numbers
-      return num.toFixed(4);
-    } else {
-      // Show up to 2 decimal places for numbers >= 1
-      return num.toFixed(2);
+    try {
+      const formatted = formatEther(ethPrice);
+      // Convert to number for easier manipulation
+      const num = parseFloat(formatted);
+      
+      if (num < 0.0001) {
+        // Use scientific notation for very small numbers
+        return num.toExponential(4);
+      } else if (num < 1) {
+        // Show up to 4 decimal places for small numbers
+        return num.toFixed(4);
+      } else {
+        // Show up to 2 decimal places for numbers >= 1
+        return num.toFixed(2);
+      }
+    } catch (error) {
+      console.error('Error formatting ETH price:', error);
+      return '0.00';
     }
   };
