@@ -61,38 +61,51 @@ export type Aesthetics =
 
 export type ProductCondition = 'New' | 'Like New' | 'Very Good' | 'Good' | 'Fair';
 export type ProductGender = 'Men' | 'Women' | 'Unisex' | 'Kids';
-export type PaymentMethod = 'ETH' | 'TOKEN';
 
+
+// types/market.ts
 export interface Product {
-  id: bigint
-  seller: Address
-  tokenPrice: bigint
-  ethPrice: bigint
-  quantity: bigint
-  name: string
-  description: string
-  size: string
-  condition: ProductCondition
-  brand: string
-  categories: string[]
-  gender: ProductGender
-  image: string
-  isAvailableForExchange: boolean
-  exchangePreference: string
-  isSold: boolean
-  isDeleted: boolean
-  inEscrowQuantity: bigint
-  aesthetics: Aesthetics[]
+  id: bigint;
+  name: string;
+  description: string;
+  image: string;
+  brand: string;
+  condition: string;
+  size: string;
+  ethPrice: bigint;
+  tokenPrice: bigint;
+  quantity: bigint;
+  seller: string;
+  isAvailableForExchange: boolean;
+  exchangePreference: string;
+  categories: string[];
+  gender: string;
+  isSold: boolean;
+  isDeleted: boolean;
+  inEscrowQuantity: bigint;
+}
+
+export type PaymentMethod = "ETH" | "TOKEN";
+
+export interface CartItem {
+  product: Product;
+  quantity: bigint;
+  paymentMethod: PaymentMethod;
+}
+
+export interface CartState {
+  items: CartItem[];
+  isOpen: boolean;
 }
 
 export interface ExchangeOffer {
-  offeredProductId: bigint
-  wantedProductId: bigint
-  offerer: Address
-  isActive: boolean
-  tokenTopUp: bigint
-  escrowId: bigint
-  offeredQuantity: bigint
+  offeredProductId: bigint;
+  wantedProductId: bigint;
+  offerer: Address;
+  isActive: boolean;
+  tokenTopUp: bigint;
+  escrowId: bigint;
+  offeredQuantity: bigint;
 }
 
 export interface CartItem {

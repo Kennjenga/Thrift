@@ -38,3 +38,23 @@ export interface DonationCenter {
     isError: boolean;
     isLoading: boolean;
   }
+
+  // types/donations.ts
+export interface PendingDonation {
+  id: bigint;
+  donorAddress: string;
+  centerId: bigint;
+  itemCount: bigint;
+  itemType: string;
+  description: string;
+  weightInKg: bigint;
+  submissionDate: bigint;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface ApprovedDonation extends PendingDonation {
+  verifiedItemCount: bigint;
+  verifiedWeightInKg: bigint;
+  approvalDate: bigint;
+  rewardAmount: bigint;
+}

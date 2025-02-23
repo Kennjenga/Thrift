@@ -85,7 +85,7 @@ const MarketplacePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-900 to-black p-6">
+    <div className="min-h-screen to-black">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-white mb-8">Marketplace</h1>
 

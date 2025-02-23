@@ -29,7 +29,7 @@ contract ThriftToken is ERC20, Ownable {
     constructor(
         address initialOwner,
         address _devWallet
-    ) ERC20("ThriftToken", "THRIFT") {
+    ) ERC20("ThriftToken", "THRIFT") Ownable(msg.sender) {
         _transferOwnership(initialOwner);
         devWallet = _devWallet;
         currentCap = INITIAL_CAP;

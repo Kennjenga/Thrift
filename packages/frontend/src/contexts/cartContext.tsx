@@ -1,137 +1,307 @@
-// contexts/CartContext.tsx
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  ReactNode,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { Product } from "@/types/market";
-import { CartItem, CartState } from "@/types/cart";
 
-// Storage key for localStorage
-const CART_STORAGE_KEY = "ace-marketplace-cart";
+// Types
+type PaymentType = "ETH" | "TOKEN" | "EXCHANGE";
+
+export interface CartItem extends Omit<Product, "paymentType"> {
+  quantity: bigint;
+  paymentType: PaymentType;
+  exchangeProductId?: bigint;
+  tokenTopUp?: bigint;
+}
+
+export interface CartState {
+  items: CartItem[];
+  total: {
+    eth: bigint;
+    tokens: bigint;
+  };
+  isOpen: boolean;
+}
 
 type CartAction =
-  | { type: "ADD_ITEM"; payload: { product: Product; quantity: bigint } }
+  | { type: "ADD_ITEM"; payload: CartItem }
   | { type: "REMOVE_ITEM"; payload: { productId: bigint } }
   | {
       type: "UPDATE_QUANTITY";
       payload: { productId: bigint; quantity: bigint };
     }
+  | {
+      type: "UPDATE_PAYMENT_TYPE";
+      payload: { productId: bigint; paymentType: PaymentType };
+    }
+  | {
+      type: "UPDATE_EXCHANGE_DETAILS";
+      payload: {
+        productId: bigint;
+        exchangeProductId: bigint;
+        tokenTopUp: bigint;
+      };
+    }
   | { type: "CLEAR_CART" }
-  | { type: "INIT_CART"; payload: CartState };
+  | { type: "SET_CART_OPEN"; payload: boolean };
 
-// Helper function to serialize bigint for storage
-const serializeCart = (state: CartState): string => {
-  return JSON.stringify(state, (_, value) =>
-    typeof value === "bigint" ? value.toString() + "n" : value
-  );
+interface CartContextType {
+  state: CartState;
+  addItem: (item: CartItem) => void;
+  removeItem: (productId: bigint) => void;
+  updateQuantity: (productId: bigint, quantity: bigint) => void;
+  updatePaymentType: (productId: bigint, paymentType: PaymentType) => void;
+  updateExchangeDetails: (
+    productId: bigint,
+    exchangeProductId: bigint,
+    tokenTopUp: bigint
+  ) => void;
+  clearCart: () => void;
+  setCartOpen: (isOpen: boolean) => void;
+}
+
+// Constants
+const CART_STORAGE_KEY = "marketplace-cart";
+
+// Initial state
+const initialState: CartState = {
+  items: [],
+  total: {
+    eth: BigInt(0),
+    tokens: BigInt(0),
+  },
+  isOpen: false,
 };
 
-// Helper function to deserialize bigint from storage
-const deserializeCart = (jsonString: string): CartState => {
-  return JSON.parse(jsonString, (_, value) => {
-    if (typeof value === "string" && value.endsWith("n")) {
-      return BigInt(value.slice(0, -1));
+// Helper functions
+const serializeCart = (state: CartState): string => {
+  return JSON.stringify(state, (key, value) => {
+    if (typeof value === "bigint") {
+      return value.toString() + "n";
     }
     return value;
   });
 };
 
-// Load cart state from localStorage with client-side check
-const loadCartState = (): CartState => {
-  const initialState = {
-    items: [],
-    total: { eth: BigInt(0), tokens: BigInt(0) },
-  };
+interface SerializedCartItem
+  extends Omit<
+    CartItem,
+    | "quantity"
+    | "ethPrice"
+    | "tokenPrice"
+    | "exchangeProductId"
+    | "tokenTopUp"
+    | "id"
+  > {
+  quantity: string;
+  ethPrice: string;
+  tokenPrice: string;
+  id: string;
+  exchangeProductId?: string;
+  tokenTopUp?: string;
+}
 
+interface SerializedCartState {
+  items: SerializedCartItem[];
+  total: {
+    eth: string;
+    tokens: string;
+  };
+  isOpen: boolean;
+}
+
+const deserializeCart = (jsonString: string): CartState => {
+  const parsedCart = JSON.parse(jsonString) as SerializedCartState;
+
+  return {
+    ...parsedCart,
+    total: {
+      eth: toBigInt(parsedCart.total.eth),
+      tokens: toBigInt(parsedCart.total.tokens),
+    },
+    items: parsedCart.items.map(
+      (item): CartItem => ({
+        ...item,
+        id: toBigInt(item.id),
+        quantity: toBigInt(item.quantity),
+        ethPrice: toBigInt(item.ethPrice),
+        tokenPrice: toBigInt(item.tokenPrice),
+        exchangeProductId: item.exchangeProductId
+          ? toBigInt(item.exchangeProductId)
+          : undefined,
+        tokenTopUp: item.tokenTopUp ? toBigInt(item.tokenTopUp) : undefined,
+        paymentType: item.paymentType as PaymentType,
+      })
+    ),
+  };
+};
+
+const toBigInt = (value: string | number | bigint): bigint => {
+  if (typeof value === "bigint") return value;
+  if (typeof value === "string") {
+    const cleanValue = value.endsWith("n") ? value.slice(0, -1) : value;
+    return BigInt(cleanValue);
+  }
+  if (typeof value === "number") return BigInt(value);
+  return BigInt(0);
+};
+
+const calculateTotal = (items: CartItem[]) => {
+  return items.reduce(
+    (acc, item) => {
+      switch (item.paymentType) {
+        case "ETH":
+          return {
+            ...acc,
+            eth: acc.eth + item.ethPrice * item.quantity,
+          };
+        case "TOKEN":
+          return {
+            ...acc,
+            tokens: acc.tokens + item.tokenPrice * item.quantity,
+          };
+        case "EXCHANGE":
+          if (item.tokenTopUp) {
+            return {
+              ...acc,
+              tokens: acc.tokens + item.tokenTopUp,
+            };
+          }
+          return acc;
+        default:
+          return acc;
+      }
+    },
+    { eth: BigInt(0), tokens: BigInt(0) }
+  );
+};
+
+const loadInitialState = (): CartState => {
   if (typeof window === "undefined") {
     return initialState;
   }
 
   try {
     const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-    if (savedCart) {
-      return deserializeCart(savedCart);
-    }
+    if (!savedCart) return initialState;
+
+    return deserializeCart(savedCart);
   } catch (error) {
     console.error("Failed to load cart from localStorage:", error);
+    return initialState;
   }
-  return initialState;
 };
 
-const calculateTotal = (items: CartItem[]) => {
-  return items.reduce(
-    (acc, item) => ({
-      eth: acc.eth + item.ethPrice * item.quantity,
-      tokens: acc.tokens + item.tokenPrice * item.quantity,
-    }),
-    { eth: BigInt(0), tokens: BigInt(0) }
-  );
-};
+// Create context
+export const CartContext = createContext<CartContextType | undefined>(
+  undefined
+);
 
+// Reducer
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   let newState: CartState;
 
   switch (action.type) {
-    case "INIT_CART":
-      return action.payload;
-
     case "ADD_ITEM": {
-      const { product, quantity } = action.payload;
-      const existingItem = state.items.find((item) => item.id === product.id);
+      const existingItemIndex = state.items.findIndex(
+        (item) => item.id === action.payload.id
+      );
 
-      if (existingItem) {
-        const newQuantity = existingItem.quantity + quantity;
-        if (newQuantity > product.quantity) return state;
-
-        const updatedItems = state.items.map((item) =>
-          item.id === product.id ? { ...item, quantity: newQuantity } : item
-        );
-        newState = {
-          items: updatedItems,
-          total: calculateTotal(updatedItems),
+      let newItems: CartItem[];
+      if (existingItemIndex >= 0) {
+        newItems = [...state.items];
+        newItems[existingItemIndex] = {
+          ...action.payload,
+          quantity:
+            state.items[existingItemIndex].quantity + action.payload.quantity,
         };
       } else {
-        const newItems = [...state.items, { ...product, quantity }];
-        newState = {
-          items: newItems,
-          total: calculateTotal(newItems),
-        };
+        newItems = [...state.items, action.payload];
       }
+
+      newState = {
+        ...state,
+        items: newItems,
+        total: calculateTotal(newItems),
+      };
       break;
     }
 
     case "REMOVE_ITEM": {
-      const filteredItems = state.items.filter(
-        (item) => BigInt(item.id) !== action.payload.productId
+      const newItems = state.items.filter(
+        (item) => item.id !== action.payload.productId
       );
       newState = {
-        items: filteredItems,
-        total: calculateTotal(filteredItems),
+        ...state,
+        items: newItems,
+        total: calculateTotal(newItems),
       };
       break;
     }
 
     case "UPDATE_QUANTITY": {
-      const { productId, quantity } = action.payload;
-      const updatedItems = state.items.map((item) =>
-        BigInt(item.id) === productId ? { ...item, quantity } : item
+      const newItems = state.items.map((item) =>
+        item.id === action.payload.productId
+          ? { ...item, quantity: action.payload.quantity }
+          : item
       );
       newState = {
-        items: updatedItems,
-        total: calculateTotal(updatedItems),
+        ...state,
+        items: newItems,
+        total: calculateTotal(newItems),
+      };
+      break;
+    }
+
+    case "UPDATE_PAYMENT_TYPE": {
+      const newItems = state.items.map(
+        (item): CartItem =>
+          item.id === action.payload.productId
+            ? {
+                ...item,
+                paymentType: action.payload.paymentType,
+                ...(action.payload.paymentType !== "EXCHANGE" && {
+                  exchangeProductId: undefined,
+                  tokenTopUp: undefined,
+                }),
+              }
+            : item
+      );
+      newState = {
+        ...state,
+        items: newItems,
+        total: calculateTotal(newItems),
+      };
+      break;
+    }
+
+    case "UPDATE_EXCHANGE_DETAILS": {
+      const newItems = state.items.map(
+        (item): CartItem =>
+          item.id === action.payload.productId
+            ? {
+                ...item,
+                paymentType: "EXCHANGE" as const,
+                exchangeProductId: action.payload.exchangeProductId,
+                tokenTopUp: action.payload.tokenTopUp,
+              }
+            : item
+      );
+      newState = {
+        ...state,
+        items: newItems,
+        total: calculateTotal(newItems),
       };
       break;
     }
 
     case "CLEAR_CART":
+      newState = initialState;
+      break;
+
+    case "SET_CART_OPEN":
       newState = {
-        items: [],
-        total: { eth: BigInt(0), tokens: BigInt(0) },
+        ...state,
+        isOpen: action.payload,
       };
       break;
 
@@ -139,7 +309,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return state;
   }
 
-  // Save to localStorage only on client-side
+  // Save to localStorage
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(CART_STORAGE_KEY, serializeCart(newState));
@@ -151,35 +321,17 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
   return newState;
 };
 
-interface CartContextType {
-  state: CartState;
-  dispatch: React.Dispatch<CartAction>;
-  addToCart: (product: Product, quantity: bigint) => void;
-  removeFromCart: (productId: bigint) => void;
-  updateQuantity: (productId: bigint, quantity: bigint) => void;
-  clearCart: () => void;
-}
-
-export const CartContext = createContext<CartContextType>(
-  {} as CartContextType
-);
-
-// Client-side only CartProvider component
+// Provider component
 export const CartProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [state, dispatch] = useReducer(cartReducer, null, loadCartState);
+  const [state, dispatch] = useReducer(cartReducer, null, loadInitialState);
 
-  useEffect(() => {
-    const savedState = loadCartState();
-    dispatch({ type: "INIT_CART", payload: savedState });
-  }, []);
-
-  const addToCart = (product: Product, quantity: bigint = BigInt(1)) => {
-    dispatch({ type: "ADD_ITEM", payload: { product, quantity } });
+  const addItem = (item: CartItem) => {
+    dispatch({ type: "ADD_ITEM", payload: item });
   };
 
-  const removeFromCart = (productId: bigint) => {
+  const removeItem = (productId: bigint) => {
     dispatch({ type: "REMOVE_ITEM", payload: { productId } });
   };
 
@@ -187,19 +339,43 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     dispatch({ type: "UPDATE_QUANTITY", payload: { productId, quantity } });
   };
 
+  const updatePaymentType = (productId: bigint, paymentType: PaymentType) => {
+    dispatch({
+      type: "UPDATE_PAYMENT_TYPE",
+      payload: { productId, paymentType },
+    });
+  };
+
+  const updateExchangeDetails = (
+    productId: bigint,
+    exchangeProductId: bigint,
+    tokenTopUp: bigint
+  ) => {
+    dispatch({
+      type: "UPDATE_EXCHANGE_DETAILS",
+      payload: { productId, exchangeProductId, tokenTopUp },
+    });
+  };
+
   const clearCart = () => {
     dispatch({ type: "CLEAR_CART" });
+  };
+
+  const setCartOpen = (isOpen: boolean) => {
+    dispatch({ type: "SET_CART_OPEN", payload: isOpen });
   };
 
   return (
     <CartContext.Provider
       value={{
         state,
-        dispatch,
-        addToCart,
-        removeFromCart,
+        addItem,
+        removeItem,
         updateQuantity,
+        updatePaymentType,
+        updateExchangeDetails,
         clearCart,
+        setCartOpen,
       }}
     >
       {children}
@@ -207,7 +383,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// Custom hook to use cart context
+// Hook
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {

@@ -1,12 +1,20 @@
 // src/app/marketplace/layout.tsx
 "use client";
 
-import { ClientCartProvider } from "./_components/clientcartprovider";
-
+import { CartProvider } from "@/contexts/cartContext";
+import Navbar from "./_components/navbar";
 export default function MarketplaceLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <ClientCartProvider>{children}</ClientCartProvider>;
+  return (
+    <>
+      <CartProvider>
+        <Navbar />
+        {children}
+      </CartProvider>
+      ;
+    </>
+  );
 }
