@@ -3,19 +3,29 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ThriftToken} from "./thrift.sol";
 import {UserAesthetics} from "./userAesthetics.sol";
 
+/**
+ * @title Marketplace
+ * @dev A decentralized marketplace for buying, selling, and exchanging products
+ * with support for both ETH and token payments, escrow system, and aesthetic tracking
+ */
 contract Marketplace is ReentrancyGuard {
     using Counters for Counters.Counter;
 
+    // Core state variables
     ThriftToken public thriftToken;
     UserAesthetics public userAesthetics;
     address public treasuryWallet;
 
+    // Counters for IDs
     Counters.Counter private _productIds;
     Counters.Counter private _escrowIds;
 
+    // Constants
     uint256 public tokenPlatformFee = 35; // 3.5% total platform fee
     uint256 public ethPlatformFee = 35; // 3.5% total platform fee
     uint256 public constant BURN_PERCENTAGE = 60;
@@ -24,13 +34,7 @@ contract Marketplace is ReentrancyGuard {
     uint256 public constant MAX_ESCROW_DURATION = 5 days;
     uint256 public constant MAX_BULK_PURCHASE = 50;
 
-    // Aesthetic tracking
-    struct AestheticStats {
-        uint256 productCount;
-        uint256 purchaseCount;
-        uint256 lastUpdated;
-    }
-
+    // Structs
     struct Product {
         uint256 id;
         address seller;
@@ -42,7 +46,29 @@ contract Marketplace is ReentrancyGuard {
         string size;
         string condition;
         string brand;
-        string[] categories; // Array for better aesthetics matching
+        string[] categories;
+        string gender;
+        string image;
+        bool isAvailableForExchange;
+        string exchangePreference;
+        bool isSold;
+        bool isDeleted;
+        uint256 inEscrowQuantity;
+    }
+
+    struct ProductWithAvailability {
+        uint256 id;
+        address seller;
+        uint256 tokenPrice;
+        uint256 ethPrice;
+        uint256 totalQuantity;
+        uint256 availableQuantity;
+        string name;
+        string description;
+        string size;
+        string condition;
+        string brand;
+        string[] categories;
         string gender;
         string image;
         bool isAvailableForExchange;
@@ -66,11 +92,10 @@ contract Marketplace is ReentrancyGuard {
         bool refunded;
         bool isToken;
         bool isExchange;
-        uint256 exchangeProductId; // If this is an exchange, the ID of product being exchanged
-        uint256 tokenTopUp; // Additional tokens for exchange balancing
+        uint256 exchangeProductId;
+        uint256 tokenTopUp;
     }
 
-    // Enhanced exchange system
     struct ExchangeOffer {
         uint256 offeredProductId;
         uint256 wantedProductId;
@@ -80,82 +105,166 @@ contract Marketplace is ReentrancyGuard {
         uint256 escrowId;
     }
 
+    struct UserEscrowTracking {
+        uint256[] activeEscrows;
+        uint256[] completedEscrows;
+    }
+
+    struct SearchParams {
+        string nameQuery;
+        string[] categories;
+        string brand;
+        string condition;
+        string gender;
+        string size;
+        uint256 minPrice;
+        uint256 maxPrice;
+        bool onlyAvailable;
+        bool exchangeOnly;
+        uint256 page;
+        uint256 pageSize;
+    }
+
+    struct SearchResult {
+        ProductWithAvailability[] products;
+        uint256 totalResults;
+        uint256 totalPages;
+        uint256 currentPage;
+    }
+
+    // Mappings
     mapping(uint256 => Product) public products;
     mapping(uint256 => Escrow) public escrows;
     mapping(address => uint256[]) public userProducts;
-    mapping(address => uint256[]) public userEscrows;
     mapping(string => uint256[]) public categoryToProducts;
-    mapping(string => AestheticStats) public aestheticsStats;
     mapping(uint256 => ExchangeOffer[]) public exchangeOffers;
+    mapping(address => UserEscrowTracking) private userEscrowInfos;
+    mapping(address => mapping(uint256 => uint256)) private escrowToActiveIndex;
 
-    // Track top aesthetics
-    string[] private _topAesthetics;
-    uint256 private _lastAestheticsUpdate;
-    uint256 private constant AESTHETICS_UPDATE_INTERVAL = 1 days;
+    // Pause state
+    bool public isPaused;
 
+    // Events
     event ProductCreated(
         uint256 indexed productId,
         address indexed seller,
-        string[] categories
+        string[] categories,
+        uint256 quantity,
+        uint256 tokenPrice,
+        uint256 ethPrice
     );
+
     event ProductUpdated(
         uint256 indexed productId,
         address indexed seller,
-        string[] categories
+        string[] categories,
+        uint256 quantity,
+        uint256 tokenPrice,
+        uint256 ethPrice
     );
-    event ProductQuantityUpdated(
+
+    event ProductMarkedSold(uint256 indexed productId, address indexed seller);
+
+    event QuantityUpdate(
         uint256 indexed productId,
-        uint256 newQuantity
+        uint256 newTotal,
+        uint256 newAvailable
     );
+
     event EscrowCreated(
         uint256 indexed escrowId,
         uint256 indexed productId,
         address indexed buyer,
         address seller,
-        uint256 quantity
-    );
-    event EscrowConfirmed(uint256 indexed escrowId, address indexed confirmer);
-    event EscrowCompleted(uint256 indexed escrowId);
-    event EscrowRefunded(uint256 indexed escrowId);
-    event ExchangeOfferCreated(
-        uint256 offeredProductId,
-        uint256 wantedProductId,
-        address offerer,
         uint256 quantity,
+        uint256 amount,
+        bool isToken
+    );
+
+    event BulkEscrowCreated(
+        uint256 indexed firstEscrowId,
+        uint256 count,
+        address indexed buyer,
+        uint256 totalAmount,
+        bool isToken
+    );
+
+    event EscrowConfirmed(
+        uint256 indexed escrowId,
+        address indexed confirmer,
+        bool isBuyer
+    );
+
+    event EscrowCompleted(
+        uint256 indexed escrowId,
+        uint256 indexed productId,
+        uint256 quantity,
+        uint256 amount
+    );
+
+    event EscrowRefunded(
+        uint256 indexed escrowId,
+        address indexed buyer,
+        uint256 amount
+    );
+
+    event ExchangeOfferCreated(
+        uint256 indexed offeredProductId,
+        uint256 indexed wantedProductId,
+        address indexed offerer,
         uint256 tokenTopUp,
         uint256 escrowId
     );
+
     event ExchangeCompleted(
-        uint256 offeredProductId,
-        uint256 wantedProductId,
+        uint256 indexed offeredProductId,
+        uint256 indexed wantedProductId,
         address party1,
         address party2,
-        uint256 quantity,
         uint256 tokenTopUp
     );
-    event BulkPurchaseInitiated(
-        address buyer,
-        uint256[] productIds,
-        uint256[] quantities,
-        uint256[] escrowIds
+
+    event EscrowRejected(
+        uint256 indexed escrowId,
+        address indexed rejector,
+        string reason
     );
 
+    event EscrowCancelled(uint256 indexed escrowId, address indexed canceller);
+
+    event PlatformFeesUpdated(uint256 newTokenFee, uint256 newEthFee);
+    event TreasuryWalletUpdated(address newTreasury);
+    event UserAestheticsUpdated(address newUserAesthetics);
+
+    /**
+     * @dev Contract constructor
+     */
     constructor(
-        address payable _thriftToken, // Change to address payable
+        address payable _thriftToken,
         address _userAesthetics,
-        address _treasuryWallet
+        address payable _treasuryWallet
     ) {
+        require(_thriftToken != address(0), "Invalid token address");
+        require(_userAesthetics != address(0), "Invalid aesthetics address");
+        require(_treasuryWallet != address(0), "Invalid treasury address");
+
         thriftToken = ThriftToken(_thriftToken);
         userAesthetics = UserAesthetics(_userAesthetics);
         treasuryWallet = _treasuryWallet;
-
-        // Initialize top aesthetics array
-        _topAesthetics = new string[](5);
-        _lastAestheticsUpdate = block.timestamp;
     }
 
-    // PRODUCT MANAGEMENT FUNCTIONS
+    // Modifiers
+    modifier whenNotPaused() {
+        require(!isPaused, "Contract is paused");
+        _;
+    }
 
+    // Product Management Functions
+
+    /**
+     * @dev Creates a new product listing
+     * @return uint256 ID of the created product
+     */
     function createProduct(
         string memory name,
         string memory description,
@@ -170,11 +279,17 @@ contract Marketplace is ReentrancyGuard {
         uint256 quantity,
         bool isAvailableForExchange,
         string memory exchangePreference
-    ) external returns (uint256) {
+    ) external whenNotPaused returns (uint256) {
+        require(msg.sender != address(0), "Invalid sender address");
         require(quantity > 0, "Quantity must be positive");
         require(tokenPrice > 0 || ethPrice > 0, "Must set at least one price");
-        require(categories.length > 0, "At least one category required");
-        require(categories.length <= 20, "Too many categories");
+        require(
+            categories.length > 0 && categories.length <= 20,
+            "Invalid categories count"
+        );
+        require(bytes(name).length > 0, "Name required");
+        require(bytes(name).length <= 100, "Name too long");
+        require(bytes(description).length <= 1000, "Description too long");
 
         _productIds.increment();
         uint256 productId = _productIds.current();
@@ -202,18 +317,29 @@ contract Marketplace is ReentrancyGuard {
 
         userProducts[msg.sender].push(productId);
 
-        // Index product by each category for efficient queries & update stats
-        for (uint i = 0; i < categories.length; i++) {
+        // Index product by categories (aesthetics)
+        for (uint256 i = 0; i < categories.length; ) {
             categoryToProducts[categories[i]].push(productId);
-            aestheticsStats[categories[i]].productCount++;
-            aestheticsStats[categories[i]].lastUpdated = block.timestamp;
+            unchecked {
+                ++i;
+            }
         }
 
-        _updateTopAesthetics();
-        emit ProductCreated(productId, msg.sender, categories);
+        emit ProductCreated(
+            productId,
+            msg.sender,
+            categories,
+            quantity,
+            tokenPrice,
+            ethPrice
+        );
+
         return productId;
     }
 
+    /**
+     * @dev Updates an existing product
+     */
     function updateProduct(
         uint256 productId,
         string memory name,
@@ -231,21 +357,23 @@ contract Marketplace is ReentrancyGuard {
     ) external {
         Product storage product = products[productId];
         require(product.seller == msg.sender, "Not your product");
-        require(!product.isDeleted, "Product deleted");
+        require(!product.isDeleted && !product.isSold, "Product not available");
         require(tokenPrice > 0 || ethPrice > 0, "Must set at least one price");
         require(
-            product.quantity > product.inEscrowQuantity,
-            "All items in escrow"
+            categories.length > 0 && categories.length <= 20,
+            "Invalid categories count"
         );
-        require(categories.length > 0, "At least one category required");
-        require(categories.length <= 20, "Too many categories");
 
         // Remove from old category indices
-        for (uint i = 0; i < product.categories.length; i++) {
-            removeFromCategoryIndex(product.categories[i], productId);
-            aestheticsStats[product.categories[i]].productCount--;
+        string[] memory oldCategories = product.categories;
+        for (uint256 i = 0; i < oldCategories.length; ) {
+            removeFromCategoryIndex(oldCategories[i], productId);
+            unchecked {
+                ++i;
+            }
         }
 
+        // Update product details
         product.name = name;
         product.description = description;
         product.size = size;
@@ -260,81 +388,266 @@ contract Marketplace is ReentrancyGuard {
         product.exchangePreference = exchangePreference;
 
         // Add to new category indices
-        for (uint i = 0; i < categories.length; i++) {
+        for (uint256 i = 0; i < categories.length; ) {
             categoryToProducts[categories[i]].push(productId);
-            aestheticsStats[categories[i]].productCount++;
-            aestheticsStats[categories[i]].lastUpdated = block.timestamp;
-        }
-
-        _updateTopAesthetics();
-        emit ProductUpdated(productId, msg.sender, categories);
-    }
-
-    // Helper function to remove product from category index
-    function removeFromCategoryIndex(
-        string memory category,
-        uint256 productId
-    ) internal {
-        uint256[] storage productsInCategory = categoryToProducts[category];
-        for (uint i = 0; i < productsInCategory.length; i++) {
-            if (productsInCategory[i] == productId) {
-                // Move the last element to this position and pop
-                if (i < productsInCategory.length - 1) {
-                    productsInCategory[i] = productsInCategory[
-                        productsInCategory.length - 1
-                    ];
-                }
-                productsInCategory.pop();
-                break;
+            unchecked {
+                ++i;
             }
         }
+
+        emit ProductUpdated(
+            productId,
+            msg.sender,
+            categories,
+            product.quantity,
+            tokenPrice,
+            ethPrice
+        );
     }
 
+    /**
+     * @dev Updates product quantity
+     */
     function updateProductQuantity(
         uint256 productId,
         uint256 newQuantity
-    ) external {
+    ) public {
         Product storage product = products[productId];
         require(product.seller == msg.sender, "Not your product");
-        require(!product.isDeleted, "Product deleted");
+        require(!product.isDeleted && !product.isSold, "Product not available");
         require(
             newQuantity >= product.inEscrowQuantity,
             "Cannot set below escrow quantity"
         );
 
         product.quantity = newQuantity;
-        emit ProductQuantityUpdated(productId, newQuantity);
+
+        // Check if product is now effectively sold out
+        _checkAndMarkProductSold(productId);
+
+        emit QuantityUpdate(
+            productId,
+            newQuantity,
+            newQuantity - product.inEscrowQuantity
+        );
     }
 
-    // PURCHASING FUNCTIONS WITH ESCROW
+    /**
+     * @dev Batch update product quantities
+     */
+    function batchUpdateQuantities(
+        uint256[] calldata productIds,
+        uint256[] calldata newQuantities
+    ) external {
+        require(productIds.length == newQuantities.length, "Length mismatch");
+        for (uint256 i = 0; i < productIds.length; ) {
+            updateProductQuantity(productIds[i], newQuantities[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
 
+    /**
+     * @dev Removes product from category index
+     */
+    function removeFromCategoryIndex(
+        string memory category,
+        uint256 productId
+    ) internal {
+        uint256[] storage productsInCategory = categoryToProducts[category];
+        uint256 length = productsInCategory.length;
+
+        for (uint256 i = 0; i < length; ) {
+            if (productsInCategory[i] == productId) {
+                // Move last element to this position and pop
+                if (i < length - 1) {
+                    productsInCategory[i] = productsInCategory[length - 1];
+                }
+                productsInCategory.pop();
+                break;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @dev Checks if product has no available quantity and marks it as sold
+     */
+    function _checkAndMarkProductSold(uint256 productId) internal {
+        Product storage product = products[productId];
+        if (
+            product.quantity - product.inEscrowQuantity == 0 && !product.isSold
+        ) {
+            product.isSold = true;
+            emit ProductMarkedSold(productId, product.seller);
+        }
+    }
+
+    /**
+     * @dev Updates product quantities after sale completion
+     */
+    function _completeQuantitySale(
+        uint256 productId,
+        uint256 quantity
+    ) internal {
+        Product storage product = products[productId];
+        require(product.quantity >= quantity, "Invalid quantity");
+
+        unchecked {
+            product.quantity -= quantity;
+            product.inEscrowQuantity -= quantity;
+        }
+
+        if (product.quantity == 0) {
+            product.isSold = true;
+            emit ProductMarkedSold(productId, product.seller);
+        }
+
+        emit QuantityUpdate(
+            productId,
+            product.quantity,
+            product.quantity - product.inEscrowQuantity
+        );
+    }
+
+    // Escrow System Functions
+
+    /**
+     * @dev Escrow tracking helper functions
+     */
+    function _addToUserActiveEscrows(address user, uint256 escrowId) internal {
+        UserEscrowTracking storage userInfo = userEscrowInfos[user];
+        escrowToActiveIndex[user][escrowId] = userInfo.activeEscrows.length;
+        userInfo.activeEscrows.push(escrowId);
+    }
+
+    function _moveEscrowToCompleted(
+        uint256 escrowId,
+        address buyer,
+        address seller
+    ) internal {
+        // Handle buyer's escrow tracking
+        _removeFromActiveAddToCompleted(buyer, escrowId);
+        // Handle seller's escrow tracking
+        _removeFromActiveAddToCompleted(seller, escrowId);
+    }
+
+    function _removeFromActiveAddToCompleted(
+        address user,
+        uint256 escrowId
+    ) internal {
+        UserEscrowTracking storage userInfo = userEscrowInfos[user];
+        uint256 index = escrowToActiveIndex[user][escrowId];
+
+        if (
+            index < userInfo.activeEscrows.length &&
+            userInfo.activeEscrows[index] == escrowId
+        ) {
+            // Remove from active (swap with last element and pop)
+            uint256 lastIndex = userInfo.activeEscrows.length - 1;
+            if (index != lastIndex) {
+                userInfo.activeEscrows[index] = userInfo.activeEscrows[
+                    lastIndex
+                ];
+                escrowToActiveIndex[user][
+                    userInfo.activeEscrows[index]
+                ] = index;
+            }
+            userInfo.activeEscrows.pop();
+            delete escrowToActiveIndex[user][escrowId];
+
+            // Add to completed
+            userInfo.completedEscrows.push(escrowId);
+        }
+    }
+
+    function _removeEscrowFromActiveList(
+        uint256 escrowId,
+        address buyer,
+        address seller
+    ) internal {
+        // Remove from buyer's active list
+        UserEscrowTracking storage buyerInfo = userEscrowInfos[buyer];
+        uint256 buyerIndex = escrowToActiveIndex[buyer][escrowId];
+
+        if (
+            buyerIndex < buyerInfo.activeEscrows.length &&
+            buyerInfo.activeEscrows[buyerIndex] == escrowId
+        ) {
+            // Remove (swap with last element and pop)
+            uint256 lastIndex = buyerInfo.activeEscrows.length - 1;
+            if (buyerIndex != lastIndex) {
+                buyerInfo.activeEscrows[buyerIndex] = buyerInfo.activeEscrows[
+                    lastIndex
+                ];
+                escrowToActiveIndex[buyer][
+                    buyerInfo.activeEscrows[buyerIndex]
+                ] = buyerIndex;
+            }
+            buyerInfo.activeEscrows.pop();
+            delete escrowToActiveIndex[buyer][escrowId];
+        }
+
+        // Remove from seller's active list
+        UserEscrowTracking storage sellerInfo = userEscrowInfos[seller];
+        uint256 sellerIndex = escrowToActiveIndex[seller][escrowId];
+
+        if (
+            sellerIndex < sellerInfo.activeEscrows.length &&
+            sellerInfo.activeEscrows[sellerIndex] == escrowId
+        ) {
+            // Remove (swap with last element and pop)
+            uint256 lastIndex = sellerInfo.activeEscrows.length - 1;
+            if (sellerIndex != lastIndex) {
+                sellerInfo.activeEscrows[sellerIndex] = sellerInfo
+                    .activeEscrows[lastIndex];
+                escrowToActiveIndex[seller][
+                    sellerInfo.activeEscrows[sellerIndex]
+                ] = sellerIndex;
+            }
+            sellerInfo.activeEscrows.pop();
+            delete escrowToActiveIndex[seller][escrowId];
+        }
+    }
+
+    /**
+     * @dev Creates an escrow with ETH payment
+     */
     function createEscrowWithEth(
         uint256 productId,
         uint256 quantity
-    ) external payable nonReentrant {
-        require(quantity > 0, "Quantity must be positive");
-        require(quantity <= MAX_BULK_PURCHASE, "Quantity exceeds limit");
-
+    ) external payable whenNotPaused nonReentrant {
         Product storage product = products[productId];
-        require(!product.isDeleted, "Product deleted");
+        require(!product.isDeleted && !product.isSold, "Product not available");
         require(product.ethPrice > 0, "ETH price not set");
         require(
-            product.quantity - product.inEscrowQuantity >= quantity,
-            "Insufficient quantity"
+            quantity > 0 && quantity <= MAX_BULK_PURCHASE,
+            "Invalid quantity"
         );
 
-        uint256 totalAmount = product.ethPrice * quantity;
-        require(msg.value == totalAmount, "Incorrect ETH amount");
+        uint256 availableQuantity = product.quantity - product.inEscrowQuantity;
+        require(availableQuantity >= quantity, "Insufficient quantity");
+
+        uint256 totalCost = product.ethPrice * quantity;
+        require(msg.value == totalCost, "Incorrect ETH amount");
 
         _escrowIds.increment();
         uint256 escrowId = _escrowIds.current();
 
+        // Update product state
+        product.inEscrowQuantity += quantity;
+        _checkAndMarkProductSold(productId);
+
+        // Create escrow
         escrows[escrowId] = Escrow({
             escrowId: escrowId,
             productId: productId,
             buyer: msg.sender,
             seller: product.seller,
-            amount: totalAmount,
+            amount: totalCost,
             deadline: block.timestamp + MAX_ESCROW_DURATION,
             quantity: quantity,
             buyerConfirmed: false,
@@ -347,55 +660,60 @@ contract Marketplace is ReentrancyGuard {
             tokenTopUp: 0
         });
 
-        product.inEscrowQuantity += quantity;
-        userEscrows[msg.sender].push(escrowId);
-
-        // Update aesthetic stats when purchase initiated
-        for (uint i = 0; i < product.categories.length; i++) {
-            aestheticsStats[product.categories[i]].purchaseCount++;
-            aestheticsStats[product.categories[i]].lastUpdated = block
-                .timestamp;
-        }
+        // Add to user escrow lists
+        _addToUserActiveEscrows(msg.sender, escrowId);
+        _addToUserActiveEscrows(product.seller, escrowId);
 
         emit EscrowCreated(
             escrowId,
             productId,
             msg.sender,
             product.seller,
-            quantity
+            quantity,
+            totalCost,
+            false
         );
     }
 
+    /**
+     * @dev Creates an escrow with token payment
+     */
     function createEscrowWithTokens(
         uint256 productId,
         uint256 quantity
-    ) external nonReentrant {
-        require(quantity > 0, "Quantity must be positive");
-        require(quantity <= MAX_BULK_PURCHASE, "Quantity exceeds limit");
-
+    ) external whenNotPaused nonReentrant {
         Product storage product = products[productId];
-        require(!product.isDeleted, "Product deleted");
+        require(!product.isDeleted && !product.isSold, "Product not available");
         require(product.tokenPrice > 0, "Token price not set");
         require(
-            product.quantity - product.inEscrowQuantity >= quantity,
-            "Insufficient quantity"
+            quantity > 0 && quantity <= MAX_BULK_PURCHASE,
+            "Invalid quantity"
         );
 
-        uint256 totalAmount = product.tokenPrice * quantity;
+        uint256 availableQuantity = product.quantity - product.inEscrowQuantity;
+        require(availableQuantity >= quantity, "Insufficient quantity");
+
+        uint256 totalCost = product.tokenPrice * quantity;
+
         require(
-            thriftToken.transferFrom(msg.sender, address(this), totalAmount),
+            thriftToken.transferFrom(msg.sender, address(this), totalCost),
             "Token transfer failed"
         );
 
         _escrowIds.increment();
         uint256 escrowId = _escrowIds.current();
 
+        // Update product state
+        product.inEscrowQuantity += quantity;
+        _checkAndMarkProductSold(productId);
+
+        // Create escrow
         escrows[escrowId] = Escrow({
             escrowId: escrowId,
             productId: productId,
             buyer: msg.sender,
             seller: product.seller,
-            amount: totalAmount,
+            amount: totalCost,
             deadline: block.timestamp + MAX_ESCROW_DURATION,
             quantity: quantity,
             buyerConfirmed: false,
@@ -408,425 +726,91 @@ contract Marketplace is ReentrancyGuard {
             tokenTopUp: 0
         });
 
-        product.inEscrowQuantity += quantity;
-        userEscrows[msg.sender].push(escrowId);
-
-        // Update aesthetic stats when purchase initiated
-        for (uint i = 0; i < product.categories.length; i++) {
-            aestheticsStats[product.categories[i]].purchaseCount++;
-            aestheticsStats[product.categories[i]].lastUpdated = block
-                .timestamp;
-        }
+        // Add to user escrow lists
+        _addToUserActiveEscrows(msg.sender, escrowId);
+        _addToUserActiveEscrows(product.seller, escrowId);
 
         emit EscrowCreated(
             escrowId,
             productId,
             msg.sender,
             product.seller,
-            quantity
+            quantity,
+            totalCost,
+            true
         );
     }
 
-    // BULK PURCHASE WITH ESCROW
-    function createBulkEscrowWithEth(
-        uint256[] calldata productIds,
-        uint256[] calldata quantities
-    ) external payable nonReentrant {
-        require(
-            productIds.length == quantities.length,
-            "Arrays length mismatch"
-        );
-        require(productIds.length > 0, "Empty purchase");
-
-        uint256 totalCost = 0;
-        uint256[] memory escrowIds = new uint256[](productIds.length);
-
-        // Create escrow for each product
-        for (uint256 i = 0; i < productIds.length; i++) {
-            require(
-                quantities[i] > 0 && quantities[i] <= MAX_BULK_PURCHASE,
-                "Invalid quantity"
-            );
-
-            Product storage product = products[productIds[i]];
-            require(!product.isDeleted, "Product deleted");
-            require(product.ethPrice > 0, "ETH price not set");
-            require(
-                product.quantity - product.inEscrowQuantity >= quantities[i],
-                "Insufficient quantity"
-            );
-
-            uint256 itemCost = product.ethPrice * quantities[i];
-            totalCost += itemCost;
-
-            _escrowIds.increment();
-            uint256 escrowId = _escrowIds.current();
-            escrowIds[i] = escrowId;
-
-            escrows[escrowId] = Escrow({
-                escrowId: escrowId,
-                productId: productIds[i],
-                buyer: msg.sender,
-                seller: product.seller,
-                amount: itemCost,
-                deadline: block.timestamp + MAX_ESCROW_DURATION,
-                quantity: quantities[i],
-                buyerConfirmed: false,
-                sellerConfirmed: false,
-                completed: false,
-                refunded: false,
-                isToken: false,
-                isExchange: false,
-                exchangeProductId: 0,
-                tokenTopUp: 0
-            });
-
-            product.inEscrowQuantity += quantities[i];
-            userEscrows[msg.sender].push(escrowId);
-
-            // Update aesthetic stats
-            for (uint j = 0; j < product.categories.length; j++) {
-                aestheticsStats[product.categories[j]].purchaseCount++;
-                aestheticsStats[product.categories[j]].lastUpdated = block
-                    .timestamp;
-            }
-
-            emit EscrowCreated(
-                escrowId,
-                productIds[i],
-                msg.sender,
-                product.seller,
-                quantities[i]
-            );
-        }
-
-        require(msg.value == totalCost, "Incorrect ETH amount");
-
-        emit BulkPurchaseInitiated(
-            msg.sender,
-            productIds,
-            quantities,
-            escrowIds
-        );
-    }
-
-    function createBulkEscrowWithTokens(
-        uint256[] calldata productIds,
-        uint256[] calldata quantities
-    ) external nonReentrant {
-        require(
-            productIds.length == quantities.length,
-            "Arrays length mismatch"
-        );
-        require(productIds.length > 0, "Empty purchase");
-
-        uint256 totalCost = 0;
-        uint256[] memory escrowIds = new uint256[](productIds.length);
-
-        // Calculate total cost first
-        for (uint256 i = 0; i < productIds.length; i++) {
-            require(
-                quantities[i] > 0 && quantities[i] <= MAX_BULK_PURCHASE,
-                "Invalid quantity"
-            );
-
-            Product storage product = products[productIds[i]];
-            require(!product.isDeleted, "Product deleted");
-            require(product.tokenPrice > 0, "Token price not set");
-            require(
-                product.quantity - product.inEscrowQuantity >= quantities[i],
-                "Insufficient quantity"
-            );
-
-            totalCost += product.tokenPrice * quantities[i];
-        }
-
-        // Transfer tokens first
-        require(
-            thriftToken.transferFrom(msg.sender, address(this), totalCost),
-            "Token transfer failed"
-        );
-
-        // Create escrow for each product
-        for (uint256 i = 0; i < productIds.length; i++) {
-            Product storage product = products[productIds[i]];
-            uint256 itemCost = product.tokenPrice * quantities[i];
-
-            _escrowIds.increment();
-            uint256 escrowId = _escrowIds.current();
-            escrowIds[i] = escrowId;
-
-            escrows[escrowId] = Escrow({
-                escrowId: escrowId,
-                productId: productIds[i],
-                buyer: msg.sender,
-                seller: product.seller,
-                amount: itemCost,
-                deadline: block.timestamp + MAX_ESCROW_DURATION,
-                quantity: quantities[i],
-                buyerConfirmed: false,
-                sellerConfirmed: false,
-                completed: false,
-                refunded: false,
-                isToken: true,
-                isExchange: false,
-                exchangeProductId: 0,
-                tokenTopUp: 0
-            });
-
-            product.inEscrowQuantity += quantities[i];
-            userEscrows[msg.sender].push(escrowId);
-
-            // Update aesthetic stats
-            for (uint j = 0; j < product.categories.length; j++) {
-                aestheticsStats[product.categories[j]].purchaseCount++;
-                aestheticsStats[product.categories[j]].lastUpdated = block
-                    .timestamp;
-            }
-
-            emit EscrowCreated(
-                escrowId,
-                productIds[i],
-                msg.sender,
-                product.seller,
-                quantities[i]
-            );
-        }
-
-        emit BulkPurchaseInitiated(
-            msg.sender,
-            productIds,
-            quantities,
-            escrowIds
-        );
-    }
-
-    // ESCROW MANAGEMENT FUNCTIONS
-    function confirmEscrow(uint256 escrowId) external {
-        Escrow storage escrow = escrows[escrowId];
-        require(
-            !escrow.completed && !escrow.refunded,
-            "Escrow already finalized"
-        );
-        require(block.timestamp <= escrow.deadline, "Escrow expired");
-        require(
-            msg.sender == escrow.buyer || msg.sender == escrow.seller,
-            "Not authorized"
-        );
-
-        if (msg.sender == escrow.buyer) {
-            escrow.buyerConfirmed = true;
-        } else {
-            escrow.sellerConfirmed = true;
-        }
-
-        emit EscrowConfirmed(escrowId, msg.sender);
-
-        if (escrow.buyerConfirmed && escrow.sellerConfirmed) {
-            _completeEscrow(escrowId);
-        }
-    }
-
-    function _completeEscrow(uint256 escrowId) internal {
-        Escrow storage escrow = escrows[escrowId];
-        Product storage product = products[escrow.productId];
-
-        escrow.completed = true;
-        product.inEscrowQuantity -= escrow.quantity;
-        product.quantity -= escrow.quantity;
-
-        if (product.quantity == 0) {
-            product.isSold = true;
-        }
-
-        // Handle exchange completion if this is an exchange escrow
-        if (escrow.isExchange) {
-            if (escrow.exchangeProductId > 0) {
-                // Handle the exchange product transfer
-                Product storage exchangeProduct = products[
-                    escrow.exchangeProductId
-                ];
-                exchangeProduct.inEscrowQuantity -= 1;
-                exchangeProduct.quantity -= 1;
-
-                // Update ownership - since this is an exchange transaction
-                // the party1 is the original seller of exchangeProduct
-                // the party2 is the original seller of product
-                address party1 = exchangeProduct.seller;
-                address party2 = product.seller;
-
-                product.seller = party1;
-                exchangeProduct.seller = party2;
-
-                // If tokenTopUp was part of the exchange
-                if (escrow.tokenTopUp > 0) {
-                    // Transfer the token top-up to the party receiving it
-                    thriftToken.transfer(party2, escrow.tokenTopUp);
-                }
-
-                if (exchangeProduct.quantity == 0) {
-                    exchangeProduct.isSold = true;
-                }
-
-                // Fire exchange completed event
-                emit ExchangeCompleted(
-                    escrow.exchangeProductId,
-                    escrow.productId,
-                    party1,
-                    party2,
-                    1,
-                    escrow.tokenTopUp
-                );
-            }
-        } else {
-            // Normal purchase - process fees
-            if (escrow.isToken) {
-                // Calculate fees for token payment
-                uint256 platformFeeAmount = (escrow.amount * tokenPlatformFee) /
-                    1000;
-                uint256 burnAmount = (platformFeeAmount * BURN_PERCENTAGE) /
-                    100;
-                uint256 treasuryAmount = (platformFeeAmount *
-                    TREASURY_PERCENTAGE) / 100;
-                uint256 sellerAmount = escrow.amount - platformFeeAmount;
-                uint256 spendingReward = (escrow.amount *
-                    SPENDING_REWARD_PERCENTAGE) / 1000;
-
-                // Process payments
-                thriftToken.burn(burnAmount);
-                thriftToken.transfer(treasuryWallet, treasuryAmount);
-                thriftToken.transfer(escrow.seller, sellerAmount);
-                thriftToken.mintReward(escrow.buyer, spendingReward);
-            } else {
-                // Calculate fees for ETH payment
-                uint256 platformFeeAmount = (escrow.amount * ethPlatformFee) /
-                    1000;
-                uint256 treasuryAmount = platformFeeAmount;
-                uint256 sellerAmount = escrow.amount - platformFeeAmount;
-
-                // Process payments
-                payable(treasuryWallet).transfer(treasuryAmount);
-                payable(escrow.seller).transfer(sellerAmount);
-            }
-        }
-
-        emit EscrowCompleted(escrowId);
-    }
-
-    function refundEscrow(uint256 escrowId) external nonReentrant {
-        Escrow storage escrow = escrows[escrowId];
-        require(
-            !escrow.completed && !escrow.refunded,
-            "Escrow already finalized"
-        );
-
-        // Allow refund if deadline passed or seller approves
-        require(
-            block.timestamp > escrow.deadline || msg.sender == escrow.seller,
-            "Not authorized to refund"
-        );
-
-        Product storage product = products[escrow.productId];
-        escrow.refunded = true;
-        product.inEscrowQuantity -= escrow.quantity;
-
-        // For exchanges, also update the exchanged product
-        if (escrow.isExchange && escrow.exchangeProductId > 0) {
-            Product storage exchangeProduct = products[
-                escrow.exchangeProductId
-            ];
-            exchangeProduct.inEscrowQuantity -= 1;
-
-            // If token top-up was included, refund that too
-            if (escrow.tokenTopUp > 0) {
-                thriftToken.transfer(escrow.buyer, escrow.tokenTopUp);
-            }
-        } else {
-            // Regular purchase refund
-            if (escrow.isToken) {
-                require(
-                    thriftToken.transfer(escrow.buyer, escrow.amount),
-                    "Token refund failed"
-                );
-            } else {
-                payable(escrow.buyer).transfer(escrow.amount);
-            }
-        }
-
-        emit EscrowRefunded(escrowId);
-    }
-
-    // EXCHANGE FUNCTIONS WITH ESCROW
+    /**
+     * @dev Creates an exchange offer
+     */
     function createExchangeOffer(
         uint256 offeredProductId,
         uint256 wantedProductId,
+        uint256 quantity,
         uint256 tokenTopUp
-    ) external nonReentrant {
+    ) external whenNotPaused nonReentrant {
         Product storage offeredProduct = products[offeredProductId];
         Product storage wantedProduct = products[wantedProductId];
 
         require(offeredProduct.seller == msg.sender, "Not your product");
         require(
-            !offeredProduct.isDeleted && !wantedProduct.isDeleted,
-            "Product(s) deleted"
-        );
-        require(
-            offeredProduct.isAvailableForExchange,
-            "Not available for exchange"
+            !offeredProduct.isDeleted &&
+                !offeredProduct.isSold &&
+                !wantedProduct.isDeleted &&
+                !wantedProduct.isSold,
+            "Products not available"
         );
         require(
             wantedProduct.isAvailableForExchange,
-            "Wanted product not for exchange"
+            "Product not for exchange"
         );
         require(
-            !offeredProduct.isSold && !wantedProduct.isSold,
-            "Product(s) sold"
+            quantity > 0 && quantity <= MAX_BULK_PURCHASE,
+            "Invalid quantity"
         );
 
-        // Ensure exactly one item is available for exchange
-        require(
-            offeredProduct.quantity - offeredProduct.inEscrowQuantity == 1,
-            "Must have exactly one item for exchange"
-        );
-        require(
-            wantedProduct.quantity - wantedProduct.inEscrowQuantity == 1,
-            "Wanted product must have exactly one item"
-        );
+        uint256 availableQuantity = offeredProduct.quantity -
+            offeredProduct.inEscrowQuantity;
+        require(availableQuantity >= quantity, "Insufficient quantity");
 
-        // Handle token top-up if provided
         if (tokenTopUp > 0) {
             require(
                 thriftToken.transferFrom(msg.sender, address(this), tokenTopUp),
-                "Token transfer failed"
+                "Token top-up transfer failed"
             );
         }
 
         _escrowIds.increment();
         uint256 escrowId = _escrowIds.current();
 
-        // Setup exchange escrow
+        // Update product states
+        offeredProduct.inEscrowQuantity += quantity;
+        wantedProduct.inEscrowQuantity += quantity;
+
+        // Check if products are now effectively sold out
+        _checkAndMarkProductSold(offeredProductId);
+        _checkAndMarkProductSold(wantedProductId);
+
+        // Create escrow
         escrows[escrowId] = Escrow({
             escrowId: escrowId,
-            productId: wantedProductId,
-            buyer: msg.sender, // The person offering the exchange
+            productId: offeredProductId,
+            buyer: msg.sender,
             seller: wantedProduct.seller,
-            amount: tokenTopUp,
+            amount: 0,
             deadline: block.timestamp + MAX_ESCROW_DURATION,
-            quantity: 1, // Always 1 for exchanges
-            buyerConfirmed: true, // Buyer auto-confirms by creating the offer
+            quantity: quantity,
+            buyerConfirmed: true,
             sellerConfirmed: false,
             completed: false,
             refunded: false,
-            isToken: true,
+            isToken: false,
             isExchange: true,
-            exchangeProductId: offeredProductId,
+            exchangeProductId: wantedProductId,
             tokenTopUp: tokenTopUp
         });
 
-        // Update escrow quantity
-        offeredProduct.inEscrowQuantity += 1;
-
-        // Record the exchange offer
         exchangeOffers[wantedProductId].push(
             ExchangeOffer({
                 offeredProductId: offeredProductId,
@@ -838,182 +822,807 @@ contract Marketplace is ReentrancyGuard {
             })
         );
 
-        userEscrows[msg.sender].push(escrowId);
+        // Add to user escrow lists
+        _addToUserActiveEscrows(msg.sender, escrowId);
+        _addToUserActiveEscrows(wantedProduct.seller, escrowId);
 
         emit ExchangeOfferCreated(
             offeredProductId,
             wantedProductId,
             msg.sender,
-            1,
             tokenTopUp,
             escrowId
         );
     }
 
-    function acceptExchangeOffer(
-        uint256 wantedProductId,
-        uint256 offerIndex
-    ) external nonReentrant {
-        Product storage wantedProduct = products[wantedProductId];
-        require(wantedProduct.seller == msg.sender, "Not your product");
-
-        ExchangeOffer storage offer = exchangeOffers[wantedProductId][
-            offerIndex
-        ];
-        require(offer.isActive, "Offer not active");
-
-        // Get the escrow for this exchange
-        Escrow storage escrow = escrows[offer.escrowId];
+    /**
+     * @dev Validates and creates bulk escrows (common logic)
+     */
+    function _validateAndCreateBulkEscrow(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities,
+        bool isToken,
+        uint256 paymentAmount
+    ) internal returns (uint256[] memory) {
+        require(productIds.length > 0, "Empty product array");
         require(
-            !escrow.completed && !escrow.refunded,
-            "Escrow already finalized"
+            productIds.length == quantities.length,
+            "Array length mismatch"
+        );
+        require(productIds.length <= MAX_BULK_PURCHASE, "Too many products");
+
+        uint256 totalCost = 0;
+
+        // Validate products and calculate total cost
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+
+            // Validation checks
+            require(
+                !product.isDeleted && !product.isSold,
+                "Product not available"
+            );
+            require(
+                quantities[i] > 0 && quantities[i] <= MAX_BULK_PURCHASE,
+                "Invalid quantity"
+            );
+            uint256 availableQuantity = product.quantity -
+                product.inEscrowQuantity;
+            require(
+                availableQuantity >= quantities[i],
+                "Insufficient quantity"
+            );
+
+            // Price check and calculation
+            uint256 price = isToken ? product.tokenPrice : product.ethPrice;
+            require(price > 0, "Price not set");
+            totalCost += price * quantities[i];
+        }
+
+        // Verify payment
+        require(paymentAmount == totalCost, "Incorrect payment amount");
+
+        uint256[] memory escrowIds = new uint256[](productIds.length);
+
+        // Create escrows
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+            uint256 productCost = (
+                isToken ? product.tokenPrice : product.ethPrice
+            ) * quantities[i];
+
+            // Reserve quantity
+            product.inEscrowQuantity += quantities[i];
+            _checkAndMarkProductSold(productIds[i]);
+
+            // Create escrow
+            _escrowIds.increment();
+            uint256 escrowId = _escrowIds.current();
+
+            escrows[escrowId] = Escrow({
+                escrowId: escrowId,
+                productId: productIds[i],
+                buyer: msg.sender,
+                seller: product.seller,
+                amount: productCost,
+                deadline: block.timestamp + MAX_ESCROW_DURATION,
+                quantity: quantities[i],
+                buyerConfirmed: false,
+                sellerConfirmed: false,
+                completed: false,
+                refunded: false,
+                isToken: isToken,
+                isExchange: false,
+                exchangeProductId: 0,
+                tokenTopUp: 0
+            });
+
+            escrowIds[i] = escrowId;
+
+            // Add to tracking
+            _addToUserActiveEscrows(msg.sender, escrowId);
+            _addToUserActiveEscrows(product.seller, escrowId);
+
+            emit EscrowCreated(
+                escrowId,
+                productIds[i],
+                msg.sender,
+                product.seller,
+                quantities[i],
+                productCost,
+                isToken
+            );
+        }
+
+        // Emit bulk event
+        emit BulkEscrowCreated(
+            escrowIds[0],
+            productIds.length,
+            msg.sender,
+            totalCost,
+            isToken
         );
 
-        // Confirm from seller side
-        escrow.sellerConfirmed = true;
-
-        // This will trigger the exchange completion
-        _completeEscrow(offer.escrowId);
-
-        // Mark the offer as inactive
-        offer.isActive = false;
+        return escrowIds;
     }
 
-    // AESTHETIC MANAGEMENT FUNCTIONS
-    function _updateTopAesthetics() internal {
-        // Only update periodically to save gas
-        if (
-            block.timestamp - _lastAestheticsUpdate < AESTHETICS_UPDATE_INTERVAL
-        ) {
-            return;
+    /**
+     * @dev Creates multiple escrows with ETH payment in a single transaction
+     */
+    function createBulkEscrowWithEth(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external payable whenNotPaused nonReentrant returns (uint256[] memory) {
+        return
+            _validateAndCreateBulkEscrow(
+                productIds,
+                quantities,
+                false,
+                msg.value
+            );
+    }
+
+    /**
+     * @dev Creates multiple escrows with token payment in a single transaction
+     */
+    function createBulkEscrowWithTokens(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external whenNotPaused nonReentrant returns (uint256[] memory) {
+        // Calculate total cost first to make a single token transfer
+        uint256 totalCost = 0;
+
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product storage product = products[productIds[i]];
+            require(product.tokenPrice > 0, "Token price not set");
+            totalCost += product.tokenPrice * quantities[i];
         }
 
-        _lastAestheticsUpdate = block.timestamp;
+        // Transfer tokens for all products at once
+        require(
+            thriftToken.transferFrom(msg.sender, address(this), totalCost),
+            "Token transfer failed"
+        );
 
-        // Simple algorithm to find top 5 aesthetics by product count
-        // This is a simplified version - in production would use a more sophisticated algorithm
-        string[20] memory candidateAesthetics;
-        uint256[20] memory counts;
-        uint8 count = 0;
+        return
+            _validateAndCreateBulkEscrow(
+                productIds,
+                quantities,
+                true,
+                totalCost
+            );
+    }
 
-        // Collect candidate aesthetics from recently updated ones
-        for (uint256 i = 1; i <= _productIds.current() && count < 20; i++) {
+    /**
+     * @dev Confirms an escrow
+     */
+    function confirmEscrow(uint256 escrowId) external nonReentrant {
+        Escrow storage escrow = escrows[escrowId];
+        require(!escrow.completed && !escrow.refunded, "Escrow not active");
+        require(block.timestamp <= escrow.deadline, "Escrow expired");
+
+        bool isBuyer = msg.sender == escrow.buyer;
+        bool isSeller = msg.sender == escrow.seller;
+        require(isBuyer || isSeller, "Not authorized");
+
+        if (isBuyer) {
+            require(!escrow.buyerConfirmed, "Already confirmed");
+            escrow.buyerConfirmed = true;
+        } else {
+            require(!escrow.sellerConfirmed, "Already confirmed");
+            escrow.sellerConfirmed = true;
+        }
+
+        emit EscrowConfirmed(escrowId, msg.sender, isBuyer);
+
+        if (escrow.buyerConfirmed && escrow.sellerConfirmed) {
+            _completeEscrow(escrowId);
+        }
+    }
+
+    /**
+     * @dev Internal function to complete an escrow
+     */
+    function _completeEscrow(uint256 escrowId) internal {
+        Escrow storage escrow = escrows[escrowId];
+        require(!escrow.completed && !escrow.refunded, "Invalid escrow state");
+        require(
+            escrow.buyerConfirmed && escrow.sellerConfirmed,
+            "Not confirmed"
+        );
+
+        escrow.completed = true;
+
+        if (escrow.isExchange) {
+            _completeExchange(escrow);
+        } else {
+            _completeSale(escrow);
+        }
+
+        // Remove escrow from active lists and move to completed lists
+        _moveEscrowToCompleted(escrowId, escrow.buyer, escrow.seller);
+
+        emit EscrowCompleted(
+            escrowId,
+            escrow.productId,
+            escrow.quantity,
+            escrow.amount
+        );
+    }
+
+    /**
+     * @dev Completes a regular sale
+     */
+    function _completeSale(Escrow storage escrow) internal {
+        uint256 platformFee = escrow.isToken
+            ? tokenPlatformFee
+            : ethPlatformFee;
+        uint256 feeAmount = (escrow.amount * platformFee) / 1000;
+        uint256 sellerAmount = escrow.amount - feeAmount;
+
+        // Process platform fee
+        if (escrow.isToken) {
+            // Calculate burn and treasury amounts
+            uint256 burnAmount = (feeAmount * BURN_PERCENTAGE) / 100;
+            uint256 treasuryAmount = feeAmount - burnAmount;
+
+            // Transfer tokens
+            require(
+                thriftToken.transfer(escrow.seller, sellerAmount),
+                "Seller transfer failed"
+            );
+            require(
+                thriftToken.transfer(treasuryWallet, treasuryAmount),
+                "Treasury transfer failed"
+            );
+            thriftToken.burn(burnAmount);
+
+            // Process spending rewards
+            uint256 rewardAmount = (escrow.amount *
+                SPENDING_REWARD_PERCENTAGE) / 1000;
+            thriftToken.mint(escrow.buyer, rewardAmount);
+        } else {
+            // Transfer ETH
+            payable(escrow.seller).transfer(sellerAmount);
+            payable(treasuryWallet).transfer(feeAmount);
+        }
+
+        _completeQuantitySale(escrow.productId, escrow.quantity);
+    }
+
+    /**
+     * @dev Completes an exchange
+     */
+    function _completeExchange(Escrow storage escrow) internal {
+        Product storage wantedProduct = products[escrow.exchangeProductId];
+
+        // Process token top-up if any
+        if (escrow.tokenTopUp > 0) {
+            uint256 platformFee = (escrow.tokenTopUp * tokenPlatformFee) / 1000;
+            uint256 sellerAmount = escrow.tokenTopUp - platformFee;
+
+            uint256 burnAmount = (platformFee * BURN_PERCENTAGE) / 100;
+            uint256 treasuryAmount = platformFee - burnAmount;
+
+            require(
+                thriftToken.transfer(wantedProduct.seller, sellerAmount),
+                "Top-up transfer failed"
+            );
+            require(
+                thriftToken.transfer(treasuryWallet, treasuryAmount),
+                "Treasury transfer failed"
+            );
+            thriftToken.burn(burnAmount);
+        }
+
+        // Update product states
+        _completeQuantitySale(escrow.productId, escrow.quantity);
+        _completeQuantitySale(escrow.exchangeProductId, escrow.quantity);
+
+        emit ExchangeCompleted(
+            escrow.productId,
+            escrow.exchangeProductId,
+            escrow.buyer,
+            escrow.seller,
+            escrow.tokenTopUp
+        );
+    }
+
+    /**
+     * @dev Common escrow rejection/cancellation logic
+     */
+    function _rejectOrCancelEscrow(
+        uint256 escrowId,
+        bool isSeller,
+        string memory reason
+    ) internal {
+        Escrow storage escrow = escrows[escrowId];
+
+        // Validate permissions
+        if (isSeller) {
+            require(escrow.seller == msg.sender, "Not authorized");
+        } else {
+            require(escrow.buyer == msg.sender, "Not authorized");
+            require(!escrow.sellerConfirmed, "Seller already confirmed");
+        }
+
+        require(!escrow.completed && !escrow.refunded, "Escrow not active");
+
+        escrow.refunded = true;
+
+        // Refund buyer
+        if (escrow.isToken) {
+            require(
+                thriftToken.transfer(escrow.buyer, escrow.amount),
+                "Token refund failed"
+            );
+        } else if (!escrow.isExchange) {
+            payable(escrow.buyer).transfer(escrow.amount);
+        }
+
+        // Release quantities
+        Product storage product = products[escrow.productId];
+        product.inEscrowQuantity -= escrow.quantity;
+
+        if (escrow.isExchange) {
+            Product storage exchangeProduct = products[
+                escrow.exchangeProductId
+            ];
+            exchangeProduct.inEscrowQuantity -= escrow.quantity;
+
+            if (escrow.tokenTopUp > 0) {
+                require(
+                    thriftToken.transfer(escrow.buyer, escrow.tokenTopUp),
+                    "Token top-up refund failed"
+                );
+            }
+        }
+
+        // Remove escrow from active lists
+        _removeEscrowFromActiveList(escrowId, escrow.buyer, escrow.seller);
+
+        // Emit appropriate event
+        if (isSeller) {
+            emit EscrowRejected(escrowId, msg.sender, reason);
+        } else {
+            emit EscrowCancelled(escrowId, msg.sender);
+        }
+    }
+
+    /**
+     * @dev Rejects an escrow (seller only)
+     */
+    function rejectEscrow(
+        uint256 escrowId,
+        string memory reason
+    ) external nonReentrant {
+        _rejectOrCancelEscrow(escrowId, true, reason);
+    }
+
+    /**
+     * @dev Cancels an escrow (buyer only)
+     */
+    function cancelEscrow(uint256 escrowId) external nonReentrant {
+        _rejectOrCancelEscrow(escrowId, false, "");
+    }
+
+    /**
+     * @dev Confirms multiple escrows
+     */
+    function _bulkConfirmEscrows(
+        uint256[] calldata escrowIds,
+        bool isBuyer
+    ) internal {
+        require(escrowIds.length > 0, "Empty escrow array");
+        require(escrowIds.length <= MAX_BULK_PURCHASE, "Too many escrows");
+
+        for (uint256 i = 0; i < escrowIds.length; ) {
+            Escrow storage escrow = escrows[escrowIds[i]];
+
+            // Validate permissions
+            if (isBuyer) {
+                require(escrow.buyer == msg.sender, "Not buyer's escrow");
+                require(!escrow.buyerConfirmed, "Already confirmed");
+                escrow.buyerConfirmed = true;
+            } else {
+                require(escrow.seller == msg.sender, "Not seller's escrow");
+                require(!escrow.sellerConfirmed, "Already confirmed");
+                escrow.sellerConfirmed = true;
+            }
+
+            require(!escrow.completed && !escrow.refunded, "Escrow not active");
+            require(block.timestamp <= escrow.deadline, "Escrow expired");
+
+            emit EscrowConfirmed(escrowIds[i], msg.sender, isBuyer);
+
+            // Auto-complete if both parties have confirmed
+            if (escrow.buyerConfirmed && escrow.sellerConfirmed) {
+                _completeEscrow(escrowIds[i]);
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @dev Bulk confirm all escrows for the buyer
+     */
+    function bulkConfirmEscrowsAsBuyer(
+        uint256[] calldata escrowIds
+    ) external nonReentrant {
+        _bulkConfirmEscrows(escrowIds, true);
+    }
+
+    /**
+     * @dev Bulk confirm multiple escrows from the same seller
+     */
+    function bulkConfirmEscrowsForSeller(
+        uint256[] calldata escrowIds
+    ) external nonReentrant {
+        _bulkConfirmEscrows(escrowIds, false);
+    }
+
+    // Query Functions
+
+    /**
+     * @dev Gets all active products
+     */
+    function getAllActiveProducts()
+        external
+        view
+        returns (ProductWithAvailability[] memory)
+    {
+        uint256 totalProducts = _productIds.current();
+        uint256 activeCount = 0;
+
+        // Count active products
+        for (uint256 i = 1; i <= totalProducts; ) {
             Product storage product = products[i];
-            if (product.isDeleted || product.isSold) continue;
-
-            for (uint j = 0; j < product.categories.length && count < 20; j++) {
-                string memory category = product.categories[j];
-
-                // Check if already in candidates
-                bool found = false;
-                for (uint8 k = 0; k < count; k++) {
-                    if (
-                        keccak256(bytes(candidateAesthetics[k])) ==
-                        keccak256(bytes(category))
-                    ) {
-                        counts[k]++;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    candidateAesthetics[count] = category;
-                    counts[count] = aestheticsStats[category].productCount;
-                    count++;
-                }
-            }
-        }
-
-        // Simple sort to find top 5
-        for (uint8 i = 0; i < count; i++) {
-            for (uint8 j = i + 1; j < count; j++) {
-                if (counts[j] > counts[i]) {
-                    // Swap counts
-                    uint256 tempCount = counts[i];
-                    counts[i] = counts[j];
-                    counts[j] = tempCount;
-
-                    // Swap aesthetics
-                    string memory tempAesthetic = candidateAesthetics[i];
-                    candidateAesthetics[i] = candidateAesthetics[j];
-                    candidateAesthetics[j] = tempAesthetic;
-                }
-            }
-        }
-
-        // Update top aesthetics array
-        for (uint8 i = 0; i < 5 && i < count; i++) {
-            _topAesthetics[i] = candidateAesthetics[i];
-        }
-    }
-    // VIEW FUNCTIONS FOR PRODUCT & AESTHETIC QUERIES
-
-    function getProductsByCategory(
-        string memory category,
-        uint256 limit,
-        uint256 offset
-    ) external view returns (uint256[] memory) {
-        uint256[] storage allProducts = categoryToProducts[category];
-        uint256 resultCount = (offset + limit > allProducts.length)
-            ? allProducts.length - offset
-            : limit;
-
-        if (offset >= allProducts.length || resultCount == 0) {
-            return new uint256[](0);
-        }
-
-        uint256[] memory result = new uint256[](resultCount);
-        for (uint i = 0; i < resultCount; i++) {
-            // Filter out deleted and sold products
-            uint256 currentProduct = allProducts[offset + i];
             if (
-                !products[currentProduct].isDeleted &&
-                !products[currentProduct].isSold
+                !product.isDeleted &&
+                !product.isSold &&
+                (product.quantity - product.inEscrowQuantity) > 0
             ) {
-                result[i] = currentProduct;
+                unchecked {
+                    ++activeCount;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
 
+        ProductWithAvailability[]
+            memory activeProducts = new ProductWithAvailability[](activeCount);
+        uint256 currentIndex = 0;
+
+        // Fill active products array
+        for (uint256 i = 1; i <= totalProducts; ) {
+            Product storage product = products[i];
+            if (
+                !product.isDeleted &&
+                !product.isSold &&
+                (product.quantity - product.inEscrowQuantity) > 0
+            ) {
+                activeProducts[
+                    currentIndex
+                ] = _convertToProductWithAvailability(product);
+                unchecked {
+                    ++currentIndex;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        return activeProducts;
+    }
+
+    /**
+     * @dev Helper to convert Product to ProductWithAvailability
+     */
+    function _convertToProductWithAvailability(
+        Product storage product
+    ) internal view returns (ProductWithAvailability memory) {
+        return
+            ProductWithAvailability({
+                id: product.id,
+                seller: product.seller,
+                tokenPrice: product.tokenPrice,
+                ethPrice: product.ethPrice,
+                totalQuantity: product.quantity,
+                availableQuantity: product.quantity - product.inEscrowQuantity,
+                name: product.name,
+                description: product.description,
+                size: product.size,
+                condition: product.condition,
+                brand: product.brand,
+                categories: product.categories,
+                gender: product.gender,
+                image: product.image,
+                isAvailableForExchange: product.isAvailableForExchange,
+                exchangePreference: product.exchangePreference,
+                isSold: product.isSold,
+                isDeleted: product.isDeleted,
+                inEscrowQuantity: product.inEscrowQuantity
+            });
+    }
+
+    /**
+     * @dev Gets products by their IDs
+     */
+    function getProductsById(
+        uint256[] calldata productIds
+    ) external view returns (ProductWithAvailability[] memory) {
+        ProductWithAvailability[] memory result = new ProductWithAvailability[](
+            productIds.length
+        );
+
+        for (uint256 i = 0; i < productIds.length; ) {
+            result[i] = _convertToProductWithAvailability(
+                products[productIds[i]]
+            );
+            unchecked {
+                ++i;
+            }
+        }
         return result;
     }
 
-    function getUserProducts(
-        address user
-    ) external view returns (uint256[] memory) {
-        return userProducts[user];
-    }
+    /**
+     * @dev Check if a product matches search parameters
+     */
+    function _productMatchesSearch(
+        Product storage product,
+        SearchParams memory params
+    ) internal view returns (bool) {
+        // Check if product is available
+        if (
+            params.onlyAvailable &&
+            (product.isDeleted ||
+                product.isSold ||
+                (product.quantity - product.inEscrowQuantity) == 0)
+        ) {
+            return false;
+        }
 
-    function getUserEscrows(
-        address user
-    ) external view returns (uint256[] memory) {
-        return userEscrows[user];
-    }
+        // Check if product is for exchange
+        if (params.exchangeOnly && !product.isAvailableForExchange) {
+            return false;
+        }
 
-    function getTopAesthetics() external view returns (string[] memory) {
-        return _topAesthetics;
-    }
+        // Name query match
+        if (bytes(params.nameQuery).length > 0) {
+            // Simple contains check - can be improved with more advanced search
+            bytes memory nameBytes = bytes(product.name);
+            bytes memory queryBytes = bytes(params.nameQuery);
+            bool nameMatch = false;
 
-    function getExchangeOffersForProduct(
-        uint256 productId
-    ) external view returns (ExchangeOffer[] memory) {
-        ExchangeOffer[] storage offers = exchangeOffers[productId];
-        uint256 activeCount = 0;
+            // Simple substring search
+            if (queryBytes.length <= nameBytes.length) {
+                for (
+                    uint i = 0;
+                    i <= nameBytes.length - queryBytes.length;
+                    i++
+                ) {
+                    bool isMatching = true;
+                    for (uint j = 0; j < queryBytes.length; j++) {
+                        if (nameBytes[i + j] != queryBytes[j]) {
+                            isMatching = false;
+                            break;
+                        }
+                    }
+                    if (isMatching) {
+                        nameMatch = true;
+                        break;
+                    }
+                }
+            }
 
-        // Count active offers
-        for (uint i = 0; i < offers.length; i++) {
-            if (offers[i].isActive) {
-                activeCount++;
+            if (!nameMatch) {
+                return false;
             }
         }
 
-        // Create result array with active offers
-        ExchangeOffer[] memory result = new ExchangeOffer[](activeCount);
+        // Category filter (aesthetics)
+        if (params.categories.length > 0) {
+            bool categoryMatch = false;
+            for (uint256 i = 0; i < params.categories.length; i++) {
+                for (uint256 j = 0; j < product.categories.length; j++) {
+                    if (
+                        keccak256(bytes(params.categories[i])) ==
+                        keccak256(bytes(product.categories[j]))
+                    ) {
+                        categoryMatch = true;
+                        break;
+                    }
+                }
+                if (categoryMatch) break;
+            }
+            if (!categoryMatch) return false;
+        }
+
+        // String filter checks
+        if (_nonEmptyAndDifferent(params.brand, product.brand)) return false;
+        if (_nonEmptyAndDifferent(params.condition, product.condition))
+            return false;
+        if (_nonEmptyAndDifferent(params.gender, product.gender)) return false;
+        if (_nonEmptyAndDifferent(params.size, product.size)) return false;
+
+        // Price range filter (using token price)
+        if (params.minPrice > 0 && product.tokenPrice < params.minPrice) {
+            return false;
+        }
+        if (params.maxPrice > 0 && product.tokenPrice > params.maxPrice) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @dev Helper to check if a string parameter is non-empty and different from product value
+     */
+    function _nonEmptyAndDifferent(
+        string memory param,
+        string memory productValue
+    ) internal pure returns (bool) {
+        return
+            bytes(param).length > 0 &&
+            keccak256(bytes(productValue)) != keccak256(bytes(param));
+    }
+
+    /**
+     * @dev Search products with filters and pagination
+     */
+    function searchProducts(
+        SearchParams memory params
+    ) public view returns (SearchResult memory) {
+        // Validate pagination parameters
+        require(params.page > 0, "Invalid page number");
+        require(
+            params.pageSize > 0 && params.pageSize <= 50,
+            "Invalid page size"
+        );
+
+        uint256 totalProducts = _productIds.current();
+        uint256 totalMatches = 0;
+
+        // First pass: count total matches
+        for (uint256 i = 1; i <= totalProducts; ) {
+            if (_productMatchesSearch(products[i], params)) {
+                unchecked {
+                    ++totalMatches;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Calculate pagination values
+        uint256 totalPages = (totalMatches + params.pageSize - 1) /
+            params.pageSize;
+        uint256 startIndex = (params.page - 1) * params.pageSize;
+
+        // Ensure valid page number
+        if (totalMatches == 0) {
+            totalPages = 1;
+        }
+        require(params.page <= totalPages, "Page number exceeds total pages");
+
+        // Create array for current page results
+        ProductWithAvailability[]
+            memory pageProducts = new ProductWithAvailability[](
+                Math.min(params.pageSize, totalMatches)
+            );
+
+        uint256 currentIndex = 0;
+        uint256 matchesFound = 0;
+
+        // Second pass: fill matching products array for current page
+        for (
+            uint256 i = 1;
+            i <= totalProducts && currentIndex < pageProducts.length;
+
+        ) {
+            Product storage product = products[i];
+            if (_productMatchesSearch(product, params)) {
+                if (matchesFound >= startIndex) {
+                    pageProducts[
+                        currentIndex
+                    ] = _convertToProductWithAvailability(product);
+                    unchecked {
+                        ++currentIndex;
+                    }
+                }
+                unchecked {
+                    ++matchesFound;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Return search results with pagination info
+        return
+            SearchResult({
+                products: pageProducts,
+                totalResults: totalMatches,
+                totalPages: totalPages,
+                currentPage: params.page
+            });
+    }
+
+    /**
+     * @dev Get products based on user aesthetics
+     */
+    function getProductsByUserAesthetics(
+        address user,
+        uint256 page,
+        uint256 pageSize
+    ) external view returns (SearchResult memory) {
+        // Get user aesthetics
+        (string[] memory userPreferences, bool isSet, ) = userAesthetics
+            .getUserAesthetics(user);
+        require(isSet, "User aesthetics not set");
+
+        return
+            searchProducts(
+                SearchParams({
+                    nameQuery: "",
+                    categories: userPreferences,
+                    brand: "",
+                    condition: "",
+                    gender: "",
+                    size: "",
+                    minPrice: 0,
+                    maxPrice: 0,
+                    onlyAvailable: true,
+                    exchangeOnly: false,
+                    page: page,
+                    pageSize: pageSize
+                })
+            );
+    }
+
+    /**
+     * @dev Get user escrow IDs based on role
+     */
+    function _getUserEscrows(
+        address user,
+        bool completed,
+        bool asBuyer
+    ) internal view returns (uint256[] memory) {
+        UserEscrowTracking storage userInfo = userEscrowInfos[user];
+        uint256[] storage sourceList = completed
+            ? userInfo.completedEscrows
+            : userInfo.activeEscrows;
+
+        if (!asBuyer) {
+            // Just return all escrows where user is seller (no need to filter)
+            return sourceList;
+        }
+
+        // Count relevant escrows
+        uint256 count = 0;
+        for (uint256 i = 0; i < sourceList.length; i++) {
+            if (escrows[sourceList[i]].buyer == user) {
+                count++;
+            }
+        }
+
+        // Create filtered array
+        uint256[] memory result = new uint256[](count);
         uint256 resultIndex = 0;
 
-        for (uint i = 0; i < offers.length && resultIndex < activeCount; i++) {
-            if (offers[i].isActive) {
-                result[resultIndex] = offers[i];
+        for (uint256 i = 0; i < sourceList.length && resultIndex < count; i++) {
+            if (escrows[sourceList[i]].buyer == user) {
+                result[resultIndex] = sourceList[i];
                 resultIndex++;
             }
         }
@@ -1021,308 +1630,205 @@ contract Marketplace is ReentrancyGuard {
         return result;
     }
 
-    // products by aesthetics
-    function getProductsByAestheticPreference(
-        address user,
-        uint256 limit
+    /**
+     * @dev Get user active escrows where user is buyer
+     */
+    function getUserActiveEscrowsAsBuyer(
+        address user
     ) external view returns (uint256[] memory) {
-        // Get user's aesthetic preferences
-        (string[] memory userPrefs, , ) = userAesthetics.getUserAesthetics(
-            user
-        );
-        if (userPrefs.length == 0) {
-            return new uint256[](0);
-        }
+        return _getUserEscrows(user, false, true);
+    }
 
-        // Use an array to track included products
-        uint256[] memory result = new uint256[](limit);
-        uint256 resultCount = 0;
+    /**
+     * @dev Get user active escrows where user is seller
+     */
+    function getUserActiveEscrowsAsSeller(
+        address user
+    ) external view returns (uint256[] memory) {
+        return _getUserEscrows(user, false, false);
+    }
 
-        // Collect products from each preferred aesthetic category
-        for (uint i = 0; i < userPrefs.length && resultCount < limit; i++) {
-            uint256[] storage productsInCategory = categoryToProducts[
-                userPrefs[i]
-            ];
+    /**
+     * @dev Get user's completed escrows
+     */
+    function getUserCompletedEscrows(
+        address user
+    ) external view returns (uint256[] memory) {
+        return userEscrowInfos[user].completedEscrows;
+    }
 
-            for (
-                uint j = 0;
-                j < productsInCategory.length && resultCount < limit;
-                j++
-            ) {
-                uint256 productId = productsInCategory[j];
-                if (
-                    !products[productId].isDeleted &&
-                    !products[productId].isSold
-                ) {
-                    result[resultCount] = productId;
-                    resultCount++;
+    /**
+     * @dev Gets all exchange offers for a product
+     */
+    function getExchangeOffers(
+        uint256 productId
+    ) external view returns (ExchangeOffer[] memory) {
+        ExchangeOffer[] storage offers = exchangeOffers[productId];
+        uint256 activeCount = 0;
+
+        // Count active offers
+        for (uint256 i = 0; i < offers.length; ) {
+            if (offers[i].isActive) {
+                unchecked {
+                    ++activeCount;
                 }
             }
-        }
-
-        // If we have fewer results than the limit, resize the array
-        if (resultCount < limit) {
-            uint256[] memory resizedResult = new uint256[](resultCount);
-            for (uint i = 0; i < resultCount; i++) {
-                resizedResult[i] = result[i];
+            unchecked {
+                ++i;
             }
-            return resizedResult;
         }
 
-        return result;
+        // Create array of active offers
+        ExchangeOffer[] memory activeOffers = new ExchangeOffer[](activeCount);
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 0; i < offers.length; ) {
+            if (offers[i].isActive) {
+                activeOffers[currentIndex] = offers[i];
+                unchecked {
+                    ++currentIndex;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        return activeOffers;
     }
 
-    // ADMIN FUNCTIONS
+    /**
+     * @dev Gets user's products
+     */
+    function getUserProducts(
+        address user
+    ) external view returns (ProductWithAvailability[] memory) {
+        uint256[] storage userProductIds = userProducts[user];
+        uint256 activeCount = 0;
 
-    function setTreasuryWallet(address newTreasuryWallet) external {
-        require(msg.sender == treasuryWallet, "Not authorized");
-        treasuryWallet = newTreasuryWallet;
+        // Count active products
+        for (uint256 i = 0; i < userProductIds.length; ) {
+            Product storage product = products[userProductIds[i]];
+            if (!product.isDeleted) {
+                unchecked {
+                    ++activeCount;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        ProductWithAvailability[]
+            memory userActiveProducts = new ProductWithAvailability[](
+                activeCount
+            );
+        uint256 currentIndex = 0;
+
+        // Fill active products array
+        for (uint256 i = 0; i < userProductIds.length; ) {
+            Product storage product = products[userProductIds[i]];
+            if (!product.isDeleted) {
+                userActiveProducts[
+                    currentIndex
+                ] = _convertToProductWithAvailability(product);
+                unchecked {
+                    ++currentIndex;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        return userActiveProducts;
     }
 
-    function setPlatformFees(uint256 newTokenFee, uint256 newEthFee) external {
+    /**
+     * @dev Calculates available quantity for a product
+     */
+    function getAvailableQuantity(
+        uint256 productId
+    ) public view returns (uint256) {
+        Product storage product = products[productId];
+        if (product.isDeleted || product.isSold) {
+            return 0;
+        }
+        return product.quantity - product.inEscrowQuantity;
+    }
+
+    // Admin Functions
+
+    /**
+     * @dev Updates platform fees
+     */
+    function updatePlatformFees(
+        uint256 newTokenFee,
+        uint256 newEthFee
+    ) external {
         require(msg.sender == treasuryWallet, "Not authorized");
-        require(newTokenFee <= 100 && newEthFee <= 100, "Fees too high"); // Max 10%
+        require(newTokenFee <= 100 && newEthFee <= 100, "Fee too high");
 
         tokenPlatformFee = newTokenFee;
         ethPlatformFee = newEthFee;
+
+        emit PlatformFeesUpdated(newTokenFee, newEthFee);
     }
 
-    // PRODUCT DELETION
+    /**
+     * @dev Updates treasury wallet
+     */
+    function updateTreasuryWallet(address newTreasury) external {
+        require(msg.sender == treasuryWallet, "Not authorized");
+        require(newTreasury != address(0), "Invalid address");
 
-    function deleteProduct(uint256 productId) external {
-        Product storage product = products[productId];
+        treasuryWallet = newTreasury;
+
+        emit TreasuryWalletUpdated(newTreasury);
+    }
+
+    /**
+     * @dev Updates UserAesthetics contract
+     */
+    function updateUserAesthetics(address newUserAesthetics) external {
+        require(msg.sender == treasuryWallet, "Not authorized");
+        require(newUserAesthetics != address(0), "Invalid address");
+
+        userAesthetics = UserAesthetics(newUserAesthetics);
+
+        emit UserAestheticsUpdated(newUserAesthetics);
+    }
+
+    /**
+     * @dev Toggles pause state for contract operations
+     */
+    function togglePause() external {
+        require(msg.sender == treasuryWallet, "Not authorized");
+        isPaused = !isPaused;
+    }
+
+    /**
+     * @dev Emergency function to handle stuck tokens
+     */
+    function emergencyTokenWithdraw(address token, uint256 amount) external {
+        require(msg.sender == treasuryWallet, "Not authorized");
         require(
-            product.seller == msg.sender || msg.sender == treasuryWallet,
-            "Not authorized"
+            IERC20(token).transfer(treasuryWallet, amount),
+            "Transfer failed"
         );
-        require(!product.isDeleted, "Already deleted");
-        require(product.inEscrowQuantity == 0, "Has active escrows");
-
-        product.isDeleted = true;
-
-        // Remove from category indices
-        for (uint i = 0; i < product.categories.length; i++) {
-            removeFromCategoryIndex(product.categories[i], productId);
-            aestheticsStats[product.categories[i]].productCount--;
-        }
     }
 
-    // BULK QUERIES
-
-    function getProductsBatch(
-        uint256[] calldata productIds
-    ) external view returns (Product[] memory) {
-        Product[] memory result = new Product[](productIds.length);
-
-        for (uint i = 0; i < productIds.length; i++) {
-            result[i] = products[productIds[i]];
-        }
-
-        return result;
-    }
-
-    function getEscrowsBatch(
-        uint256[] calldata escrowIds
-    ) external view returns (Escrow[] memory) {
-        Escrow[] memory result = new Escrow[](escrowIds.length);
-
-        for (uint i = 0; i < escrowIds.length; i++) {
-            result[i] = escrows[escrowIds[i]];
-        }
-
-        return result;
-    }
-
-    // SEARCH FUNCTIONS
-
-    function searchProducts(
-        string memory searchTerm,
-        string[] memory categories,
-        string memory gender,
-        string memory brand,
-        uint256 minPrice,
-        uint256 maxPrice,
-        bool useTokenPrice,
-        uint256 limit,
-        uint256 offset
-    ) external view returns (uint256[] memory) {
-        uint256[] memory tempResults = new uint256[](_productIds.current());
-        uint256 resultCount = 0;
-
-        for (uint256 i = 1; i <= _productIds.current(); i++) {
-            Product storage product = products[i];
-
-            // Skip deleted or sold out products
-            if (product.isDeleted || product.isSold || product.quantity == 0) {
-                continue;
-            }
-
-            // Price filter
-            if (useTokenPrice) {
-                if (
-                    product.tokenPrice < minPrice ||
-                    (maxPrice > 0 && product.tokenPrice > maxPrice)
-                ) {
-                    continue;
-                }
-            } else {
-                if (
-                    product.ethPrice < minPrice ||
-                    (maxPrice > 0 && product.ethPrice > maxPrice)
-                ) {
-                    continue;
-                }
-            }
-
-            // Gender filter
-            if (
-                bytes(gender).length > 0 &&
-                keccak256(bytes(product.gender)) != keccak256(bytes(gender))
-            ) {
-                continue;
-            }
-
-            // Brand filter
-            if (
-                bytes(brand).length > 0 &&
-                keccak256(bytes(product.brand)) != keccak256(bytes(brand))
-            ) {
-                continue;
-            }
-
-            // Category filter
-            if (categories.length > 0) {
-                bool categoryMatch = false;
-                for (uint j = 0; j < categories.length; j++) {
-                    for (uint k = 0; k < product.categories.length; k++) {
-                        if (
-                            keccak256(bytes(categories[j])) ==
-                            keccak256(bytes(product.categories[k]))
-                        ) {
-                            categoryMatch = true;
-                            break;
-                        }
-                    }
-                    if (categoryMatch) break;
-                }
-                if (!categoryMatch) continue;
-            }
-
-            // Search term in name or description (simple contains check)
-            if (bytes(searchTerm).length > 0) {
-                bytes memory nameBytes = bytes(product.name);
-                bytes memory descBytes = bytes(product.description);
-                bytes memory searchBytes = bytes(searchTerm);
-
-                bool termMatch = false;
-
-                // Simple contains check - not efficient but works for view functions
-                if (
-                    _contains(nameBytes, searchBytes) ||
-                    _contains(descBytes, searchBytes)
-                ) {
-                    termMatch = true;
-                }
-
-                if (!termMatch) continue;
-            }
-
-            // Add to results
-            tempResults[resultCount] = i;
-            resultCount++;
-        }
-
-        // Apply pagination
-        uint256 startIndex = offset < resultCount ? offset : resultCount;
-        uint256 endIndex = (offset + limit) < resultCount
-            ? (offset + limit)
-            : resultCount;
-        uint256 paginatedCount = endIndex - startIndex;
-
-        uint256[] memory results = new uint256[](paginatedCount);
-        for (uint256 i = 0; i < paginatedCount; i++) {
-            results[i] = tempResults[startIndex + i];
-        }
-
-        return results;
-    }
-
-    // Simple string contains helper - not gas efficient but usable in view functions
-    function _contains(
-        bytes memory haystack,
-        bytes memory needle
-    ) internal pure returns (bool) {
-        if (needle.length == 0) return true;
-        if (haystack.length < needle.length) return false;
-
-        for (uint i = 0; i <= haystack.length - needle.length; i++) {
-            bool isMatch = true;
-            for (uint j = 0; j < needle.length; j++) {
-                if (haystack[i + j] != needle[j]) {
-                    isMatch = false;
-                    break;
-                }
-            }
-            if (isMatch) return true;
-        }
-        return false;
-    }
-
-    // EMERGENCY FUNCTIONS
-
-    function emergencyWithdrawEth() external {
+    /**
+     * @dev Emergency function to handle stuck ETH
+     */
+    function emergencyEthWithdraw() external {
         require(msg.sender == treasuryWallet, "Not authorized");
         payable(treasuryWallet).transfer(address(this).balance);
     }
 
-    function emergencyWithdrawTokens(uint256 amount) external {
-        require(msg.sender == treasuryWallet, "Not authorized");
-        thriftToken.transfer(treasuryWallet, amount);
-    }
-
-    // Update UserAesthetics contract if needed
-    function updateUserAestheticsContract(address newUserAesthetics) external {
-        require(msg.sender == treasuryWallet, "Not authorized");
-        userAesthetics = UserAesthetics(newUserAesthetics);
-    }
-
-    // ANALYTICS FUNCTIONS
-
-    function getMarketplaceStats()
-        external
-        view
-        returns (
-            uint256 totalProducts,
-            uint256 activeListings,
-            uint256 totalCompletedEscrows,
-            uint256 totalVolume
-        )
-    {
-        totalProducts = _productIds.current();
-        totalCompletedEscrows = 0;
-        totalVolume = 0;
-        activeListings = 0;
-
-        // Count active listings
-        for (uint256 i = 1; i <= _productIds.current(); i++) {
-            if (
-                !products[i].isDeleted &&
-                !products[i].isSold &&
-                products[i].quantity > 0
-            ) {
-                activeListings++;
-            }
-        }
-
-        // Count completed escrows and volume
-        for (uint256 i = 1; i <= _escrowIds.current(); i++) {
-            if (escrows[i].completed) {
-                totalCompletedEscrows++;
-                totalVolume += escrows[i].amount;
-            }
-        }
-    }
-
-    // Receive function to allow contract to receive ETH
+    /**
+     * @dev Receive and fallback functions
+     */
     receive() external payable {}
+    fallback() external payable {}
 }
