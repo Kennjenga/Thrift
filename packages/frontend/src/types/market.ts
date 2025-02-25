@@ -1,69 +1,14 @@
 // types/market.ts
 import { type Address } from 'viem'
+import { type Aesthetic } from '@/constants/aesthetics'
 
-export type Aesthetics =
-  | 'Minimalist'
-  | 'Old Money'
-  | 'Vintage'
-  | 'Dark Academia'
-  | 'Light Academia'
-  | 'Romantic Academia'
-  | 'Bohemian'
-  | 'Cottagecore'
-  | 'Fairycore'
-  | 'Goblincore'
-  | 'Witchy'
-  | 'Grunge'
-  | 'Soft Grunge'
-  | 'Punk'
-  | 'Gothic'
-  | 'Nu-Goth'
-  | 'Pastel Goth'
-  | 'Cyberpunk'
-  | 'Y2K'
-  | 'E-Girl'
-  | 'E-Boy'
-  | 'Baddie'
-  | 'Streetwear'
-  | 'Athleisure'
-  | 'Techwear'
-  | 'Art Hoe'
-  | 'Indie'
-  | 'Retro Futurism'
-  | 'Mod'
-  | 'Barbiecore'
-  | 'Kawaii'
-  | 'Classic Lolita'
-  | 'Sweet Lolita'
-  | 'Gothic Lolita'
-  | 'Decora'
-  | 'Kidcore'
-  | 'Harajuku'
-  | 'Scene'
-  | 'Emo'
-  | 'Hippie'
-  | 'Mermaidcore'
-  | 'Dark Fantasy'
-  | 'Pastelcore'
-  | 'Soft Girl'
-  | 'Camp'
-  | 'Coastal Grandmother'
-  | 'Balletcore'
-  | 'Angelcore'
-  | 'Gyaru'
-  | 'Cowboycore'
-  | 'Rocker Chic'
-  | 'Mafia Chic'
-  | 'Royalcore'
-  | 'Regencore'
-  | 'Steampunk'
-  | 'Dieselpunk';
+export type Aesthetics = Aesthetic; // Maintain backward compatibility
 
-export type ProductCondition = 'New' | 'Like New' | 'Very Good' | 'Good' | 'Fair';
-export type ProductGender = 'Men' | 'Women' | 'Unisex' | 'Kids';
+export type ProductCondition = 'New' | 'Like New' | 'Good' | 'Fair'
+export type ProductGender = 'Men' | 'Women' | 'Unisex' | 'Kids'
+export type ProductSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'
+export type ProductCategory = 'Tops' | 'Bottoms' | 'Dresses' | 'Outerwear' | 'Accessories' | 'Shoes'
 
-
-// types/market.ts
 export interface Product {
   id: bigint;
   name: string;
@@ -108,12 +53,6 @@ export interface ExchangeOffer {
   offeredQuantity: bigint;
 }
 
-export interface CartItem {
-  product: Product
-  quantity: bigint
-  paymentMethod: PaymentMethod
-}
-
 export interface Escrow {
   escrowId: bigint
   productId: bigint
@@ -143,4 +82,20 @@ export interface AestheticStat {
   productCount: bigint
   purchaseCount: bigint
   lastUpdated: bigint
+}
+
+export interface CreateProductFormData {
+  name: string
+  description: string
+  size: string
+  condition: ProductCondition
+  brand: string
+  categories: string[]
+  gender: ProductGender
+  image: string
+  tokenPrice: string
+  ethPrice: string
+  quantity: string
+  isAvailableForExchange: boolean
+  exchangePreference: string
 }

@@ -1,67 +1,77 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { formatEther, type Address } from "viem";
+import { useParams } from "next/navigation";
+import { formatEther, type Address, parseEther } from "viem";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
+import {
+  useGetProductById,
+  // useGetProductsByIds,
+  useGetUserProducts,
+} from "@/blockchain/hooks/useMarketplace";
 import { useCart } from "@/contexts/cartContext";
-import { Coins, ShoppingBag, RefreshCw, ArrowRightLeft, X } from "lucide-react";
-import { Product } from "@/types/market";
+import {
+  ShoppingCart,
+  RefreshCw,
+  ArrowRightLeft,
+  Check,
+  AlertCircle,
+} from "lucide-react";
+import { Product, PaymentMethod } from "@/types/market";
 import { useAccount } from "wagmi";
-
-// Type definitions for hook returns
-type GetProductsBatchReturn = {
-  data: Product[] | undefined;
-  isLoading: boolean;
-};
-
-type GetUserProductsReturn = {
-  data: bigint[] | undefined;
-};
+import { motion } from "framer-motion";
 
 const ProductPage = () => {
   const params = useParams();
-  const router = useRouter();
-  const id = params?.id as string;
+  // const router = useRouter();
+  const productId = params?.id as string;
 
   const { address } = useAccount();
-
-  const {
-    useGetProductsBatch,
-    useGetUserProducts,
-    createExchangeOffer,
-    createEscrowWithEth,
-    createEscrowWithTokens,
-  } = useMarketplace();
-
   const { addItem } = useCart();
 
-  const [quantity, setQuantity] = useState<bigint>(BigInt(1));
-  const [loading, setLoading] = useState<"eth" | "tokens" | "exchange" | null>(
-    null
+  // Product data loading
+  const { data: productData, isLoading: productLoading } = useGetProductById(
+    productId ? BigInt(productId) : undefined
   );
-  const [showExchangeModal, setShowExchangeModal] = useState(false);
+
+  // Get user's products for exchange
+  const { data: userProductsData, isLoading: userProductsLoading } =
+    useGetUserProducts(address as Address);
+
+  // Get marketplace functions for transactions
+  const { createExchangeOffer, createEscrowWithEth, createEscrowWithTokens } =
+    useMarketplace();
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [userProducts, setUserProducts] = useState<Product[]>([]);
+  const [quantity, setQuantity] = useState<bigint>(BigInt(1));
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("ETH");
+  const [exchangeMode, setExchangeMode] = useState(false);
+  const [tokenTopUp, setTokenTopUp] = useState("");
   const [selectedExchangeProduct, setSelectedExchangeProduct] = useState<
     bigint | null
   >(null);
-  const [tokenTopUp, setTokenTopUp] = useState<string>("0");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [processing, setProcessing] = useState(false);
 
-  // Properly typed hook calls with type assertions
-  const { data: products = [], isLoading: productLoading } =
-    useGetProductsBatch(id ? [BigInt(id)] : []) as GetProductsBatchReturn;
+  // Update product when data is loaded
+  useEffect(() => {
+    if (productData) {
+      setProduct(productData as Product);
+    }
+  }, [productData]);
 
-  // Only fetch user products if we have an address
-  const { data: userProductIds = [] } = useGetUserProducts(
-    address as Address
-  ) as GetUserProductsReturn;
+  // Update user products when data is loaded
+  useEffect(() => {
+    if (userProductsData) {
+      setUserProducts(userProductsData as Product[]);
+    }
+  }, [userProductsData]);
 
-  const { data: userProducts = [], isLoading: userProductsLoading } =
-    useGetProductsBatch(userProductIds || []) as GetProductsBatchReturn;
-
-  const product = products[0];
-
-  if (productLoading || userProductsLoading) {
+  // Loading state
+  if (productLoading || userProductsLoading || !product) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <RefreshCw className="w-8 h-8 animate-spin text-gray-500" />
@@ -69,296 +79,314 @@ const ProductPage = () => {
     );
   }
 
-  if (!product) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-2xl font-bold text-red-500">Product not found</h2>
-      </div>
-    );
-  }
-
   const handleAddToCart = () => {
+    if (!product) return;
+
     addItem({
-      ...product,
+      id: product.id,
       quantity,
-      paymentType: "ETH",
+      paymentType: paymentMethod,
+      name: product.name,
+      description: product.description,
+      size: product.size,
+      brand: product.brand,
+      condition: product.condition,
+      gender: product.gender,
+      image: product.image,
+      ethPrice: product.ethPrice,
+      tokenPrice: product.tokenPrice,
+      isAvailableForExchange: product.isAvailableForExchange,
+      seller: product.seller,
+      categories: product.categories ? product.categories : [],
+      exchangePreference: product.exchangePreference
+        ? product.exchangePreference
+        : "",
+      isSold: false,
+      isDeleted: false,
+      inEscrowQuantity: 0n,
     });
+    setSuccess("Item added to cart!");
   };
 
-  const handleBuyWithEth = async () => {
-    if (!address) return;
-    try {
-      setLoading("eth");
-      await createEscrowWithEth(
-        BigInt(product.id),
-        quantity,
-        product.ethPrice * quantity
-      );
-      router.push("/escrow");
-    } catch (error) {
-      console.error("ETH Purchase Error:", error);
-    } finally {
-      setLoading(null);
-    }
-  };
+  const handlePurchase = async () => {
+    if (!product || !address) return;
+    setError("");
+    setSuccess("");
+    setProcessing(true);
 
-  const handleBuyWithTokens = async () => {
-    if (!address) return;
     try {
-      setLoading("tokens");
-      await createEscrowWithTokens(BigInt(product.id), quantity);
-      router.push("/escrow");
-    } catch (error) {
-      console.error("Token Purchase Error:", error);
+      if (paymentMethod === "ETH") {
+        if (!product.ethPrice) {
+          throw new Error("ETH price not set for this product");
+        }
+        const totalCost = product.ethPrice * quantity;
+        await createEscrowWithEth(product.id, quantity, totalCost);
+      } else {
+        await createEscrowWithTokens(product.id, quantity);
+      }
+      setSuccess("Purchase initiated! Check your escrow status.");
+    } catch {
+      console.error("Purchase error:", error);
+      setError(error || "Failed to create purchase escrow");
     } finally {
-      setLoading(null);
+      setProcessing(false);
     }
   };
 
   const handleExchange = async () => {
-    if (!selectedExchangeProduct || !address) return;
+    if (!product || !selectedExchangeProduct || !address) return;
+    setError("");
+    setSuccess("");
+    setProcessing(true);
 
     try {
-      setLoading("exchange");
       await createExchangeOffer(
         selectedExchangeProduct,
-        BigInt(product.id),
-        BigInt(tokenTopUp)
+        product.id,
+        quantity,
+        tokenTopUp ? parseEther(tokenTopUp) : 0n
       );
-      setShowExchangeModal(false);
-      router.push("/escrow");
-    } catch (error) {
-      console.error("Exchange Error:", error);
+      setSuccess("Exchange offer created! Check your escrow status.");
+    } catch {
+      console.error("Exchange error:", error);
+      setError(error || "Failed to create exchange offer");
     } finally {
-      setLoading(null);
+      setProcessing(false);
     }
   };
 
+  const toggleExchangeMode = () => {
+    setExchangeMode(!exchangeMode);
+    setSelectedExchangeProduct(null);
+    setTokenTopUp("");
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Product Image */}
-        <div className="relative h-96 rounded-lg overflow-hidden">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover rounded-lg"
-          />
-        </div>
-
-        {/* Product Details */}
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="text-gray-600">{product.description}</p>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Brand</p>
-              <p className="font-semibold">{product.brand}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Condition</p>
-              <p className="font-semibold">{product.condition}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Size</p>
-              <p className="font-semibold">{product.size}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Gender</p>
-              <p className="font-semibold">{product.gender}</p>
-            </div>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {/* Product Image */}
+          <div className="relative aspect-square rounded-xl overflow-hidden">
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              className="object-cover"
+            />
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Coins className="w-5 h-5" />
-                <p className="text-xl font-bold">
-                  {formatEther(product.ethPrice)} ETH
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Coins className="w-5 h-5" />
-                <p className="text-xl font-bold">
-                  {formatEther(product.tokenPrice)} Tokens
-                </p>
-              </div>
+          {/* Product Details */}
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {product.name}
+              </h1>
+              <p className="text-lg text-gray-600">{product.brand}</p>
             </div>
 
-            {product.isAvailableForExchange && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-900">
-                  Exchange Preferences
-                </h3>
-                <p className="text-blue-700 mt-1">
-                  {product.exchangePreference}
-                </p>
+            <div className="space-y-2">
+              <p className="text-gray-600">{product.description}</p>
+              <div className="flex gap-4">
+                <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
+                  {product.condition}
+                </span>
+                <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
+                  {product.size}
+                </span>
+                <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
+                  {product.gender}
+                </span>
               </div>
-            )}
-          </div>
-
-          {address ? (
-            <>
-              <div className="flex items-center gap-4">
-                <select
-                  value={quantity.toString()}
-                  onChange={(e) => setQuantity(BigInt(e.target.value))}
-                  className="p-2 border rounded-lg"
-                >
-                  {[...Array(Number(product.quantity))].map((_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {i + 1}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={handleAddToCart}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  <ShoppingBag className="w-5 h-5" />
-                  Add to Cart
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={handleBuyWithEth}
-                  disabled={loading === "eth"}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
-                >
-                  {loading === "eth" ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Coins className="w-5 h-5" />
-                  )}
-                  Buy with ETH
-                </button>
-
-                <button
-                  onClick={handleBuyWithTokens}
-                  disabled={loading === "tokens"}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
-                >
-                  {loading === "tokens" ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Coins className="w-5 h-5" />
-                  )}
-                  Buy with Tokens
-                </button>
-              </div>
-
-              {product.isAvailableForExchange && (
-                <button
-                  onClick={() => setShowExchangeModal(true)}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                >
-                  <ArrowRightLeft className="w-5 h-5" />
-                  Propose Exchange
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="p-4 bg-yellow-50 rounded-lg text-yellow-800">
-              Please connect your wallet to purchase this item
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Exchange Modal */}
-      {showExchangeModal && address && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Exchange Offer</h2>
-              <button onClick={() => setShowExchangeModal(false)}>
-                <X className="w-6 h-6" />
-              </button>
             </div>
 
             <div className="space-y-4">
-              <p className="text-gray-600">
-                Select one of your items to exchange
-              </p>
+              {product.tokenPrice > 0n && (
+                <p className="text-xl font-semibold">
+                  {formatEther(product.tokenPrice)} THRIFT
+                </p>
+              )}
+              {product.ethPrice > 0n && (
+                <p className="text-xl font-semibold">
+                  {formatEther(product.ethPrice)} ETH
+                </p>
+              )}
+            </div>
 
-              <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto">
-                {(userProducts as Product[])
-                  .filter((p) => p.isAvailableForExchange)
-                  .map((userProduct) => (
-                    <div
-                      key={userProduct.id.toString()}
-                      className={`border rounded-lg p-4 cursor-pointer ${
-                        selectedExchangeProduct === userProduct.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "hover:border-gray-400"
-                      }`}
-                      onClick={() => setSelectedExchangeProduct(userProduct.id)}
-                    >
-                      <div className="flex gap-4">
-                        <div className="relative h-20 w-20">
-                          <Image
-                            src={userProduct.image}
-                            alt={userProduct.name}
-                            fill
-                            className="rounded-md object-cover"
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold">{userProduct.name}</h3>
-                          <p className="text-sm text-gray-600">
-                            {userProduct.brand}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
+            {/* Exchange Toggle Button */}
+            {product.isAvailableForExchange && (
+              <button
+                onClick={toggleExchangeMode}
+                className="flex items-center gap-2 text-blue-600 font-medium"
+              >
+                <ArrowRightLeft className="w-5 h-5" />
+                {exchangeMode ? "Switch to Purchase" : "Switch to Exchange"}
+              </button>
+            )}
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Token Top-up Amount
-                </label>
-                <div className="flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-gray-400" />
+            {/* Purchase Controls */}
+            {!exchangeMode ? (
+              <div className="space-y-4">
+                <div className="flex gap-4 items-center">
+                  <label className="text-gray-700">Quantity:</label>
                   <input
                     type="number"
-                    value={tokenTopUp}
-                    onChange={(e) => setTokenTopUp(e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    placeholder="0"
-                    min="0"
-                    step="0.000000000000000001"
+                    min="1"
+                    max={Number(product.quantity)}
+                    value={Number(quantity)}
+                    onChange={(e) =>
+                      setQuantity(BigInt(parseInt(e.target.value) || 1))
+                    }
+                    className="w-20 p-2 border rounded"
                   />
                 </div>
-              </div>
 
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  onClick={() => setShowExchangeModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleExchange}
-                  disabled={!selectedExchangeProduct || loading === "exchange"}
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                >
-                  {loading === "exchange" ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                  ) : (
-                    "Create Exchange Offer"
-                  )}
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    className={`flex-1 py-3 px-4 rounded-lg font-medium ${
+                      paymentMethod === "ETH"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                    onClick={() => setPaymentMethod("ETH")}
+                    disabled={!product.ethPrice}
+                  >
+                    Pay with ETH
+                  </button>
+                  <button
+                    className={`flex-1 py-3 px-4 rounded-lg font-medium ${
+                      paymentMethod === "TOKEN"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                    onClick={() => setPaymentMethod("TOKEN")}
+                    disabled={!product.tokenPrice}
+                  >
+                    Pay with THRIFT
+                  </button>
+                </div>
+
+                <div className="flex gap-4">
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleAddToCart}
+                    disabled={processing}
+                    className="w-1/2 py-4 bg-gray-200 text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Add to Cart
+                  </motion.button>
+
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handlePurchase}
+                    disabled={processing}
+                    className="w-1/2 py-4 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                  >
+                    {processing ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        Purchase Now
+                      </>
+                    )}
+                  </motion.button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Exchange Controls */}
+                <div className="bg-gray-100 p-4 rounded-lg">
+                  <h3 className="font-medium mb-2">
+                    Exchange for Your Product
+                  </h3>
+
+                  {userProducts.length > 0 ? (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-gray-700 block">
+                          Select your product to offer:
+                        </label>
+                        <select
+                          className="w-full p-2 border rounded-lg"
+                          value={selectedExchangeProduct?.toString() || ""}
+                          onChange={(e) =>
+                            setSelectedExchangeProduct(
+                              e.target.value ? BigInt(e.target.value) : null
+                            )
+                          }
+                        >
+                          <option value="">Select a product</option>
+                          {userProducts.map((item) => (
+                            <option
+                              key={item.id.toString()}
+                              value={item.id.toString()}
+                            >
+                              {item.name} ({item.brand})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2 mt-4">
+                        <label className="text-gray-700 block">
+                          Token Top-up (optional):
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full p-2 border rounded-lg"
+                          placeholder="Amount in THRIFT"
+                          value={tokenTopUp}
+                          onChange={(e) => setTokenTopUp(e.target.value)}
+                        />
+                        <p className="text-sm text-gray-500">
+                          Add THRIFT tokens to make your exchange offer more
+                          attractive
+                        </p>
+                      </div>
+
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleExchange}
+                        disabled={processing || !selectedExchangeProduct}
+                        className="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                      >
+                        {processing ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        ) : (
+                          <>
+                            <ArrowRightLeft className="w-5 h-5" />
+                            Create Exchange Offer
+                          </>
+                        )}
+                      </motion.button>
+                    </>
+                  ) : (
+                    <p className="text-gray-600">
+                      You don&apos;t have any products to exchange. List a
+                      product first.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Messages */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <Check className="w-5 h-5 flex-shrink-0" />
+                <p>{success}</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

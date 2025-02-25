@@ -1,66 +1,73 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Package } from "lucide-react";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
-import { Product } from "@/types/market";
-import { formatETHPrice } from "@/utils/token-utils";
+import { Product, ProductCondition, ProductGender } from "@/types/market";
+import { AESTHETICS } from "@/constants/aesthetics";
+// import { formatETHPrice} from "@/utils/token-utils";
+// import { useAccount } from "wagmi";
+import { formatEther } from "ethers";
 
 const ProductCard = ({ product }: { product: Product }) => {
   return (
-    <motion.div
-      whileHover={{ y: -5 }}
-      className="bg-purple-900/20 backdrop-blur-lg rounded-xl p-4 border border-purple-500/20"
-    >
-      <div className="relative aspect-square mb-4 rounded-lg overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden border hover:shadow-md transition-shadow">
+      <div className="relative aspect-square">
         <Image
           src={product.image}
           alt={product.name}
-          layout="fill"
-          objectFit="cover"
-          className="transition-transform duration-300 hover:scale-105"
+          fill
+          className="object-cover group-hover:scale-105 transition-transform"
         />
       </div>
-
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-white">{product.name}</h3>
-        <p className="text-purple-200/80">{product.brand}</p>
-
-        <div className="flex justify-between items-center">
-          <span className="text-white font-medium">
-            {formatETHPrice(product.ethPrice)} ETH
-          </span>
-          <span className="text-sm text-purple-200/60">
-            Qty: {String(product.quantity)}
-          </span>
+      <div className="p-4">
+        <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
+        <p className="text-sm text-gray-500 truncate">{product.brand}</p>
+        <div className="mt-2 flex justify-between items-center">
+          <div>
+            {product.tokenPrice > 0n && (
+              <p className="text-sm font-medium text-gray-900">
+                {formatEther(product.tokenPrice)} THRIFT
+              </p>
+            )}
+            {product.ethPrice > 0n && (
+              <p className="text-sm font-medium text-gray-900">
+                {formatEther(product.ethPrice)} ETH
+              </p>
+            )}
+          </div>
+          {product.isAvailableForExchange && (
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+              Exchange
+            </span>
+          )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-64">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
   </div>
 );
 
 const ErrorDisplay = ({ message }: { message: string }) => (
   <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3">
     <AlertCircle className="w-6 h-6 text-red-500" />
-    <p className="text-white/80">{message}</p>
+    <p className="text-red-700">{message}</p>
   </div>
 );
 
 const EmptyState = () => (
-  <div className="text-center py-12 bg-purple-900/20 rounded-xl border border-purple-500/20">
-    <Package className="w-12 h-12 mx-auto mb-4 text-purple-400" />
-    <p className="text-white/80 mb-6">No products found in the marketplace</p>
+  <div className="text-center py-12 bg-gray-100 rounded-xl border border-gray-200">
+    <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+    <p className="text-gray-600 mb-6">No products found in the marketplace</p>
     <Link href="/marketplace/create">
-      <button className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
+      <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
         List a Product
       </button>
     </Link>
@@ -68,65 +75,194 @@ const EmptyState = () => (
 );
 
 const MarketplacePage = () => {
-  const { useGetAllProducts } = useMarketplace();
-  const PAGE_SIZE = 12;
-  const [currentPage, setCurrentPage] = React.useState(0);
+  // const { address } = useAccount();
+  const { allActiveProducts, searchProducts } = useMarketplace();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    nameQuery: "",
+    categories: [] as string[],
+    brand: "",
+    condition: "" as ProductCondition | "",
+    gender: "" as ProductGender | "",
+    size: "",
+    minPrice: "",
+    maxPrice: "",
+    onlyAvailable: true,
+    exchangeOnly: false,
+    page: 1n,
+    pageSize: 12n,
+  });
 
-  const {
-    data: productsData,
-    isLoading,
-    error,
-  } = useGetAllProducts(currentPage, PAGE_SIZE);
-  const products = productsData as Array<Product>;
-  console.log(productsData);
+  useEffect(() => {
+    if (allActiveProducts) {
+      setProducts(allActiveProducts as Product[]);
+      setLoading(false);
+    }
+  }, [allActiveProducts]);
 
-  const handleLoadMore = () => {
-    setCurrentPage((prev) => prev + 1);
+  const handleSearch = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fixed: Removed explicit typing to avoid type mismatch
+      const result = await searchProducts(
+        filters.nameQuery,
+        filters.categories,
+        filters.brand,
+        filters.condition,
+        filters.gender,
+        filters.size,
+        filters.minPrice ? BigInt(parseFloat(filters.minPrice) * 1e18) : 0n,
+        filters.maxPrice ? BigInt(parseFloat(filters.maxPrice) * 1e18) : 0n,
+        filters.onlyAvailable,
+        filters.exchangeOnly,
+        filters.page,
+        filters.pageSize
+      );
+
+      if (result && result.success && result.data) {
+        setProducts(result.data.products || []);
+      } else {
+        setProducts([]);
+        if (result.error) {
+          setError("An error occurred while searching. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error("Error searching products:", error);
+      setError("Failed to search products. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen to-black">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8">Marketplace</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Filters Section */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="flex-1 min-w-[200px] p-2 border rounded"
+              value={filters.nameQuery}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, nameQuery: e.target.value }))
+              }
+            />
 
-        {isLoading && currentPage === 0 ? (
-          <LoadingSpinner />
-        ) : error ? (
-          <ErrorDisplay message={error.message} />
-        ) : !products || products.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              <AnimatePresence>
-                {products.map((product, index) => (
-                  <motion.div
-                    key={product.id?.toString() || index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Link href={`/marketplace/product/${product.id}`}>
-                      <ProductCard product={product} />
-                    </Link>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+            {/* Category Filter */}
+            <select
+              className="p-2 border rounded"
+              value={filters.categories[0] || ""}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  categories: e.target.value ? [e.target.value] : [],
+                }))
+              }
+            >
+              <option value="">All Categories</option>
+              {/* Fixed: Use AESTHETICS which is imported as a constant */}
+              {Object.values(AESTHETICS).map((aesthetic) => (
+                <option key={aesthetic} value={aesthetic}>
+                  {aesthetic}
+                </option>
+              ))}
+            </select>
+
+            {/* Condition Filter */}
+            <select
+              className="p-2 border rounded"
+              value={filters.condition}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  condition: e.target.value as ProductCondition,
+                }))
+              }
+            >
+              <option value="">All Conditions</option>
+              <option value="New">New</option>
+              <option value="Like New">Like New</option>
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+            </select>
+
+            {/* Price Range */}
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="Min Price"
+                className="w-24 p-2 border rounded"
+                value={filters.minPrice}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, minPrice: e.target.value }))
+                }
+                min="0"
+              />
+              <input
+                type="number"
+                placeholder="Max Price"
+                className="w-24 p-2 border rounded"
+                value={filters.maxPrice}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))
+                }
+                min="0"
+              />
             </div>
 
-            {products.length >= PAGE_SIZE && (
-              <div className="mt-8 text-center">
-                <button
-                  onClick={handleLoadMore}
-                  className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Loading..." : "Load More"}
-                </button>
-              </div>
-            )}
-          </>
+            {/* Exchange Only Toggle */}
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={filters.exchangeOnly}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    exchangeOnly: e.target.checked,
+                  }))
+                }
+              />
+              Exchange Only
+            </label>
+
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Products Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {error && <ErrorDisplay message={error} />}
+
+        {loading ? (
+          <LoadingSpinner />
+        ) : products.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <Link
+                key={product.id.toString()}
+                href={`/marketplace/product/${product.id}`}
+                className="group"
+              >
+                <ProductCard product={product} />
+              </Link>
+            ))}
+          </div>
         )}
       </div>
     </div>

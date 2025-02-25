@@ -1,224 +1,179 @@
 import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { type Address } from 'viem'
-import { MARKETPLACE_ABI, MARKETPLACE_ADDRESS } from '@/blockchain/abis/thrift'
-// import { Product, ExchangeOffer, Escrow, MarketplaceStats } from '@/types/market'
-import { sepolia } from 'wagmi/chains'
+import { 
+  MARKETPLACE_ABI, 
+  MARKETPLACE_ADDRESS,
+  MARKETPLACE_STORAGE_ABI,
+  MARKETPLACE_STORAGE_ADDRESS,
+  MARKETPLACE_PRODUCT_ABI,
+  MARKETPLACE_PRODUCT_ADDRESS,
+  MARKETPLACE_ESCROW_ABI,
+  MARKETPLACE_ESCROW_ADDRESS,
+  MARKETPLACE_QUERY_ABI,
+  MARKETPLACE_QUERY_ADDRESS
+} from '@/blockchain/abis/thrift'
+import { Product } from '@/types/market'
 
+// Define return type for search results
+interface SearchResult {
+  success: boolean;
+  data?: {
+    products: Product[];
+  };
+  error?: any;
+}
+
+/**
+ * Hook to get a single product by ID
+ */
+export function useGetProductById(productId: bigint | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getProductById',
+    args: productId ? [productId] : undefined,
+  });
+}
+
+/**
+ * Hook to get multiple products by their IDs
+ */
+export function useGetProductsByIds(productIds: bigint[] | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getProductsById',
+    args: productIds && productIds.length > 0 ? [productIds] : undefined,
+  });
+}
+
+/**
+ * Hook to get all products owned by a user
+ */
+export function useGetUserProducts(userAddress: Address | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getUserProducts',
+    args: userAddress ? [userAddress] : undefined,
+  });
+}
+
+/**
+ * Hook to get all exchange offers for a product
+ */
+export function useGetExchangeOffers(productId: bigint | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getExchangeOffers',
+    args: productId ? [productId] : undefined,
+  });
+}
+
+/**
+ * Hook to get all active products in the marketplace
+ */
+export function useGetAllActiveProducts() {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getAllActiveProducts',
+  });
+}
+
+/**
+ * Hook to get active escrows where the user is the buyer
+ */
+export function useGetUserActiveEscrowsAsBuyer(userAddress: Address | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getUserActiveEscrowsAsBuyer',
+    args: userAddress ? [userAddress] : undefined,
+  });
+}
+
+/**
+ * Hook to get active escrows where the user is the seller
+ */
+export function useGetUserActiveEscrowsAsSeller(userAddress: Address | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getUserActiveEscrowsAsSeller',
+    args: userAddress ? [userAddress] : undefined,
+  });
+}
+
+/**
+ * Hook to get completed escrows for a user
+ */
+export function useGetUserCompletedEscrows(userAddress: Address | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getUserCompletedEscrows',
+    args: userAddress ? [userAddress] : undefined,
+  });
+}
+
+/**
+ * Functions to interact with escrows
+ */
+export function useEscrowActions() {
+  const { writeContract } = useWriteContract();
+
+  // Confirm an escrow
+  const confirmEscrow = async (escrowId: bigint) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'confirmEscrow',
+      args: [escrowId],
+    });
+  };
+
+  // Reject an escrow
+  const rejectEscrow = async (escrowId: bigint, reason: string) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'rejectEscrow',
+      args: [escrowId, reason],
+    });
+  };
+
+  // Cancel an escrow
+  const cancelEscrow = async (escrowId: bigint) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'cancelEscrow',
+      args: [escrowId],
+    });
+  };
+
+  return {
+    confirmEscrow,
+    rejectEscrow,
+    cancelEscrow,
+  };
+}
+
+// Main marketplace hook
 export function useMarketplace() {
   const { address } = useAccount()
   const { writeContract } = useWriteContract()
-
-  // Core Read Functions
-  const productCount = useReadContract({
+  
+  // Read functions
+  const { data: allActiveProducts, refetch: refetchActiveProducts } = useReadContract({
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
-    functionName: 'productCount',
-    chainId: sepolia.id,
+    functionName: 'getAllActiveProducts',
   })
 
-  const totalActiveProducts = useReadContract({
-    address: MARKETPLACE_ADDRESS,
-    abi: MARKETPLACE_ABI,
-    functionName: 'getTotalActiveProducts',
-    chainId: sepolia.id,
-  })
-
-  const totalProducts = useReadContract({
-    address: MARKETPLACE_ADDRESS,
-    abi: MARKETPLACE_ABI,
-    functionName: 'getTotalProducts',
-    chainId: sepolia.id,
-  })
-
-  // Marketplace Statistics
-  const useGetMarketplaceStats = (): ReturnType<typeof useReadContract> => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getMarketplaceStats',
-      chainId: sepolia.id,
-    })
-  }
-  const useGetAllProducts = (currentPage: number, pageSize: number) => {
-    // Convert page and size to BigInt for contract interaction
-    const offset = BigInt(currentPage * pageSize)
-    const limit = BigInt(pageSize)
-  
-    // First get product IDs using searchProducts with empty filters
-    const {
-      data: productIds,
-      isLoading: isLoadingIds,
-      error: idsError
-    } = useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'searchProducts',
-      args: [
-        '', // empty search term
-        [], // empty categories
-        '', // empty gender
-        '', // empty brand
-        BigInt(0), // min price
-        BigInt(0), // max price
-        true, // useTokenPrice (doesn't matter here)
-        limit,
-        offset
-      ],
-      chainId: sepolia.id,
-    })
-  
-    // Then get full product details if we have IDs
-    const {
-      data: products,
-      isLoading: isLoadingProducts,
-      error: productsError
-    } = useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getProductsBatch',
-      args: [productIds as bigint[]],
-      chainId: sepolia.id,
-    })
-  
-    return {
-      data: products,
-      isLoading: isLoadingIds || isLoadingProducts,
-      error: idsError || productsError
-    }
-  }
-
-  const useGetProduct = (productId: bigint) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'products',
-      args: [productId],
-      chainId: sepolia.id,
-    })
-  }
-
-  const useGetProductsBatch = (productIds: bigint[]) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getProductsBatch',
-      args: [productIds],
-      chainId: sepolia.id,
-    })
-  }
-
-  const useGetUserProducts = (userAddress: Address) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getUserProducts',
-      args: [userAddress],
-      chainId: sepolia.id,
-    })
-  }
-
-  const useGetProductsByCategory = (category: string, limit: bigint, offset: bigint) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getProductsByCategory',
-      args: [category, limit, offset],
-      chainId: sepolia.id,
-    })
-  }
-
-  const useGetProductsByAestheticPreference = (userAddress: Address, limit: bigint) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getProductsByAestheticPreference',
-      args: [userAddress, limit],
-      chainId: sepolia.id,
-    })
-  }
-
-  const useSearchProducts = (
-    searchTerm: string,
-    categories: string[],
-    gender: string,
-    brand: string,
-    minPrice: bigint,
-    maxPrice: bigint,
-    useTokenPrice: boolean,
-    limit: bigint,
-    offset: bigint
-  ) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'searchProducts',
-      args: [searchTerm, categories, gender, brand, minPrice, maxPrice, useTokenPrice, limit, offset],
-      chainId: sepolia.id,
-    })
-  }
-
-  // Exchange Offers Functions
-  const useGetExchangeOffers = (productId: bigint) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getExchangeOffersForProduct',
-      args: [productId],
-      chainId: sepolia.id,
-    })
-  }
-
-  // Escrow Functions
-  const useGetUserEscrows = (userAddress: Address) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getUserEscrows',
-      args: [userAddress],
-      chainId: sepolia.id,
-    })
-  }
-
-  const useGetEscrowsBatch = (escrowIds: bigint[]) => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getEscrowsBatch',
-      args: [escrowIds],
-      chainId: sepolia.id,
-    })
-  }
-
-  // Aesthetic Functions
-  const useGetTopAesthetics = () => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'getTopAesthetics',
-      chainId: sepolia.id,
-    })
-  }
-
-  // Platform Fee Functions
-  const useGetTokenPlatformFee = () => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'tokenPlatformFee',
-      chainId: sepolia.id,
-    })
-  }
-
-  const useGetEthPlatformFee = () => {
-    return useReadContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'ethPlatformFee',
-      chainId: sepolia.id,
-    })
-  }
-
-  // Write Functions - Product Management
+  // Product creation and management
   const createProduct = async (
     name: string,
     description: string,
@@ -251,7 +206,7 @@ export function useMarketplace() {
         ethPrice,
         quantity,
         isAvailableForExchange,
-        exchangePreference,
+        exchangePreference
       ],
     })
   }
@@ -288,7 +243,7 @@ export function useMarketplace() {
         tokenPrice,
         ethPrice,
         isAvailableForExchange,
-        exchangePreference,
+        exchangePreference
       ],
     })
   }
@@ -302,23 +257,23 @@ export function useMarketplace() {
     })
   }
 
-  const deleteProduct = async (productId: bigint) => {
+  const batchUpdateQuantities = async (productIds: bigint[], newQuantities: bigint[]) => {
     return writeContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
-      functionName: 'deleteProduct',
-      args: [productId],
+      functionName: 'batchUpdateQuantities',
+      args: [productIds, newQuantities],
     })
   }
 
-  // Write Functions - Purchase Flow
-  const createEscrowWithEth = async (productId: bigint, quantity: bigint, ethAmount: bigint) => {
+  // Escrow management
+  const createEscrowWithEth = async (productId: bigint, quantity: bigint, value: bigint) => {
     return writeContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'createEscrowWithEth',
       args: [productId, quantity],
-      value: ethAmount,
+      value: value,
     })
   }
 
@@ -331,36 +286,13 @@ export function useMarketplace() {
     })
   }
 
-  const confirmEscrow = async (escrowId: bigint) => {
-    return writeContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'confirmEscrow',
-      args: [escrowId],
-    })
-  }
-
-  const refundEscrow = async (escrowId: bigint) => {
-    return writeContract({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
-      functionName: 'refundEscrow',
-      args: [escrowId],
-    })
-  }
-
-  // Write Functions - Bulk Purchase
-  const createBulkEscrowWithEth = async (
-    productIds: bigint[],
-    quantities: bigint[],
-    totalEthAmount: bigint
-  ) => {
+  const createBulkEscrowWithEth = async (productIds: bigint[], quantities: bigint[], totalValue: bigint) => {
     return writeContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'createBulkEscrowWithEth',
       args: [productIds, quantities],
-      value: totalEthAmount,
+      value: totalValue,
     })
   }
 
@@ -373,70 +305,217 @@ export function useMarketplace() {
     })
   }
 
-  // Write Functions - Exchange Flow
+  const confirmEscrow = async (escrowId: bigint) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'confirmEscrow',
+      args: [escrowId],
+    })
+  }
+
+  const cancelEscrow = async (escrowId: bigint) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'cancelEscrow',
+      args: [escrowId],
+    })
+  }
+
+  const rejectEscrow = async (escrowId: bigint, reason: string) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'rejectEscrow',
+      args: [escrowId, reason],
+    })
+  }
+
+  const bulkConfirmEscrowsAsBuyer = async (escrowIds: bigint[]) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'bulkConfirmEscrowsAsBuyer',
+      args: [escrowIds],
+    })
+  }
+
+  const bulkConfirmEscrowsForSeller = async (escrowIds: bigint[]) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'bulkConfirmEscrowsForSeller',
+      args: [escrowIds],
+    })
+  }
+
+  // Exchange functionality
   const createExchangeOffer = async (
     offeredProductId: bigint,
     wantedProductId: bigint,
+    quantity: bigint,
     tokenTopUp: bigint
   ) => {
     return writeContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'createExchangeOffer',
-      args: [offeredProductId, wantedProductId, tokenTopUp],
+      args: [offeredProductId, wantedProductId, quantity, tokenTopUp],
     })
   }
 
-  const acceptExchangeOffer = async (wantedProductId: bigint, offerIndex: bigint) => {
+  // Fixed search functionality with proper typing
+  const searchProducts = async (
+    nameQuery: string,
+    categories: string[],
+    brand: string,
+    condition: string,
+    gender: string,
+    size: string,
+    minPrice: bigint,
+    maxPrice: bigint,
+    onlyAvailable: boolean,
+    exchangeOnly: boolean,
+    page: bigint,
+    pageSize: bigint
+  ): Promise<SearchResult> => {
+    // Fix: Construct search params object correctly
+    const searchParams = {
+      nameQuery,
+      categories,
+      brand,
+      condition,
+      gender,
+      size,
+      minPrice,
+      maxPrice,
+      onlyAvailable,
+      exchangeOnly,
+      page,
+      pageSize
+    };
+
+    try {
+      // Use a direct call pattern instead of a hook
+      const result = await writeContract({
+        address: MARKETPLACE_ADDRESS,
+        abi: MARKETPLACE_ABI,
+        functionName: 'searchProducts',
+        args: [searchParams],
+      });
+      
+      return { 
+        success: true, 
+        data: { 
+          products: Array.isArray(result) ? result : [] 
+        } 
+      };
+    } catch (error) {
+      console.error("Error performing search:", error);
+      return { success: false, error };
+    }
+  };
+
+  // Fixed to use proper async pattern
+  const getProductsByUserAesthetics = async (
+    user: Address, 
+    page: bigint, 
+    pageSize: bigint
+  ): Promise<SearchResult> => {
+    try {
+      // Direct contract call instead of hook
+      const result = await writeContract({
+        address: MARKETPLACE_ADDRESS,
+        abi: MARKETPLACE_ABI,
+        functionName: 'getProductsByUserAesthetics',
+        args: [user, page, pageSize],
+      });
+      
+      return { 
+        success: true, 
+        data: { 
+          products: Array.isArray(result) ? result : [] 
+        } 
+      };
+    } catch (error) {
+      console.error("Error getting products by user aesthetics:", error);
+      return { success: false, error };
+    }
+  };
+
+  // Admin functions
+  const togglePause = async () => {
     return writeContract({
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
-      functionName: 'acceptExchangeOffer',
-      args: [wantedProductId, offerIndex],
+      functionName: 'togglePause',
+    })
+  }
+
+  const updatePlatformFees = async (newTokenFee: bigint, newEthFee: bigint) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'updatePlatformFees',
+      args: [newTokenFee, newEthFee],
+    })
+  }
+
+  const updateTreasuryWallet = async (newTreasury: Address) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'updateTreasuryWallet',
+      args: [newTreasury],
+    })
+  }
+
+  const updateUserAesthetics = async (newUserAesthetics: Address) => {
+    return writeContract({
+      address: MARKETPLACE_ADDRESS,
+      abi: MARKETPLACE_ABI,
+      functionName: 'updateUserAesthetics',
+      args: [newUserAesthetics],
     })
   }
 
   return {
-    // Core reads
-    productCount,
-    totalActiveProducts,
-    totalProducts,
+    // User data
     userAddress: address,
     
-    // Hooks
-    useGetMarketplaceStats,
-    useGetAllProducts,
-    useGetProduct,
-    useGetProductsBatch,
-    useGetUserProducts,
-    useGetProductsByCategory,
-    useGetProductsByAestheticPreference,
-    useGetExchangeOffers,
-    useGetUserEscrows,
-    useGetEscrowsBatch,
-    useGetTopAesthetics,
-    useGetTokenPlatformFee,
-    useGetEthPlatformFee,
-    useSearchProducts,
+    // Products data
+    allActiveProducts,
+    refetchActiveProducts,
     
-    // Product Management
+    // Product management
     createProduct,
     updateProduct,
     updateProductQuantity,
-    deleteProduct,
+    batchUpdateQuantities,
     
-    // Purchase Flow
+    // Escrow management
     createEscrowWithEth,
     createEscrowWithTokens,
-    confirmEscrow,
-    refundEscrow,
-    
-    // Bulk Purchase
     createBulkEscrowWithEth,
     createBulkEscrowWithTokens,
+    confirmEscrow,
+    cancelEscrow,
+    rejectEscrow,
+    bulkConfirmEscrowsAsBuyer,
+    bulkConfirmEscrowsForSeller,
     
-    // Exchange Flow
+    // Exchange functionality
     createExchangeOffer,
-    acceptExchangeOffer,
+    
+    // Search functionality with fixed implementation
+    searchProducts,
+    getProductsByUserAesthetics,
+    
+    // Admin functions
+    togglePause,
+    updatePlatformFees,
+    updateTreasuryWallet,
+    updateUserAesthetics,
   }
 }

@@ -1,67 +1,47 @@
-// types/escrow.ts
-import { type Address } from 'viem';
+import { Product } from "./market";
 
-export interface Product {
-  id: bigint;
-  name: string;
-  description: string;
-  image: string;
-  brand: string;
-  condition: string;
-  size: string;
-  gender: string;
-  ethPrice: bigint;
-  tokenPrice: bigint;
-  quantity: bigint;
-  seller: string;
-  isAvailableForExchange: boolean;
-  exchangePreference: string;
-  categories: string[];
-  isSold: boolean;
-  isDeleted: boolean;
-  inEscrowQuantity: bigint;
+export enum EscrowType {
+  PURCHASE = "PURCHASE",
+  EXCHANGE = "EXCHANGE"
 }
+
+export enum EscrowStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED"
+}
+
+export type PaymentType = "ETH" | "TOKEN";
 
 export interface Escrow {
-  escrowId: bigint;
-  productId: bigint;
-  buyer: Address;
-  seller: Address;
-  amount: bigint;
-  deadline: bigint;
-  quantity: bigint;
-  buyerConfirmed: boolean;
-  sellerConfirmed: boolean;
-  completed: boolean;
-  refunded: boolean;
-  isToken: boolean;
-  isExchange: boolean;
-  exchangeProductId: bigint;
-  tokenTopUp: bigint;
-}
-
-export interface EscrowWithProduct extends Escrow {
+  id: bigint;
+  buyer: `0x${string}`; // Address
+  seller: `0x${string}`; // Address
   product: Product;
   exchangeProduct?: Product;
-}
-
-export type EscrowStatus = 
-  | 'Pending'
-  | 'Buyer Confirmed'
-  | 'Seller Confirmed'
-  | 'Both Confirmed'
-  | 'Completed'
-  | 'Refunded';
-
-export type UserRole = 'buyer' | 'seller' | null;
-
-export interface EscrowCardProps {
-  escrow: EscrowWithProduct;
+  quantity: bigint;
+  escrowType: EscrowType;
   status: EscrowStatus;
-  role: UserRole;
-  canConfirm: boolean;
-  canRefund: boolean;
-  isLoading: boolean;
-  onConfirm: (escrowId: bigint) => Promise<void>;
-  onRefund: (escrowId: bigint) => Promise<void>;
+  paymentType?: PaymentType;
+  ethValue?: bigint;
+  tokenValue?: bigint;
+  tokenTopUp: bigint;
+  createdAt: bigint;
+  updatedAt: bigint;
+  reason?: string; // For rejection reason
 }
+
+export interface EscrowCreationParams {
+  productId: bigint;
+  quantity: bigint;
+  value?: bigint; // For ETH payments
+}
+
+export interface ExchangeOfferParams {
+  offeredProductId: bigint;
+  requestedProductId: bigint;
+  quantity: bigint;
+  tokenTopUp: bigint;
+} 
