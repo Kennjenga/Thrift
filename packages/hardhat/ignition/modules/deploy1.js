@@ -15,7 +15,7 @@ async function main() {
     // const donationContract = await donationFactory.deploy();
     const donationContract = await donationFactory.deploy(
       "0xCD6152307d4b223C00D1beF239F401101e4FBE78",
-      "0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925",
+      "0x93864C5a18c10cEca82BC18a12d147Dec0666E2D",
       deployer.address
     );
     console.log("Contract deployment initiated");

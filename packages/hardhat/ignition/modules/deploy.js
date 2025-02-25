@@ -58,5 +58,6 @@ module.exports = { main };
 // Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
 // ThriftToken deployed to: 0xCD6152307d4b223C00D1beF239F401101e4FBE78
 // Marketplace deployed to: 0x3616330653bF9A38EFB5a2DD17E6d9B74739969d
-// DonationAndRecycling deployed to:  0xcb21f93ED8A01aff099f09E5396848A43335Ce0c
+// DonationAndRecycling deployed to:  0x9BfBD2C5af21f9821Bea7018FCA7F1547f8Fa6Ec
+// Aesthetics: 0x93864C5a18c10cEca82BC18a12d147Dec0666E2D
 // Deployment complete!

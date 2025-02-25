@@ -111,7 +111,6 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
     );
 
     constructor(address payable _thriftTokenAddress) {
-        _transferOwnership(msg.sender);
         thriftToken = ThriftToken(_thriftTokenAddress);
         approvedCreators[msg.sender] = true;
         emit CreatorApproved(msg.sender);
@@ -466,6 +465,33 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
     }
 
     // Getter functions for transparency and frontend integration
+    // Add this function to the DonationAndRecycling contract
+    function getAllActiveCenters()
+        external
+        view
+        returns (DonationCenter[] memory)
+    {
+        DonationCenter[] memory activeCenters = new DonationCenter[](
+            donationCenterCount
+        );
+        uint256 activeCount = 0;
+
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (donationCenters[i].isActive) {
+                activeCenters[activeCount] = donationCenters[i];
+                activeCount++;
+            }
+        }
+
+        // Create properly sized array
+        DonationCenter[] memory result = new DonationCenter[](activeCount);
+        for (uint256 i = 0; i < activeCount; i++) {
+            result[i] = activeCenters[i];
+        }
+
+        return result;
+    }
+
     function getDonationCenter(
         uint256 centerId
     )

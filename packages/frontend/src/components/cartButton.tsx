@@ -1,58 +1,55 @@
+// CartButton.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/cartContext";
 import { CartDrawer } from "@/components/cartDrawer";
-import { motion } from "framer-motion";
 
 export const CartButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { state } = useCart();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleCart = () => setIsOpen(!isOpen);
 
-  // Early return with loading state if cart state isn't initialized
-  if (!state) {
+  // Render a loading state on the server and during initial client render
+  if (!mounted) {
     return (
-      <motion.button
-        className="relative p-2 hover:bg-[rgba(123,66,255,0.15)] rounded-full transition-colors duration-300"
-        aria-label="Shopping cart"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
+        className="relative p-3 hover:bg-[rgba(123,66,255,0.15)] rounded-full transition-colors duration-300"
+        aria-label="Loading cart"
       >
         <ShoppingCart className="h-6 w-6 text-white" />
-      </motion.button>
+      </button>
     );
   }
 
-  const itemCount = state.items?.length || 0;
+  const itemCount = state?.items?.length || 0;
 
   return (
     <>
-      <motion.button
+      <button
         onClick={toggleCart}
-        className="relative p-2 hover:bg-[rgba(123,66,255,0.15)] rounded-full transition-colors duration-300"
-        aria-label={`Shopping cart ${
-          itemCount > 0 ? `with ${itemCount} items` : "empty"
-        }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className="relative p-3 hover:bg-[rgba(123,66,255,0.15)] rounded-full transition-colors duration-300"
+        aria-label="Shopping cart"
       >
         <ShoppingCart className="h-6 w-6 text-white" />
         {itemCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <span
             className="absolute -top-1 -right-1 bg-red-500 text-white 
-            rounded-full text-xs min-w-[18px] h-[18px] flex items-center justify-center
-            shadow-lg shadow-red-500/30"
+            rounded-full text-xs min-w-[20px] h-[20px] flex items-center justify-center
+            shadow-lg shadow-red-500/30 px-1"
             aria-hidden="true"
           >
             {itemCount}
-          </motion.span>
+          </span>
         )}
-      </motion.button>
+      </button>
       <CartDrawer isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );

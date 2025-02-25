@@ -1,0 +1,287 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+// Import the common data structures
+import "./ThriftMarketplaceTypes.sol";
+
+/**
+ * External interfaces
+ */
+interface IThriftToken {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+    function burn(uint256 amount) external;
+    function mint(address to, uint256 amount) external;
+}
+
+interface IUserAesthetics {
+    function getUserAesthetics(
+        address user
+    )
+        external
+        view
+        returns (string[] memory preferences, bool isSet, uint256 timestamp);
+}
+
+/**
+ * Interface definitions for marketplace contracts
+ */
+interface IMarketplaceStorage {
+    // Configuration getters
+    function thriftToken() external view returns (address);
+    function userAesthetics() external view returns (address);
+    function treasuryWallet() external view returns (address);
+    function tokenPlatformFee() external view returns (uint256);
+    function ethPlatformFee() external view returns (uint256);
+    function isPaused() external view returns (bool);
+
+    // Product-related functions
+    function getProduct(
+        uint256 productId
+    ) external view returns (Product memory);
+    function getProductWithAvailability(
+        uint256 productId
+    ) external view returns (ProductWithAvailability memory);
+    function getAvailableQuantity(
+        uint256 productId
+    ) external view returns (uint256);
+
+    // Escrow-related functions
+    function getEscrow(uint256 escrowId) external view returns (Escrow memory);
+    function getUserEscrowTracking(
+        address user
+    ) external view returns (UserEscrowTracking memory);
+
+    // Storage modification functions - only accessible by authorized contracts
+    function createProduct(
+        address seller,
+        uint256 tokenPrice,
+        uint256 ethPrice,
+        uint256 quantity,
+        string memory name,
+        string memory description,
+        string memory size,
+        string memory condition,
+        string memory brand,
+        string[] memory categories,
+        string memory gender,
+        string memory image,
+        bool isAvailableForExchange,
+        string memory exchangePreference
+    ) external returns (uint256);
+
+    function updateProduct(
+        uint256 productId,
+        string memory name,
+        string memory description,
+        string memory size,
+        string memory condition,
+        string memory brand,
+        string[] memory categories,
+        string memory gender,
+        string memory image,
+        uint256 tokenPrice,
+        uint256 ethPrice,
+        bool isAvailableForExchange,
+        string memory exchangePreference
+    ) external;
+
+    function updateProductQuantity(
+        uint256 productId,
+        uint256 newQuantity
+    ) external;
+    function updateInEscrowQuantity(
+        uint256 productId,
+        uint256 change,
+        bool increase
+    ) external;
+    function markProductSold(uint256 productId) external;
+    function markProductDeleted(uint256 productId) external;
+
+    function createEscrow(
+        uint256 productId,
+        address buyer,
+        address seller,
+        uint256 amount,
+        uint256 quantity,
+        bool isToken,
+        bool isExchange,
+        uint256 exchangeProductId,
+        uint256 tokenTopUp
+    ) external returns (uint256);
+
+    function updateEscrowStatus(
+        uint256 escrowId,
+        bool buyerConfirmed,
+        bool sellerConfirmed,
+        bool completed,
+        bool refunded
+    ) external;
+
+    function createExchangeOffer(
+        uint256 offeredProductId,
+        uint256 wantedProductId,
+        address offerer,
+        uint256 tokenTopUp,
+        uint256 escrowId
+    ) external;
+
+    function addToUserActiveEscrows(address user, uint256 escrowId) external;
+    function moveEscrowToCompleted(
+        uint256 escrowId,
+        address buyer,
+        address seller
+    ) external;
+    function removeEscrowFromActiveList(
+        uint256 escrowId,
+        address buyer,
+        address seller
+    ) external;
+
+    // Admin functions
+    function updatePlatformFees(
+        uint256 newTokenFee,
+        uint256 newEthFee
+    ) external;
+    function updateTreasuryWallet(address newTreasury) external;
+    function updateUserAesthetics(address newUserAesthetics) external;
+    function togglePause() external;
+    function emergencyTokenWithdraw(address token, uint256 amount) external;
+    function emergencyEthWithdraw() external;
+
+    // Auth functions
+    function setAuthorizedContract(
+        address contractAddress,
+        bool authorized
+    ) external;
+    function isAuthorizedContract(
+        address contractAddress
+    ) external view returns (bool);
+
+    function getUserProductIds(
+        address user
+    ) external view returns (uint256[] memory);
+
+    function getExchangeOffersForProduct(
+        uint256 productId
+    ) external view returns (ExchangeOffer[] memory);
+
+    function BURN_PERCENTAGE() external pure returns (uint256);
+    function TREASURY_PERCENTAGE() external pure returns (uint256);
+    function SPENDING_REWARD_PERCENTAGE() external pure returns (uint256);
+    function MAX_ESCROW_DURATION() external pure returns (uint256);
+    function MAX_BULK_PURCHASE() external pure returns (uint256);
+}
+
+interface IMarketplaceProduct {
+    function createProduct(
+        string memory name,
+        string memory description,
+        string memory size,
+        string memory condition,
+        string memory brand,
+        string[] memory categories,
+        string memory gender,
+        string memory image,
+        uint256 tokenPrice,
+        uint256 ethPrice,
+        uint256 quantity,
+        bool isAvailableForExchange,
+        string memory exchangePreference
+    ) external returns (uint256);
+
+    function updateProduct(
+        uint256 productId,
+        string memory name,
+        string memory description,
+        string memory size,
+        string memory condition,
+        string memory brand,
+        string[] memory categories,
+        string memory gender,
+        string memory image,
+        uint256 tokenPrice,
+        uint256 ethPrice,
+        bool isAvailableForExchange,
+        string memory exchangePreference
+    ) external;
+
+    function updateProductQuantity(
+        uint256 productId,
+        uint256 newQuantity
+    ) external;
+    function batchUpdateQuantities(
+        uint256[] calldata productIds,
+        uint256[] calldata newQuantities
+    ) external;
+    function getUserProducts(
+        address user
+    ) external view returns (ProductWithAvailability[] memory);
+    function getAllActiveProducts()
+        external
+        view
+        returns (ProductWithAvailability[] memory);
+}
+
+interface IMarketplaceEscrow {
+    function createEscrowWithEth(
+        uint256 productId,
+        uint256 quantity
+    ) external payable;
+    function createEscrowWithTokens(
+        uint256 productId,
+        uint256 quantity
+    ) external;
+    function createExchangeOffer(
+        uint256 offeredProductId,
+        uint256 wantedProductId,
+        uint256 quantity,
+        uint256 tokenTopUp
+    ) external;
+    function createBulkEscrowWithEth(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external payable returns (uint256[] memory);
+    function createBulkEscrowWithTokens(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external returns (uint256[] memory);
+    function confirmEscrow(uint256 escrowId) external;
+    function rejectEscrow(uint256 escrowId, string memory reason) external;
+    function cancelEscrow(uint256 escrowId) external;
+    function bulkConfirmEscrowsAsBuyer(uint256[] calldata escrowIds) external;
+    function bulkConfirmEscrowsForSeller(uint256[] calldata escrowIds) external;
+    function getUserActiveEscrowsAsBuyer(
+        address user
+    ) external view returns (uint256[] memory);
+    function getUserActiveEscrowsAsSeller(
+        address user
+    ) external view returns (uint256[] memory);
+    function getUserCompletedEscrows(
+        address user
+    ) external view returns (uint256[] memory);
+    function getExchangeOffers(
+        uint256 productId
+    ) external view returns (ExchangeOffer[] memory);
+}
+
+interface IMarketplaceQuery {
+    function searchProducts(
+        SearchParams memory params
+    ) external view returns (SearchResult memory);
+    function getProductsByUserAesthetics(
+        address user,
+        uint256 page,
+        uint256 pageSize
+    ) external view returns (SearchResult memory);
+    function getProductsById(
+        uint256[] calldata productIds
+    ) external view returns (ProductWithAvailability[] memory);
+}

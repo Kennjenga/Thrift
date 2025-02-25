@@ -11,6 +11,9 @@ module.exports = {
     sepolia: {
       url: process.env.ALCHEMY_API_KEY_SEPOLIA,
       accounts: [process.env.WALLET_PRIVATE_KEY],
+      chainId: 11155111,
+      gasPrice: "auto",
+      timeout: 600000,
     },
 
     lisk: {

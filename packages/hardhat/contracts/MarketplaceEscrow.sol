@@ -1,0 +1,856 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./ThriftMarketplaceTypes.sol";
+import "./ThriftMarketplaceInterfaces.sol";
+
+/**
+ * @title MarketplaceEscrow
+ * @dev Contract that handles escrow and exchange functionality
+ */
+contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
+    // Reference to the central storage contract
+    IMarketplaceStorage public marketplaceStorage;
+
+    /**
+     * @dev Contract constructor
+     */
+    constructor(address _marketplaceStorage) {
+        require(_marketplaceStorage != address(0), "Invalid storage address");
+        marketplaceStorage = IMarketplaceStorage(_marketplaceStorage);
+        _transferOwnership(marketplaceStorage.treasuryWallet());
+    }
+
+    // Modifier to check if contract is paused
+    modifier whenNotPaused() {
+        require(!marketplaceStorage.isPaused(), "Contract is paused");
+        _;
+    }
+
+    /**
+     * @dev Creates an escrow with ETH payment
+     */
+    function createEscrowWithEth(
+        uint256 productId,
+        uint256 quantity
+    ) external payable whenNotPaused nonReentrant {
+        Product memory product = marketplaceStorage.getProduct(productId);
+        require(!product.isDeleted && !product.isSold, "Product not available");
+        require(product.ethPrice > 0, "ETH price not set");
+        require(
+            quantity > 0 && quantity <= marketplaceStorage.MAX_BULK_PURCHASE(),
+            "Invalid quantity"
+        );
+
+        uint256 availableQuantity = marketplaceStorage.getAvailableQuantity(
+            productId
+        );
+        require(availableQuantity >= quantity, "Insufficient quantity");
+
+        uint256 totalCost = product.ethPrice * quantity;
+        require(msg.value == totalCost, "Incorrect ETH amount");
+
+        // Update product's in-escrow quantity
+        marketplaceStorage.updateInEscrowQuantity(productId, quantity, true);
+
+        // Create escrow record
+        uint256 escrowId = marketplaceStorage.createEscrow(
+            productId,
+            msg.sender,
+            product.seller,
+            totalCost,
+            quantity,
+            false, // not token
+            false, // not exchange
+            0, // no exchange product
+            0 // no token top-up
+        );
+
+        // Add to user escrow lists
+        marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+        marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
+    }
+
+    /**
+     * @dev Creates an escrow with token payment
+     */
+    function createEscrowWithTokens(
+        uint256 productId,
+        uint256 quantity
+    ) external whenNotPaused nonReentrant {
+        Product memory product = marketplaceStorage.getProduct(productId);
+        require(!product.isDeleted && !product.isSold, "Product not available");
+        require(product.tokenPrice > 0, "Token price not set");
+        require(
+            quantity > 0 && quantity <= marketplaceStorage.MAX_BULK_PURCHASE(),
+            "Invalid quantity"
+        );
+
+        uint256 availableQuantity = marketplaceStorage.getAvailableQuantity(
+            productId
+        );
+        require(availableQuantity >= quantity, "Insufficient quantity");
+
+        uint256 totalCost = product.tokenPrice * quantity;
+
+        // Get token contract
+        IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
+        require(
+            token.transferFrom(msg.sender, address(this), totalCost),
+            "Token transfer failed"
+        );
+
+        // Update product's in-escrow quantity
+        marketplaceStorage.updateInEscrowQuantity(productId, quantity, true);
+
+        // Create escrow record
+        uint256 escrowId = marketplaceStorage.createEscrow(
+            productId,
+            msg.sender,
+            product.seller,
+            totalCost,
+            quantity,
+            true, // is token
+            false, // not exchange
+            0, // no exchange product
+            0 // no token top-up
+        );
+
+        // Add to user escrow lists
+        marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+        marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
+    }
+
+    /**
+     * @dev Creates an exchange offer
+     */
+    function createExchangeOffer(
+        uint256 offeredProductId,
+        uint256 wantedProductId,
+        uint256 quantity,
+        uint256 tokenTopUp
+    ) external whenNotPaused nonReentrant {
+        Product memory offeredProduct = marketplaceStorage.getProduct(
+            offeredProductId
+        );
+        Product memory wantedProduct = marketplaceStorage.getProduct(
+            wantedProductId
+        );
+
+        require(offeredProduct.seller == msg.sender, "Not your product");
+        require(
+            !offeredProduct.isDeleted &&
+                !offeredProduct.isSold &&
+                !wantedProduct.isDeleted &&
+                !wantedProduct.isSold,
+            "Products not available"
+        );
+        require(
+            wantedProduct.isAvailableForExchange,
+            "Product not for exchange"
+        );
+        require(
+            quantity > 0 && quantity <= marketplaceStorage.MAX_BULK_PURCHASE(),
+            "Invalid quantity"
+        );
+
+        uint256 availableQuantity = marketplaceStorage.getAvailableQuantity(
+            offeredProductId
+        );
+        require(availableQuantity >= quantity, "Insufficient quantity");
+
+        // Handle token top-up if needed
+        if (tokenTopUp > 0) {
+            IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
+            require(
+                token.transferFrom(msg.sender, address(this), tokenTopUp),
+                "Token top-up transfer failed"
+            );
+        }
+
+        // Update product quantities in escrow
+        marketplaceStorage.updateInEscrowQuantity(
+            offeredProductId,
+            quantity,
+            true
+        );
+        marketplaceStorage.updateInEscrowQuantity(
+            wantedProductId,
+            quantity,
+            true
+        );
+
+        // Create escrow for the exchange
+        uint256 escrowId = marketplaceStorage.createEscrow(
+            offeredProductId,
+            msg.sender,
+            wantedProduct.seller,
+            0, // no direct payment amount
+            quantity,
+            false, // not token
+            true, // is exchange
+            wantedProductId,
+            tokenTopUp
+        );
+
+        // Create exchange offer
+        marketplaceStorage.createExchangeOffer(
+            offeredProductId,
+            wantedProductId,
+            msg.sender,
+            tokenTopUp,
+            escrowId
+        );
+
+        // Add to user escrow tracking
+        marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+        marketplaceStorage.addToUserActiveEscrows(
+            wantedProduct.seller,
+            escrowId
+        );
+    }
+
+    /**
+     * @dev Creates multiple escrows with ETH payment in a single transaction
+     */
+    function createBulkEscrowWithEth(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external payable whenNotPaused nonReentrant returns (uint256[] memory) {
+        require(productIds.length > 0, "Empty product array");
+        require(
+            productIds.length == quantities.length,
+            "Array length mismatch"
+        );
+        require(
+            productIds.length <= marketplaceStorage.MAX_BULK_PURCHASE(),
+            "Too many products"
+        );
+
+        uint256 totalCost = 0;
+        uint256[] memory escrowIds = new uint256[](productIds.length);
+
+        // First pass: validate products and calculate total cost
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product memory product = marketplaceStorage.getProduct(
+                productIds[i]
+            );
+
+            // Validation checks
+            require(
+                !product.isDeleted && !product.isSold,
+                "Product not available"
+            );
+            require(
+                quantities[i] > 0 &&
+                    quantities[i] <= marketplaceStorage.MAX_BULK_PURCHASE(),
+                "Invalid quantity"
+            );
+            uint256 availableQuantity = marketplaceStorage.getAvailableQuantity(
+                productIds[i]
+            );
+            require(
+                availableQuantity >= quantities[i],
+                "Insufficient quantity"
+            );
+
+            // Price check and calculation
+            require(product.ethPrice > 0, "ETH price not set");
+            totalCost += product.ethPrice * quantities[i];
+        }
+
+        // Verify payment
+        require(msg.value == totalCost, "Incorrect ETH amount");
+
+        // Second pass: create escrows
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product memory product = marketplaceStorage.getProduct(
+                productIds[i]
+            );
+            uint256 productCost = product.ethPrice * quantities[i];
+
+            // Reserve quantity
+            marketplaceStorage.updateInEscrowQuantity(
+                productIds[i],
+                quantities[i],
+                true
+            );
+
+            // Create escrow
+            uint256 escrowId = marketplaceStorage.createEscrow(
+                productIds[i],
+                msg.sender,
+                product.seller,
+                productCost,
+                quantities[i],
+                false, // not token
+                false, // not exchange
+                0, // no exchange product
+                0 // no token top-up
+            );
+
+            escrowIds[i] = escrowId;
+
+            // Add to tracking
+            marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+            marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
+        }
+
+        return escrowIds;
+    }
+
+    /**
+     * @dev Creates multiple escrows with token payment in a single transaction
+     */
+    function createBulkEscrowWithTokens(
+        uint256[] calldata productIds,
+        uint256[] calldata quantities
+    ) external whenNotPaused nonReentrant returns (uint256[] memory) {
+        require(productIds.length > 0, "Empty product array");
+        require(
+            productIds.length == quantities.length,
+            "Array length mismatch"
+        );
+        require(
+            productIds.length <= marketplaceStorage.MAX_BULK_PURCHASE(),
+            "Too many products"
+        );
+
+        uint256 totalCost = 0;
+        uint256[] memory escrowIds = new uint256[](productIds.length);
+
+        // First pass: validate products and calculate total cost
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product memory product = marketplaceStorage.getProduct(
+                productIds[i]
+            );
+
+            // Validation checks
+            require(
+                !product.isDeleted && !product.isSold,
+                "Product not available"
+            );
+            require(
+                quantities[i] > 0 &&
+                    quantities[i] <= marketplaceStorage.MAX_BULK_PURCHASE(),
+                "Invalid quantity"
+            );
+            uint256 availableQuantity = marketplaceStorage.getAvailableQuantity(
+                productIds[i]
+            );
+            require(
+                availableQuantity >= quantities[i],
+                "Insufficient quantity"
+            );
+
+            // Price check and calculation
+            require(product.tokenPrice > 0, "Token price not set");
+            totalCost += product.tokenPrice * quantities[i];
+        }
+
+        // Transfer tokens for all products at once
+        IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
+        require(
+            token.transferFrom(msg.sender, address(this), totalCost),
+            "Token transfer failed"
+        );
+
+        // Second pass: create escrows
+        for (uint256 i = 0; i < productIds.length; i++) {
+            Product memory product = marketplaceStorage.getProduct(
+                productIds[i]
+            );
+            uint256 productCost = product.tokenPrice * quantities[i];
+
+            // Reserve quantity
+            marketplaceStorage.updateInEscrowQuantity(
+                productIds[i],
+                quantities[i],
+                true
+            );
+
+            // Create escrow
+            uint256 escrowId = marketplaceStorage.createEscrow(
+                productIds[i],
+                msg.sender,
+                product.seller,
+                productCost,
+                quantities[i],
+                true, // is token
+                false, // not exchange
+                0, // no exchange product
+                0 // no token top-up
+            );
+
+            escrowIds[i] = escrowId;
+
+            // Add to tracking
+            marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+            marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
+        }
+
+        return escrowIds;
+    }
+
+    /**
+     * @dev Confirms an escrow
+     */
+    function confirmEscrow(uint256 escrowId) external nonReentrant {
+        Escrow memory escrow = marketplaceStorage.getEscrow(escrowId);
+        require(!escrow.completed && !escrow.refunded, "Escrow not active");
+        require(block.timestamp <= escrow.deadline, "Escrow expired");
+
+        bool isBuyer = msg.sender == escrow.buyer;
+        bool isSeller = msg.sender == escrow.seller;
+        require(isBuyer || isSeller, "Not authorized");
+
+        bool buyerConfirmed = escrow.buyerConfirmed;
+        bool sellerConfirmed = escrow.sellerConfirmed;
+
+        if (isBuyer) {
+            require(!buyerConfirmed, "Already confirmed");
+            buyerConfirmed = true;
+        } else {
+            require(!sellerConfirmed, "Already confirmed");
+            sellerConfirmed = true;
+        }
+
+        // Update escrow status
+        marketplaceStorage.updateEscrowStatus(
+            escrowId,
+            buyerConfirmed,
+            sellerConfirmed,
+            false, // not completed yet
+            false // not refunded
+        );
+
+        // Check if both parties have confirmed
+        if (buyerConfirmed && sellerConfirmed) {
+            _completeEscrow(escrowId);
+        }
+    }
+
+    /**
+     * @dev Internal function to complete an escrow
+     */
+    function _completeEscrow(uint256 escrowId) internal {
+        Escrow memory escrow = marketplaceStorage.getEscrow(escrowId);
+        require(!escrow.completed && !escrow.refunded, "Invalid escrow state");
+        require(
+            escrow.buyerConfirmed && escrow.sellerConfirmed,
+            "Not confirmed"
+        );
+
+        // Mark escrow as completed
+        marketplaceStorage.updateEscrowStatus(
+            escrowId,
+            true, // buyer confirmed
+            true, // seller confirmed
+            true, // completed
+            false // not refunded
+        );
+
+        if (escrow.isExchange) {
+            _completeExchange(escrow);
+        } else {
+            _completeSale(escrow);
+        }
+
+        // Remove escrow from active lists and move to completed lists
+        marketplaceStorage.moveEscrowToCompleted(
+            escrowId,
+            escrow.buyer,
+            escrow.seller
+        );
+    }
+
+    /**
+     * @dev Completes a regular sale
+     */
+    function _completeSale(Escrow memory escrow) internal {
+        uint256 platformFee = escrow.isToken
+            ? marketplaceStorage.tokenPlatformFee()
+            : marketplaceStorage.ethPlatformFee();
+        uint256 feeAmount = (escrow.amount * platformFee) / 1000;
+        uint256 sellerAmount = escrow.amount - feeAmount;
+
+        // Process platform fee
+        if (escrow.isToken) {
+            // Get token contract
+            IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
+
+            // Calculate burn and treasury amounts
+            uint256 burnAmount = (feeAmount *
+                marketplaceStorage.BURN_PERCENTAGE()) / 100;
+            uint256 treasuryAmount = feeAmount - burnAmount;
+
+            // Transfer tokens
+            require(
+                token.transfer(escrow.seller, sellerAmount),
+                "Seller transfer failed"
+            );
+            require(
+                token.transfer(
+                    marketplaceStorage.treasuryWallet(),
+                    treasuryAmount
+                ),
+                "Treasury transfer failed"
+            );
+            token.burn(burnAmount);
+
+            // Process spending rewards
+            uint256 rewardAmount = (escrow.amount *
+                marketplaceStorage.SPENDING_REWARD_PERCENTAGE()) / 1000;
+            token.mint(escrow.buyer, rewardAmount);
+        } else {
+            // Transfer ETH
+            payable(escrow.seller).transfer(sellerAmount);
+            payable(marketplaceStorage.treasuryWallet()).transfer(feeAmount);
+        }
+
+        // Update product quantity
+        _completeQuantitySale(escrow.productId, escrow.quantity);
+    }
+
+    /**
+     * @dev Completes an exchange
+     */
+    function _completeExchange(Escrow memory escrow) internal {
+        // Process token top-up if any
+        if (escrow.tokenTopUp > 0) {
+            IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
+            uint256 platformFee = (escrow.tokenTopUp *
+                marketplaceStorage.tokenPlatformFee()) / 1000;
+            uint256 sellerAmount = escrow.tokenTopUp - platformFee;
+
+            uint256 burnAmount = (platformFee *
+                marketplaceStorage.BURN_PERCENTAGE()) / 100;
+            uint256 treasuryAmount = platformFee - burnAmount;
+
+            require(
+                token.transfer(escrow.seller, sellerAmount),
+                "Top-up transfer failed"
+            );
+            require(
+                token.transfer(
+                    marketplaceStorage.treasuryWallet(),
+                    treasuryAmount
+                ),
+                "Treasury transfer failed"
+            );
+            token.burn(burnAmount);
+        }
+
+        // Update product states
+        _completeQuantitySale(escrow.productId, escrow.quantity);
+        _completeQuantitySale(escrow.exchangeProductId, escrow.quantity);
+    }
+
+    /**
+     * @dev Updates product quantities after sale completion
+     */
+    function _completeQuantitySale(
+        uint256 productId,
+        uint256 quantity
+    ) internal {
+        Product memory product = marketplaceStorage.getProduct(productId);
+        require(product.quantity >= quantity, "Invalid quantity");
+
+        // Update the product quantity in storage
+        // This will reduce both the total quantity and in-escrow quantity
+        marketplaceStorage.updateInEscrowQuantity(productId, quantity, false);
+
+        uint256 newQuantity = product.quantity - quantity;
+        marketplaceStorage.updateProductQuantity(productId, newQuantity);
+
+        // If product is now sold out, mark it as sold
+        if (newQuantity == 0) {
+            marketplaceStorage.markProductSold(productId);
+        }
+    }
+
+    /**
+     * @dev Common escrow rejection/cancellation logic
+     */
+    function _rejectOrCancelEscrow(
+        uint256 escrowId,
+        bool isSeller,
+        string memory reason
+    ) internal {
+        Escrow memory escrow = marketplaceStorage.getEscrow(escrowId);
+
+        // Validate permissions
+        if (isSeller) {
+            require(escrow.seller == msg.sender, "Not authorized");
+        } else {
+            require(escrow.buyer == msg.sender, "Not authorized");
+            require(!escrow.sellerConfirmed, "Seller already confirmed");
+        }
+
+        require(!escrow.completed && !escrow.refunded, "Escrow not active");
+
+        // Mark escrow as refunded
+        marketplaceStorage.updateEscrowStatus(
+            escrowId,
+            escrow.buyerConfirmed,
+            escrow.sellerConfirmed,
+            false, // not completed
+            true // refunded
+        );
+
+        // Refund buyer
+        if (escrow.isToken) {
+            IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
+            require(
+                token.transfer(escrow.buyer, escrow.amount),
+                "Token refund failed"
+            );
+        } else if (!escrow.isExchange) {
+            payable(escrow.buyer).transfer(escrow.amount);
+        }
+
+        // Release quantities
+        marketplaceStorage.updateInEscrowQuantity(
+            escrow.productId,
+            escrow.quantity,
+            false
+        );
+
+        if (escrow.isExchange) {
+            marketplaceStorage.updateInEscrowQuantity(
+                escrow.exchangeProductId,
+                escrow.quantity,
+                false
+            );
+
+            if (escrow.tokenTopUp > 0) {
+                IThriftToken token = IThriftToken(
+                    marketplaceStorage.thriftToken()
+                );
+                require(
+                    token.transfer(escrow.buyer, escrow.tokenTopUp),
+                    "Token top-up refund failed"
+                );
+            }
+        }
+
+        // Remove escrow from active lists
+        marketplaceStorage.removeEscrowFromActiveList(
+            escrowId,
+            escrow.buyer,
+            escrow.seller
+        );
+    }
+
+    /**
+     * @dev Rejects an escrow (seller only)
+     */
+    function rejectEscrow(
+        uint256 escrowId,
+        string memory reason
+    ) external nonReentrant {
+        _rejectOrCancelEscrow(escrowId, true, reason);
+    }
+
+    /**
+     * @dev Cancels an escrow (buyer only)
+     */
+    function cancelEscrow(uint256 escrowId) external nonReentrant {
+        _rejectOrCancelEscrow(escrowId, false, "");
+    }
+
+    /**
+     * @dev Confirms multiple escrows
+     */
+    function _bulkConfirmEscrows(
+        uint256[] calldata escrowIds,
+        bool isBuyer
+    ) internal {
+        require(escrowIds.length > 0, "Empty escrow array");
+        require(
+            escrowIds.length <= marketplaceStorage.MAX_BULK_PURCHASE(),
+            "Too many escrows"
+        );
+
+        for (uint256 i = 0; i < escrowIds.length; ) {
+            Escrow memory escrow = marketplaceStorage.getEscrow(escrowIds[i]);
+
+            // Validate permissions and status
+            if (isBuyer) {
+                require(escrow.buyer == msg.sender, "Not buyer's escrow");
+                require(!escrow.buyerConfirmed, "Already confirmed");
+
+                // Update escrow status
+                marketplaceStorage.updateEscrowStatus(
+                    escrowIds[i],
+                    true, // buyer confirmed
+                    escrow.sellerConfirmed,
+                    false, // not completed yet
+                    false // not refunded
+                );
+            } else {
+                require(escrow.seller == msg.sender, "Not seller's escrow");
+                require(!escrow.sellerConfirmed, "Already confirmed");
+
+                // Update escrow status
+                marketplaceStorage.updateEscrowStatus(
+                    escrowIds[i],
+                    escrow.buyerConfirmed,
+                    true, // seller confirmed
+                    false, // not completed yet
+                    false // not refunded
+                );
+            }
+
+            require(!escrow.completed && !escrow.refunded, "Escrow not active");
+            require(block.timestamp <= escrow.deadline, "Escrow expired");
+
+            // Get updated escrow after status change
+            escrow = marketplaceStorage.getEscrow(escrowIds[i]);
+
+            // Auto-complete if both parties have confirmed
+            if (escrow.buyerConfirmed && escrow.sellerConfirmed) {
+                _completeEscrow(escrowIds[i]);
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @dev Bulk confirm all escrows for the buyer
+     */
+    function bulkConfirmEscrowsAsBuyer(
+        uint256[] calldata escrowIds
+    ) external nonReentrant {
+        _bulkConfirmEscrows(escrowIds, true);
+    }
+
+    /**
+     * @dev Bulk confirm multiple escrows from the same seller
+     */
+    function bulkConfirmEscrowsForSeller(
+        uint256[] calldata escrowIds
+    ) external nonReentrant {
+        _bulkConfirmEscrows(escrowIds, false);
+    }
+
+    /**
+     * @dev Get user's active escrows where user is buyer
+     */
+    function getUserActiveEscrowsAsBuyer(
+        address user
+    ) external view returns (uint256[] memory) {
+        UserEscrowTracking memory tracking = marketplaceStorage
+            .getUserEscrowTracking(user);
+        uint256[] memory activeEscrows = tracking.activeEscrows;
+
+        // Count escrows where user is buyer
+        uint256 count = 0;
+        for (uint256 i = 0; i < activeEscrows.length; i++) {
+            Escrow memory escrow = marketplaceStorage.getEscrow(
+                activeEscrows[i]
+            );
+            if (escrow.buyer == user) {
+                count++;
+            }
+        }
+
+        // Create filtered array
+        uint256[] memory buyerEscrows = new uint256[](count);
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < activeEscrows.length; i++) {
+            Escrow memory escrow = marketplaceStorage.getEscrow(
+                activeEscrows[i]
+            );
+            if (escrow.buyer == user) {
+                buyerEscrows[index++] = activeEscrows[i];
+            }
+        }
+
+        return buyerEscrows;
+    }
+
+    /**
+     * @dev Get user's active escrows where user is seller
+     */
+    function getUserActiveEscrowsAsSeller(
+        address user
+    ) external view returns (uint256[] memory) {
+        UserEscrowTracking memory tracking = marketplaceStorage
+            .getUserEscrowTracking(user);
+        uint256[] memory activeEscrows = tracking.activeEscrows;
+
+        // Count escrows where user is seller
+        uint256 count = 0;
+        for (uint256 i = 0; i < activeEscrows.length; i++) {
+            Escrow memory escrow = marketplaceStorage.getEscrow(
+                activeEscrows[i]
+            );
+            if (escrow.seller == user) {
+                count++;
+            }
+        }
+
+        // Create filtered array
+        uint256[] memory sellerEscrows = new uint256[](count);
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < activeEscrows.length; i++) {
+            Escrow memory escrow = marketplaceStorage.getEscrow(
+                activeEscrows[i]
+            );
+            if (escrow.seller == user) {
+                sellerEscrows[index++] = activeEscrows[i];
+            }
+        }
+
+        return sellerEscrows;
+    }
+
+    /**
+     * @dev Get user's completed escrows
+     */
+    function getUserCompletedEscrows(
+        address user
+    ) external view returns (uint256[] memory) {
+        UserEscrowTracking memory tracking = marketplaceStorage
+            .getUserEscrowTracking(user);
+        return tracking.completedEscrows;
+    }
+
+    /**
+     * @dev Gets all exchange offers for a product
+     */
+    function getExchangeOffers(
+        uint256 productId
+    ) external view returns (ExchangeOffer[] memory) {
+        ExchangeOffer[] memory offers = marketplaceStorage
+            .getExchangeOffersForProduct(productId);
+
+        // Count active offers
+        uint256 activeCount = 0;
+        for (uint256 i = 0; i < offers.length; i++) {
+            if (offers[i].isActive) {
+                activeCount++;
+            }
+        }
+
+        // Create array of active offers
+        ExchangeOffer[] memory activeOffers = new ExchangeOffer[](activeCount);
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < offers.length; i++) {
+            if (offers[i].isActive) {
+                activeOffers[index++] = offers[i];
+            }
+        }
+
+        return activeOffers;
+    }
+}

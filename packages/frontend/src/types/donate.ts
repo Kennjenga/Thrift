@@ -1,60 +1,101 @@
-// types/donate
+// types/donation.ts
+import { Address } from 'viem';
 
-export interface DonationCenter {
-    id: number;
-    name: string;
-    description: string;
-    location: string;
-    acceptsTokens: boolean;
-    acceptsRecycling: boolean;
-    acceptsDonations: boolean; // Add this new field
-    isActive: boolean;
-  }
-  
-  export interface DonationData {
-    itemCount: bigint;
-    itemType: string;
-    description: string;
-    weightInKg: bigint;
-  }
-  
-  export interface RecyclingData {
-    description: string;
-    weightInKg: bigint;
-  }
-  
-  export interface NewDonationCenterData {
-    name: string;
-    description: string;
-    location: string;
-    acceptsTokens: boolean;
-    acceptsRecycling: boolean;
-    acceptsDonations: boolean; // Add this new field
-    centerType: 'donation' | 'recycling' | ''; // Add this to track center type
-  }
-  
-  export interface DonationCenterHookResult {
-    data?: DonationCenter;
-    isError: boolean;
-    isLoading: boolean;
-  }
-
-  // types/donations.ts
-export interface PendingDonation {
-  id: bigint;
-  donorAddress: string;
+export interface DonationSubmission {
   centerId: bigint;
   itemCount: bigint;
   itemType: string;
   description: string;
   weightInKg: bigint;
-  submissionDate: bigint;
-  status: 'pending' | 'approved' | 'rejected';
 }
 
-export interface ApprovedDonation extends PendingDonation {
-  verifiedItemCount: bigint;
-  verifiedWeightInKg: bigint;
-  approvalDate: bigint;
-  rewardAmount: bigint;
+export interface RecyclingSubmission {
+  centerId: bigint;
+  description: string;
+  weightInKg: bigint;
+}
+
+export interface TokenDonation {
+  centerId: bigint;
+  tokenAmount: bigint;
+}
+
+export interface PendingDonation {
+  id: bigint;
+  donor: Address;
+  itemCount: bigint;
+  itemType: string;
+  description: string;
+  timestamp: bigint;
+  isRecycling: boolean;
+  tokenAmount: bigint;
+  weightInKg: bigint;
+  isTokenDonation: boolean;
+  centerId: bigint;
+  isApproved: boolean;
+  isProcessed: boolean;
+}
+
+export interface RewardRates {
+  clothingItemRewardNumerator: bigint;
+  clothingItemRewardDenominator: bigint;
+  clothingWeightRewardNumerator: bigint;
+  clothingWeightRewardDenominator: bigint;
+  recyclingRewardNumerator: bigint;
+  recyclingRewardDenominator: bigint;
+  maxDonationReward: bigint;
+}
+
+export interface DonationCenterResponse {
+  name: string;
+  description: string;
+  location: string;
+  isActive: boolean;
+  acceptsTokens: boolean;
+  acceptsRecycling: boolean;
+  owner: Address;
+  totalDonationsReceived: bigint;
+  totalRecyclingReceived: bigint;
+  totalTokenDonationsReceived: bigint;
+}
+
+
+export interface DonationCenter {
+  id: bigint;
+  name: string;
+  description: string;
+  location: string;
+  isActive: boolean;
+  acceptsTokens: boolean;
+  acceptsRecycling: boolean;
+  owner: Address;
+  totalDonationsReceived: bigint;
+  totalRecyclingReceived: bigint;
+  totalTokenDonationsReceived: bigint;
+}
+
+export interface RewardRates {
+  clothingItemRewardNumerator: bigint;
+  clothingItemRewardDenominator: bigint;
+  clothingWeightRewardNumerator: bigint;
+  clothingWeightRewardDenominator: bigint;
+  recyclingRewardNumerator: bigint;
+  recyclingRewardDenominator: bigint;
+  maxDonationReward: bigint;
+}
+
+export interface DonationFormData {
+  name: string;
+  description: string;
+  location: string;
+  acceptsTokens: boolean;
+  acceptsRecycling: boolean;
+}
+
+export interface NewDonation {
+  itemCount?: number;
+  itemType?: string;
+  description: string;
+  weightInKg: number;
+  isRecycling: boolean;
 }
