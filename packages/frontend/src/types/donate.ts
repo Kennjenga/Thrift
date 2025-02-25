@@ -1,25 +1,28 @@
-// types/donation.ts
-import { Address } from 'viem';
+import { type Address } from 'viem';
 
-export interface DonationSubmission {
-  centerId: bigint;
-  itemCount: bigint;
-  itemType: string;
+/**
+ * Represents a donation center in the system
+ */
+export interface DonationCenter {
+  id: bigint;
+  name: string;
   description: string;
-  weightInKg: bigint;
+  location: string;
+  isActive: boolean;
+  acceptsTokens: boolean;
+  acceptsRecycling: boolean;
+  owner: Address;
+  totalDonationsReceived: bigint;
+  totalRecyclingReceived: bigint;
+  totalTokenDonationsReceived: bigint;
+  tokenDonationIds?: bigint[];
+  clothingDonationIds?: bigint[];
+  recyclingDonationIds?: bigint[];
 }
 
-export interface RecyclingSubmission {
-  centerId: bigint;
-  description: string;
-  weightInKg: bigint;
-}
-
-export interface TokenDonation {
-  centerId: bigint;
-  tokenAmount: bigint;
-}
-
+/**
+ * Represents a pending or approved donation in the system
+ */
 export interface PendingDonation {
   id: bigint;
   donor: Address;
@@ -36,6 +39,9 @@ export interface PendingDonation {
   isProcessed: boolean;
 }
 
+/**
+ * Represents the reward rates for different donation types
+ */
 export interface RewardRates {
   clothingItemRewardNumerator: bigint;
   clothingItemRewardDenominator: bigint;
@@ -46,56 +52,33 @@ export interface RewardRates {
   maxDonationReward: bigint;
 }
 
-export interface DonationCenterResponse {
-  name: string;
-  description: string;
-  location: string;
-  isActive: boolean;
-  acceptsTokens: boolean;
-  acceptsRecycling: boolean;
-  owner: Address;
-  totalDonationsReceived: bigint;
-  totalRecyclingReceived: bigint;
-  totalTokenDonationsReceived: bigint;
+/**
+ * Enum for donation types
+ */
+export enum DonationType {
+  CLOTHING = 'clothing',
+  RECYCLING = 'recycling',
+  TOKEN = 'token'
 }
 
-
-export interface DonationCenter {
-  id: bigint;
-  name: string;
-  description: string;
-  location: string;
-  isActive: boolean;
-  acceptsTokens: boolean;
-  acceptsRecycling: boolean;
-  owner: Address;
-  totalDonationsReceived: bigint;
-  totalRecyclingReceived: bigint;
-  totalTokenDonationsReceived: bigint;
+/**
+ * Represents donation statistics for the application
+ */
+export interface DonationStatistics {
+  totalCenters: number;
+  activeCenters: number;
+  totalClothingDonations: bigint;
+  totalRecyclingWeight: bigint;
+  totalTokenDonations: bigint;
 }
 
-export interface RewardRates {
-  clothingItemRewardNumerator: bigint;
-  clothingItemRewardDenominator: bigint;
-  clothingWeightRewardNumerator: bigint;
-  clothingWeightRewardDenominator: bigint;
-  recyclingRewardNumerator: bigint;
-  recyclingRewardDenominator: bigint;
-  maxDonationReward: bigint;
-}
-
-export interface DonationFormData {
-  name: string;
-  description: string;
-  location: string;
-  acceptsTokens: boolean;
-  acceptsRecycling: boolean;
-}
-
-export interface NewDonation {
-  itemCount?: number;
-  itemType?: string;
-  description: string;
-  weightInKg: number;
-  isRecycling: boolean;
+/**
+ * Filter options for donation centers
+ */
+export interface CenterFilterOptions {
+  owner: string;
+  isActive: string;
+  acceptsTokens: string;
+  acceptsRecycling: string;
+  search: string;
 }

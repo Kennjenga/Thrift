@@ -22,6 +22,9 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         uint256 totalDonationsReceived;
         uint256 totalRecyclingReceived;
         uint256 totalTokenDonationsReceived;
+        uint256[] tokenDonationIds; // Track token donation IDs for this center
+        uint256[] clothingDonationIds; // Track clothing donation IDs for this center
+        uint256[] recyclingDonationIds; // Track recycling donation IDs for this center
     }
 
     struct PendingDonation {
@@ -44,9 +47,13 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
     mapping(uint256 => PendingDonation) public approvedDonations;
     mapping(address => uint256[]) public userDonations; // Track approved donations by user
     mapping(address => uint256[]) public userPendingDonations; // Track pending donations by user
+    mapping(uint256 => uint256[]) private centerPendingDonations; // Track pending donations by center
     uint256 public donationCenterCount;
     uint256 public pendingDonationCount;
     uint256 public approvedDonationCount;
+
+    // Donation expiry period in seconds (2 days = 172800 seconds)
+    uint256 public constant DONATION_EXPIRY_PERIOD = 2 days;
 
     // Reward constants
     uint256 public constant REWARD_BASE = 10 ** 18;
@@ -80,6 +87,11 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         uint256 indexed pendingDonationId,
         address indexed rejector,
         string reason
+    );
+    event DonationExpired(
+        uint256 indexed pendingDonationId,
+        uint256 indexed centerId,
+        address indexed donor
     );
     event DonationRegistered(
         uint256 indexed donationId,
@@ -130,6 +142,18 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         _;
     }
 
+    // Helper function to check if a donation is expired
+    function isDonationExpired(uint256 donationId) public view returns (bool) {
+        PendingDonation storage donation = pendingDonations[donationId];
+
+        // If the donation is already processed, it's not considered expired
+        if (donation.isProcessed) {
+            return false;
+        }
+
+        return (block.timestamp - donation.timestamp) > DONATION_EXPIRY_PERIOD;
+    }
+
     // Creator management functions
     function approveCreator(address creator) external onlyOwner {
         approvedCreators[creator] = true;
@@ -150,6 +174,10 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         bool acceptsRecycling
     ) external onlyApprovedCreator {
         donationCenterCount++;
+
+        // Initialize empty arrays for donation IDs
+        uint256[] memory emptyArray = new uint256[](0);
+
         donationCenters[donationCenterCount] = DonationCenter(
             name,
             description,
@@ -160,7 +188,10 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             msg.sender,
             0,
             0,
-            0
+            0,
+            emptyArray, // tokenDonationIds
+            emptyArray, // clothingDonationIds
+            emptyArray // recyclingDonationIds
         );
 
         emit DonationCenterAdded(
@@ -236,6 +267,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         });
 
         userPendingDonations[msg.sender].push(pendingDonationCount);
+        centerPendingDonations[centerId].push(pendingDonationCount);
 
         emit DonationSubmitted(pendingDonationCount, centerId, msg.sender);
     }
@@ -270,6 +302,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         });
 
         userPendingDonations[msg.sender].push(pendingDonationCount);
+        centerPendingDonations[centerId].push(pendingDonationCount);
 
         emit DonationSubmitted(pendingDonationCount, centerId, msg.sender);
     }
@@ -314,12 +347,59 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         userDonations[msg.sender].push(approvedDonationCount);
         donationCenters[centerId].totalTokenDonationsReceived += tokenAmount;
 
+        // Add to the center's token donation IDs array
+        donationCenters[centerId].tokenDonationIds.push(approvedDonationCount);
+
         emit TokenDonationRegistered(
             approvedDonationCount,
             centerId,
             msg.sender,
             tokenAmount
         );
+    }
+
+    // Function to handle expired donations
+    function expireDonation(uint256 pendingDonationId) external {
+        require(
+            pendingDonationId <= pendingDonationCount,
+            "Invalid pending donation ID"
+        );
+        PendingDonation storage pending = pendingDonations[pendingDonationId];
+        require(!pending.isProcessed, "Donation already processed");
+        require(isDonationExpired(pendingDonationId), "Donation not expired");
+
+        pending.isProcessed = true;
+        pending.isApproved = false;
+
+        emit DonationExpired(
+            pendingDonationId,
+            pending.centerId,
+            pending.donor
+        );
+    }
+
+    // Function to batch expire multiple donations
+    function batchExpireDonations(
+        uint256[] calldata pendingDonationIds
+    ) external {
+        for (uint256 i = 0; i < pendingDonationIds.length; i++) {
+            uint256 donationId = pendingDonationIds[i];
+
+            // Skip if donation ID is invalid or already processed or not expired
+            if (
+                donationId > pendingDonationCount ||
+                pendingDonations[donationId].isProcessed ||
+                !isDonationExpired(donationId)
+            ) {
+                continue;
+            }
+
+            PendingDonation storage pending = pendingDonations[donationId];
+            pending.isProcessed = true;
+            pending.isApproved = false;
+
+            emit DonationExpired(donationId, pending.centerId, pending.donor);
+        }
     }
 
     // Donation approval functions
@@ -339,6 +419,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         PendingDonation storage pending = pendingDonations[pendingDonationId];
         require(!pending.isProcessed, "Donation already processed");
         require(!pending.isTokenDonation, "Cannot approve token donations");
+        require(!isDonationExpired(pendingDonationId), "Donation expired");
 
         pending.isApproved = true;
         pending.isProcessed = true;
@@ -347,14 +428,20 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
 
         // Calculate and issue reward
         uint256 rewardAmount;
+        approvedDonationCount++;
+
         if (pending.isRecycling) {
             rewardAmount = calculateRecyclingReward(verifiedWeightInKg);
             donationCenters[pending.centerId]
                 .totalRecyclingReceived += verifiedWeightInKg;
 
-            approvedDonationCount++;
             approvedDonations[approvedDonationCount] = pending;
             userDonations[pending.donor].push(approvedDonationCount);
+
+            // Add to the center's recycling donations list
+            donationCenters[pending.centerId].recyclingDonationIds.push(
+                approvedDonationCount
+            );
 
             emit RecyclingRegistered(
                 approvedDonationCount,
@@ -370,9 +457,13 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             );
             donationCenters[pending.centerId].totalDonationsReceived++;
 
-            approvedDonationCount++;
             approvedDonations[approvedDonationCount] = pending;
             userDonations[pending.donor].push(approvedDonationCount);
+
+            // Add to the center's clothing donations list
+            donationCenters[pending.centerId].clothingDonationIds.push(
+                approvedDonationCount
+            );
 
             emit DonationRegistered(
                 approvedDonationCount,
@@ -405,6 +496,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         );
         PendingDonation storage pending = pendingDonations[pendingDonationId];
         require(!pending.isProcessed, "Donation already processed");
+        require(!isDonationExpired(pendingDonationId), "Donation expired");
 
         pending.isProcessed = true;
         pending.isApproved = false;
@@ -464,8 +556,85 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         maxDonationReward = _maxDonationReward;
     }
 
+    // Function to get the latest token donations for a center (up to 10)
+    function getLatestTokenDonations(
+        uint256 centerId
+    ) external view returns (PendingDonation[] memory) {
+        require(centerId <= donationCenterCount, "Invalid center ID");
+
+        uint256[] storage tokenDonationIds = donationCenters[centerId]
+            .tokenDonationIds;
+        uint256 donationCount = tokenDonationIds.length;
+
+        // Determine how many donations to return (up to 10)
+        uint256 resultCount = donationCount > 10 ? 10 : donationCount;
+
+        // Create result array
+        PendingDonation[] memory result = new PendingDonation[](resultCount);
+
+        // Fill with the latest donations (most recent first)
+        for (uint256 i = 0; i < resultCount; i++) {
+            // Get donation from the end of the array (newest donations)
+            uint256 donationId = tokenDonationIds[donationCount - 1 - i];
+            result[i] = approvedDonations[donationId];
+        }
+
+        return result;
+    }
+
+    // Function to get the latest clothing donations for a center (up to 10)
+    function getLatestClothingDonations(
+        uint256 centerId
+    ) external view returns (PendingDonation[] memory) {
+        require(centerId <= donationCenterCount, "Invalid center ID");
+
+        uint256[] storage clothingDonationIds = donationCenters[centerId]
+            .clothingDonationIds;
+        uint256 donationCount = clothingDonationIds.length;
+
+        // Determine how many donations to return (up to 10)
+        uint256 resultCount = donationCount > 10 ? 10 : donationCount;
+
+        // Create result array
+        PendingDonation[] memory result = new PendingDonation[](resultCount);
+
+        // Fill with the latest donations (most recent first)
+        for (uint256 i = 0; i < resultCount; i++) {
+            // Get donation from the end of the array (newest donations)
+            uint256 donationId = clothingDonationIds[donationCount - 1 - i];
+            result[i] = approvedDonations[donationId];
+        }
+
+        return result;
+    }
+
+    // Function to get the latest recycling donations for a center (up to 10)
+    function getLatestRecyclingDonations(
+        uint256 centerId
+    ) external view returns (PendingDonation[] memory) {
+        require(centerId <= donationCenterCount, "Invalid center ID");
+
+        uint256[] storage recyclingDonationIds = donationCenters[centerId]
+            .recyclingDonationIds;
+        uint256 donationCount = recyclingDonationIds.length;
+
+        // Determine how many donations to return (up to 10)
+        uint256 resultCount = donationCount > 10 ? 10 : donationCount;
+
+        // Create result array
+        PendingDonation[] memory result = new PendingDonation[](resultCount);
+
+        // Fill with the latest donations (most recent first)
+        for (uint256 i = 0; i < resultCount; i++) {
+            // Get donation from the end of the array (newest donations)
+            uint256 donationId = recyclingDonationIds[donationCount - 1 - i];
+            result[i] = approvedDonations[donationId];
+        }
+
+        return result;
+    }
+
     // Getter functions for transparency and frontend integration
-    // Add this function to the DonationAndRecycling contract
     function getAllActiveCenters()
         external
         view
@@ -535,6 +704,92 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         address user
     ) external view returns (uint256[] memory) {
         return userDonations[user];
+    }
+
+    function getCenterPendingDonations(
+        uint256 centerId
+    ) external view returns (uint256[] memory) {
+        require(centerId <= donationCenterCount, "Invalid center ID");
+        return centerPendingDonations[centerId];
+    }
+
+    // Get active pending donations for a center (not expired, not processed)
+    function getActiveCenterPendingDonations(
+        uint256 centerId
+    ) external view returns (uint256[] memory) {
+        require(centerId <= donationCenterCount, "Invalid center ID");
+
+        uint256[] memory allCenterDonations = centerPendingDonations[centerId];
+
+        // First count active donations
+        uint256 activeCount = 0;
+        for (uint256 i = 0; i < allCenterDonations.length; i++) {
+            uint256 donationId = allCenterDonations[i];
+            if (
+                !pendingDonations[donationId].isProcessed &&
+                !isDonationExpired(donationId)
+            ) {
+                activeCount++;
+            }
+        }
+
+        // Create result array with correct size
+        uint256[] memory activeDonations = new uint256[](activeCount);
+
+        // Fill array with active donation IDs
+        uint256 index = 0;
+        for (uint256 i = 0; i < allCenterDonations.length; i++) {
+            uint256 donationId = allCenterDonations[i];
+            if (
+                !pendingDonations[donationId].isProcessed &&
+                !isDonationExpired(donationId)
+            ) {
+                activeDonations[index] = donationId;
+                index++;
+            }
+        }
+
+        return activeDonations;
+    }
+
+    function getDonationById(
+        uint256 donationId,
+        bool isApproved
+    )
+        external
+        view
+        returns (
+            address donor,
+            uint256 itemCount,
+            string memory itemType,
+            string memory description,
+            uint256 timestamp,
+            bool isRecycling,
+            uint256 tokenAmount,
+            uint256 weightInKg,
+            bool isTokenDonation,
+            uint256 centerId,
+            bool _isApproved,
+            bool isProcessed
+        )
+    {
+        PendingDonation storage donation = isApproved
+            ? approvedDonations[donationId]
+            : pendingDonations[donationId];
+        return (
+            donation.donor,
+            donation.itemCount,
+            donation.itemType,
+            donation.description,
+            donation.timestamp,
+            donation.isRecycling,
+            donation.tokenAmount,
+            donation.weightInKg,
+            donation.isTokenDonation,
+            donation.centerId,
+            donation.isApproved,
+            donation.isProcessed
+        );
     }
 
     function getPendingDonation(
@@ -611,7 +866,6 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         );
     }
 
-    // Function to get current reward rates
     function getRewardRates()
         external
         view

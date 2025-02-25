@@ -7,17 +7,21 @@ async function main() {
     console.log("Deploying contracts with the account:", deployer.address);
 
     // Get the contract factory
-    const donationFactory = await hre.ethers.getContractFactory("Marketplace");
+    const donationFactory = await hre.ethers.getContractFactory(
+      "DonationAndRecycling"
+    );
     console.log("Contract factory created successfully");
 
     // Deploy the contract
     console.log("Deploying contract...");
-    // const donationContract = await donationFactory.deploy();
     const donationContract = await donationFactory.deploy(
-      "0xCD6152307d4b223C00D1beF239F401101e4FBE78",
-      "0x93864C5a18c10cEca82BC18a12d147Dec0666E2D",
-      deployer.address
+      "0xCD6152307d4b223C00D1beF239F401101e4FBE78"
     );
+    // const donationContract = await donationFactory.deploy(
+    //   "0xCD6152307d4b223C00D1beF239F401101e4FBE78",
+    //   "0x93864C5a18c10cEca82BC18a12d147Dec0666E2D",
+    //   deployer.address
+    // );
     console.log("Contract deployment initiated");
 
     // Wait for the deployment to be mined
