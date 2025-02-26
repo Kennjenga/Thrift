@@ -27,12 +27,24 @@ interface SearchResult {
  * Hook to get a single product by ID
  */
 export function useGetProductById(productId: bigint | undefined) {
-  return useReadContract({
+  const result = useReadContract({
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
-    functionName: 'getProductById',
-    args: productId ? [productId] : undefined,
+    functionName: 'getProductsById',
+    args: productId ? [[productId]] : undefined,
+    chainId: 11155111, // Add this to specify Sepolia testnet
   });
+  
+  // Create a properly typed derived value
+  const singleProduct = Array.isArray(result.data) && result.data.length > 0 
+    ? result.data[0] 
+    : undefined;
+  
+  // Return the result with the modified data
+  return {
+    ...result,
+    data: singleProduct
+  };
 }
 
 /**
@@ -44,6 +56,7 @@ export function useGetProductsByIds(productIds: bigint[] | undefined) {
     abi: MARKETPLACE_ABI,
     functionName: 'getProductsById',
     args: productIds && productIds.length > 0 ? [productIds] : undefined,
+    chainId: 11155111,
   });
 }
 
@@ -79,6 +92,7 @@ export function useGetAllActiveProducts() {
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getAllActiveProducts',
+    chainId: 11155111,
   });
 }
 
@@ -171,6 +185,7 @@ export function useMarketplace() {
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getAllActiveProducts',
+    chainId: 11155111,
   })
 
   // Product creation and management
@@ -403,6 +418,7 @@ export function useMarketplace() {
         abi: MARKETPLACE_ABI,
         functionName: 'searchProducts',
         args: [searchParams],
+        chainId: 11155111,
       });
       
       return { 

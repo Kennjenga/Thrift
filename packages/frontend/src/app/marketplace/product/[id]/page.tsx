@@ -24,16 +24,23 @@ import { motion } from "framer-motion";
 
 const ProductPage = () => {
   const params = useParams();
-  // const router = useRouter();
   const productId = params?.id as string;
+
+  console.log("Product ID from params:", productId); // Debug log
 
   const { address } = useAccount();
   const { addItem } = useCart();
 
   // Product data loading
-  const { data: productData, isLoading: productLoading } = useGetProductById(
-    productId ? BigInt(productId) : undefined
-  );
+  const {
+    data: productData,
+    isLoading: productLoading,
+    error: productError,
+  } = useGetProductById(productId ? BigInt(productId) : undefined);
+
+  console.log("Product Data:", productData); // Debug log
+  console.log("Product Loading:", productLoading); // Debug log
+  console.log("Product Error:", productError); // Debug log
 
   // Get user's products for exchange
   const { data: userProductsData, isLoading: userProductsLoading } =
@@ -58,8 +65,11 @@ const ProductPage = () => {
 
   // Update product when data is loaded
   useEffect(() => {
+    console.log("Product Data in useEffect:", productData); // Debug log
     if (productData) {
-      setProduct(productData as Product);
+      const formattedProduct = productData as Product;
+      console.log("Formatted Product:", formattedProduct); // Debug log
+      setProduct(formattedProduct);
     }
   }, [productData]);
 
@@ -71,13 +81,34 @@ const ProductPage = () => {
   }, [userProductsData]);
 
   // Loading state
-  if (productLoading || userProductsLoading || !product) {
+  if (productLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <RefreshCw className="w-8 h-8 animate-spin text-gray-500" />
       </div>
     );
   }
+
+  // Error state
+  if (productError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        <p>Error loading product: {productError.message}</p>
+      </div>
+    );
+  }
+
+  // No product found state
+  if (!productLoading && !product) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-500">
+        <p>Product not found</p>
+      </div>
+    );
+  }
+
+  // At this point, we know product is not null
+  const safeProduct = product as Product;
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -168,8 +199,8 @@ const ProductPage = () => {
           {/* Product Image */}
           <div className="relative aspect-square rounded-xl overflow-hidden">
             <Image
-              src={product.image}
-              alt={product.name}
+              src={safeProduct.image}
+              alt={safeProduct.name}
               fill
               className="object-cover"
             />
@@ -179,41 +210,40 @@ const ProductPage = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {product.name}
+                {safeProduct.name}
               </h1>
-              <p className="text-lg text-gray-600">{product.brand}</p>
+              <p className="text-lg text-gray-600">{safeProduct.brand}</p>
             </div>
-
             <div className="space-y-2">
-              <p className="text-gray-600">{product.description}</p>
+              <p className="text-gray-600">{safeProduct.description}</p>
               <div className="flex gap-4">
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
-                  {product.condition}
+                  {safeProduct.condition}
                 </span>
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
-                  {product.size}
+                  {safeProduct.size}
                 </span>
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
-                  {product.gender}
+                  {safeProduct.gender}
                 </span>
               </div>
             </div>
 
             <div className="space-y-4">
-              {product.tokenPrice > 0n && (
+              {safeProduct.tokenPrice > 0n && (
                 <p className="text-xl font-semibold">
-                  {formatEther(product.tokenPrice)} THRIFT
+                  {formatEther(safeProduct.tokenPrice)} THRIFT
                 </p>
               )}
-              {product.ethPrice > 0n && (
+              {safeProduct.ethPrice > 0n && (
                 <p className="text-xl font-semibold">
-                  {formatEther(product.ethPrice)} ETH
+                  {formatEther(safeProduct.ethPrice)} ETH
                 </p>
               )}
             </div>
 
             {/* Exchange Toggle Button */}
-            {product.isAvailableForExchange && (
+            {safeProduct.isAvailableForExchange && (
               <button
                 onClick={toggleExchangeMode}
                 className="flex items-center gap-2 text-blue-600 font-medium"
@@ -231,7 +261,7 @@ const ProductPage = () => {
                   <input
                     type="number"
                     min="1"
-                    max={Number(product.quantity)}
+                    max={Number(safeProduct.quantity)}
                     value={Number(quantity)}
                     onChange={(e) =>
                       setQuantity(BigInt(parseInt(e.target.value) || 1))
@@ -248,7 +278,7 @@ const ProductPage = () => {
                         : "bg-gray-200 text-gray-700"
                     }`}
                     onClick={() => setPaymentMethod("ETH")}
-                    disabled={!product.ethPrice}
+                    disabled={!safeProduct.ethPrice}
                   >
                     Pay with ETH
                   </button>
@@ -259,7 +289,7 @@ const ProductPage = () => {
                         : "bg-gray-200 text-gray-700"
                     }`}
                     onClick={() => setPaymentMethod("TOKEN")}
-                    disabled={!product.tokenPrice}
+                    disabled={!safeProduct.tokenPrice}
                   >
                     Pay with THRIFT
                   </button>
