@@ -742,6 +742,12 @@ export const DONATION_AND_RECYCLING_ABI = [
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isDonation",
+        "type": "bool"
       }
     ],
     "name": "DonationCenterAdded",
@@ -1047,6 +1053,11 @@ export const DONATION_AND_RECYCLING_ABI = [
       {
         "internalType": "bool",
         "name": "acceptsRecycling",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDonation",
         "type": "bool"
       }
     ],
@@ -1377,6 +1388,11 @@ export const DONATION_AND_RECYCLING_ABI = [
         "type": "bool"
       },
       {
+        "internalType": "bool",
+        "name": "isDonation",
+        "type": "bool"
+      },
+      {
         "internalType": "address",
         "name": "owner",
         "type": "address"
@@ -1466,6 +1482,11 @@ export const DONATION_AND_RECYCLING_ABI = [
           {
             "internalType": "bool",
             "name": "acceptsRecycling",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDonation",
             "type": "bool"
           },
           {
@@ -1725,6 +1746,11 @@ export const DONATION_AND_RECYCLING_ABI = [
         "type": "bool"
       },
       {
+        "internalType": "bool",
+        "name": "isDonation",
+        "type": "bool"
+      },
+      {
         "internalType": "address",
         "name": "owner",
         "type": "address"
@@ -1743,6 +1769,97 @@ export const DONATION_AND_RECYCLING_ABI = [
         "internalType": "uint256",
         "name": "totalTokenDonationsReceived",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "centerId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDonationCenterById",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "acceptsTokens",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "acceptsRecycling",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDonation",
+            "type": "bool"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalDonationsReceived",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalRecyclingReceived",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalTokenDonationsReceived",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "tokenDonationIds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "clothingDonationIds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "recyclingDonationIds",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct DonationAndRecycling.DonationCenter",
+        "name": "",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -1984,6 +2101,104 @@ export const DONATION_AND_RECYCLING_ABI = [
           }
         ],
         "internalType": "struct DonationAndRecycling.PendingDonation[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getOwnerInactiveCenterIds",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getOwnerInactiveCenters",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "acceptsTokens",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "acceptsRecycling",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDonation",
+            "type": "bool"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalDonationsReceived",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalRecyclingReceived",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalTokenDonationsReceived",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "tokenDonationIds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "clothingDonationIds",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "recyclingDonationIds",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct DonationAndRecycling.DonationCenter[]",
         "name": "",
         "type": "tuple[]"
       }
@@ -2463,6 +2678,11 @@ export const DONATION_AND_RECYCLING_ABI = [
         "internalType": "bool",
         "name": "acceptsRecycling",
         "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDonation",
+        "type": "bool"
       }
     ],
     "name": "updateDonationCenter",
@@ -2563,7 +2783,7 @@ export const DONATION_AND_RECYCLING_ABI = [
   }
 ]
 
-export const DONATION_AND_RECYCLING_ADDRESS = "0x90c6672Bf93e85573E640Af1903dc6624c174D6B"
+export const DONATION_AND_RECYCLING_ADDRESS = "0xA85B7366aD844A23dbcd81EC3439e293da5Ea196"
 
 export const USERAESTHETICS_ADDRESS = "0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925"
 export const USERAESTHETICS_ABI =  [
@@ -7249,8 +7469,7 @@ export const MARKETPLACE_ABI = [
 
 // Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
 // ThriftToken deployed to: 0xCD6152307d4b223C00D1beF239F401101e4FBE78
-// Marketplace deployed to: 0x3616330653bF9A38EFB5a2DD17E6d9B74739969d
-// DonationAndRecycling deployed to: 0x90c6672Bf93e85573E640Af1903dc6624c174D6B
+// DonationAndRecycling deployed to: 0x9BfBD2C5af21f9821Bea7018FCA7F1547f8Fa6Ec  0xA85B7366aD844A23dbcd81EC3439e293da5Ea196
 // Userprofile deployed to : 0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925
 // Deployment complete!\
 

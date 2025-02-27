@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   useDonationAndRecycling,
   type DonationCenter,
-} from "@/blockchain/hooks/useDonationCenter";
+} from "@/blockchain/hooks/useDonationCenter"; // Updated import path
+import { useAccount } from "wagmi"; // Added import for userAddress
 import { useRouter } from "next/navigation";
+
 // Utility function to format addresses
 const formatAddress = (address: string): string => {
   if (!address) return "";
@@ -24,7 +26,8 @@ type FilterOptions = {
 };
 
 const DonationCentersPage: React.FC = () => {
-  const { donationCenters, isCreator, userAddress } = useDonationAndRecycling();
+  const { donationCenters, isCreator } = useDonationAndRecycling();
+  const { address: userAddress } = useAccount(); // Get user address from wagmi
   const [filters, setFilters] = useState<FilterOptions>({
     owner: "all",
     isActive: "all",
@@ -113,7 +116,9 @@ const DonationCentersPage: React.FC = () => {
 
   // Check if a center is owned by the current user
   const isOwnedByUser = (center: DonationCenter) => {
-    return userAddress && center.owner === userAddress;
+    return (
+      userAddress && center.owner.toLowerCase() === userAddress.toLowerCase()
+    );
   };
 
   // Add the new route handler

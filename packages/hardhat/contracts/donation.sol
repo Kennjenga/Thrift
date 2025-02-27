@@ -18,6 +18,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         bool isActive;
         bool acceptsTokens;
         bool acceptsRecycling;
+        bool isDonation; // Added isDonation field
         address owner;
         uint256 totalDonationsReceived;
         uint256 totalRecyclingReceived;
@@ -70,7 +71,8 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         uint256 indexed id,
         string name,
         string location,
-        address owner
+        address owner,
+        bool isDonation
     );
     event DonationCenterUpdated(uint256 indexed id, bool isActive);
     event DonationSubmitted(
@@ -171,7 +173,8 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         string memory description,
         string memory location,
         bool acceptsTokens,
-        bool acceptsRecycling
+        bool acceptsRecycling,
+        bool isDonation
     ) external onlyApprovedCreator {
         donationCenterCount++;
 
@@ -185,6 +188,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             true,
             acceptsTokens,
             acceptsRecycling,
+            isDonation,
             msg.sender,
             0,
             0,
@@ -198,7 +202,8 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             donationCenterCount,
             name,
             location,
-            msg.sender
+            msg.sender,
+            isDonation
         );
     }
 
@@ -206,7 +211,8 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         uint256 centerId,
         bool isActive,
         bool acceptsTokens,
-        bool acceptsRecycling
+        bool acceptsRecycling,
+        bool isDonation
     ) external onlyCenterOwner(centerId) {
         require(centerId <= donationCenterCount, "Invalid center ID");
 
@@ -214,6 +220,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         center.isActive = isActive;
         center.acceptsTokens = acceptsTokens;
         center.acceptsRecycling = acceptsRecycling;
+        center.isDonation = isDonation;
 
         emit DonationCenterUpdated(centerId, isActive);
     }
@@ -245,6 +252,10 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
     ) external nonReentrant {
         require(centerId <= donationCenterCount, "Invalid center ID");
         require(donationCenters[centerId].isActive, "Center not active");
+        require(
+            donationCenters[centerId].isDonation,
+            "Center doesn't accept donations"
+        );
         require(
             itemCount > 0 || weightInKg > 0,
             "Must specify items or weight"
@@ -582,6 +593,80 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         return result;
     }
 
+    // Function to get all inactive centers owned by the caller
+    function getOwnerInactiveCenters()
+        external
+        view
+        returns (DonationCenter[] memory)
+    {
+        // Count the number of inactive centers owned by the caller
+        uint256 ownedInactiveCount = 0;
+
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (
+                donationCenters[i].owner == msg.sender &&
+                !donationCenters[i].isActive
+            ) {
+                ownedInactiveCount++;
+            }
+        }
+
+        // Create array to hold the inactive centers
+        DonationCenter[] memory inactiveCenters = new DonationCenter[](
+            ownedInactiveCount
+        );
+
+        // Fill the array with inactive centers
+        uint256 index = 0;
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (
+                donationCenters[i].owner == msg.sender &&
+                !donationCenters[i].isActive
+            ) {
+                inactiveCenters[index] = donationCenters[i];
+                index++;
+            }
+        }
+
+        return inactiveCenters;
+    }
+
+    // Function to get all inactive center IDs owned by the caller
+    function getOwnerInactiveCenterIds()
+        external
+        view
+        returns (uint256[] memory)
+    {
+        // Count the number of inactive centers owned by the caller
+        uint256 ownedInactiveCount = 0;
+
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (
+                donationCenters[i].owner == msg.sender &&
+                !donationCenters[i].isActive
+            ) {
+                ownedInactiveCount++;
+            }
+        }
+
+        // Create array to hold the inactive center IDs
+        uint256[] memory inactiveCenterIds = new uint256[](ownedInactiveCount);
+
+        // Fill the array with inactive center IDs
+        uint256 index = 0;
+        for (uint256 i = 1; i <= donationCenterCount; i++) {
+            if (
+                donationCenters[i].owner == msg.sender &&
+                !donationCenters[i].isActive
+            ) {
+                inactiveCenterIds[index] = i;
+                index++;
+            }
+        }
+
+        return inactiveCenterIds;
+    }
+
     // Function to get the latest clothing donations for a center (up to 10)
     function getLatestClothingDonations(
         uint256 centerId
@@ -661,6 +746,17 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         return result;
     }
 
+    function getDonationCenterById(
+        uint256 centerId
+    ) external view returns (DonationCenter memory) {
+        require(
+            centerId > 0 && centerId <= donationCenterCount,
+            "Invalid center ID"
+        );
+        return donationCenters[centerId];
+    }
+
+    // Function to get a donation center by ID with individual fields
     function getDonationCenter(
         uint256 centerId
     )
@@ -673,12 +769,17 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             bool isActive,
             bool acceptsTokens,
             bool acceptsRecycling,
+            bool isDonation,
             address owner,
             uint256 totalDonationsReceived,
             uint256 totalRecyclingReceived,
             uint256 totalTokenDonationsReceived
         )
     {
+        require(
+            centerId > 0 && centerId <= donationCenterCount,
+            "Invalid center ID"
+        );
         DonationCenter storage center = donationCenters[centerId];
         return (
             center.name,
@@ -687,6 +788,7 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
             center.isActive,
             center.acceptsTokens,
             center.acceptsRecycling,
+            center.isDonation,
             center.owner,
             center.totalDonationsReceived,
             center.totalRecyclingReceived,

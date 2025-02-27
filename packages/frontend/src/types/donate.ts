@@ -11,6 +11,7 @@ export interface DonationCenter {
   isActive: boolean;
   acceptsTokens: boolean;
   acceptsRecycling: boolean;
+  isDonation: boolean; // Added isDonation field
   owner: Address;
   totalDonationsReceived: bigint;
   totalRecyclingReceived: bigint;
@@ -80,5 +81,6 @@ export interface CenterFilterOptions {
   isActive: string;
   acceptsTokens: string;
   acceptsRecycling: string;
+  isDonation: string; // Added isDonation field
   search: string;
 }

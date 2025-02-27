@@ -3,14 +3,14 @@ import { type Address } from 'viem'
 import { 
   MARKETPLACE_ABI, 
   MARKETPLACE_ADDRESS,
-  MARKETPLACE_STORAGE_ABI,
-  MARKETPLACE_STORAGE_ADDRESS,
-  MARKETPLACE_PRODUCT_ABI,
-  MARKETPLACE_PRODUCT_ADDRESS,
-  MARKETPLACE_ESCROW_ABI,
-  MARKETPLACE_ESCROW_ADDRESS,
-  MARKETPLACE_QUERY_ABI,
-  MARKETPLACE_QUERY_ADDRESS
+  // MARKETPLACE_STORAGE_ABI,
+  // MARKETPLACE_STORAGE_ADDRESS,
+  // MARKETPLACE_PRODUCT_ABI,
+  // MARKETPLACE_PRODUCT_ADDRESS,
+  // MARKETPLACE_ESCROW_ABI,
+  // MARKETPLACE_ESCROW_ADDRESS,
+  // MARKETPLACE_QUERY_ABI,
+  // MARKETPLACE_QUERY_ADDRESS
 } from '@/blockchain/abis/thrift'
 import { Product } from '@/types/market'
 
@@ -20,7 +20,7 @@ interface SearchResult {
   data?: {
     products: Product[];
   };
-  error?: any;
+  error?: unknown;
 }
 
 /**
