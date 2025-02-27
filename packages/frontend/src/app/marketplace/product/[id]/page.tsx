@@ -43,8 +43,7 @@ const ProductPage = () => {
   console.log("Product Error:", productError); // Debug log
 
   // Get user's products for exchange
-  const { data: userProductsData, isLoading: userProductsLoading } =
-    useGetUserProducts(address as Address);
+  const { data: userProductsData } = useGetUserProducts(address as Address);
 
   // Get marketplace functions for transactions
   const { createExchangeOffer, createEscrowWithEth, createEscrowWithTokens } =

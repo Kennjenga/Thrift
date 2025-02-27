@@ -66,6 +66,9 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
     uint256 public recyclingRewardDenominator = 30;
     uint256 public maxDonationReward = 200 * 10 ** 18; // 200 tokens
 
+    // address[] private approvedCreatorsList;
+    // mapping(address => uint256) private creatorIndexes;
+
     // Events
     event DonationCenterAdded(
         uint256 indexed id,
@@ -166,6 +169,71 @@ contract DonationAndRecycling is Ownable, ReentrancyGuard {
         approvedCreators[creator] = false;
         emit CreatorRevoked(creator);
     }
+
+    //     function approveCreator(address creator) external onlyOwner {
+    //     // Check if not already approved
+    //     if (!approvedCreators[creator]) {
+    //         approvedCreators[creator] = true;
+    //         creatorIndexes[creator] = approvedCreatorsList.length;
+    //         approvedCreatorsList.push(creator);
+    //         emit CreatorApproved(creator);
+    //     }
+    // }
+
+    // // Replace your revokeCreator function with:
+    // function revokeCreator(address creator) external onlyOwner {
+    //     if (approvedCreators[creator]) {
+    //         uint256 indexToRemove = creatorIndexes[creator];
+    //         uint256 lastIndex = approvedCreatorsList.length - 1;
+
+    //         // Only process if creator is actually in the array
+    //         if (indexToRemove < approvedCreatorsList.length) {
+    //             // Swap with the last element if not already the last
+    //             if (indexToRemove != lastIndex) {
+    //                 address lastCreator = approvedCreatorsList[lastIndex];
+    //                 approvedCreatorsList[indexToRemove] = lastCreator;
+    //                 creatorIndexes[lastCreator] = indexToRemove;
+    //             }
+
+    //             // Remove the last element (which is now the element we wanted to remove)
+    //             approvedCreatorsList.pop();
+
+    //             // Remove from mapping
+    //             delete creatorIndexes[creator];
+    //         }
+
+    //         approvedCreators[creator] = false;
+    //         emit CreatorRevoked(creator);
+    //     }
+    // }
+
+    // // Add this new function to get the list of approved creators
+    // function getApprovedCreatorsList() external view returns (address[] memory) {
+    //     // Create a new array containing only current approved creators
+    //     uint256 approvedCount = 0;
+
+    //     // First, count how many creators are actually approved
+    //     for (uint256 i = 0; i < approvedCreatorsList.length; i++) {
+    //         if (approvedCreators[approvedCreatorsList[i]]) {
+    //             approvedCount++;
+    //         }
+    //     }
+
+    //     // Then create an array of exactly that size
+    //     address[] memory activeCreators = new address[](approvedCount);
+
+    //     // Fill the array with approved creators
+    //     uint256 index = 0;
+    //     for (uint256 i = 0; i < approvedCreatorsList.length; i++) {
+    //         address creator = approvedCreatorsList[i];
+    //         if (approvedCreators[creator]) {
+    //             activeCreators[index] = creator;
+    //             index++;
+    //         }
+    //     }
+
+    //     return activeCreators;
+    // }
 
     // Donation center management functions
     function addDonationCenter(

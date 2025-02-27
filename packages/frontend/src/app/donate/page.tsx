@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import {
   useDonationAndRecycling,
+  useContractOwnership,
   type DonationCenter,
 } from "@/blockchain/hooks/useDonationCenter"; // Updated import path
 import { useAccount } from "wagmi"; // Added import for userAddress
@@ -36,7 +37,10 @@ const DonationCentersPage: React.FC = () => {
     search: "",
   });
   const router = useRouter();
+  const { owner } = useContractOwnership();
 
+  const isAdmin =
+    userAddress && owner && userAddress.toLowerCase() === owner.toLowerCase();
   // Extract unique owners for filter dropdown
   const uniqueOwners = useMemo(() => {
     if (!donationCenters) return [];
@@ -126,6 +130,10 @@ const DonationCentersPage: React.FC = () => {
     router.push("/donate/add-center");
   };
 
+  const handleAddCreator = () => {
+    router.push("/donate/add-creator");
+  };
+
   if (!donationCenters) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -148,6 +156,14 @@ const DonationCentersPage: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Donation Centers</h1>
+          {Boolean(isAdmin) && (
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+              onClick={handleAddCreator}
+            >
+              Grant Creator
+            </button>
+          )}
           {Boolean(isCreator) && (
             <button
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"

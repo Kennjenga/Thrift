@@ -121,6 +121,19 @@ export function useGetUserActiveEscrowsAsSeller(userAddress: Address | undefined
 }
 
 /**
+ * Hook to get escrow details by ID
+ */
+export function useGetEscrowById(escrowId: bigint | undefined) {
+  return useReadContract({
+    address: MARKETPLACE_ADDRESS,
+    abi: MARKETPLACE_ABI,
+    functionName: 'getEscrow',
+    args: escrowId ? [escrowId] : undefined,
+    chainId: 11155111,
+  });
+}
+
+/**
  * Hook to get completed escrows for a user
  */
 export function useGetUserCompletedEscrows(userAddress: Address | undefined) {
