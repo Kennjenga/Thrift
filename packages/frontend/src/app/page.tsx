@@ -1,13 +1,16 @@
 "use client";
 
 import type { NextPage } from "next";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Navbar from "@/components/navbar";
 import EcoCharacter from "@/components/eco-character";
-import { ArrowRight, Clock, Heart, Repeat } from "lucide-react";
-// import Footer from "@/components/footer";
+import { AlertCircle, Package, Search, Filter, Heart, ArrowRight, Clock, Repeat } from "lucide-react";
+import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
+import { Product } from "@/types/market";
+import { formatEther } from "ethers";
 
 // Color System
 const COLORS = {
@@ -99,6 +102,14 @@ const GlobalStyles = `
 .animate-gradient {
   background-size: 200% auto;
   animation: gradient 8s ease infinite;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 `;
 
@@ -207,6 +218,7 @@ const HeroSection = () => {
 
           <div className="flex gap-4 mb-12">
             {/* Start Swapping Button */}
+            <Link href="/marketplace">
             <button
               className={`
             px-8 py-3.5
@@ -232,8 +244,10 @@ const HeroSection = () => {
             >
               <span className="relative z-10">Start Swapping</span>
             </button>
+            </Link>
 
             {/* Learn More Button */}
+            <Link href="/marketplace">
             <button
               className={`
             px-8 py-3.5
@@ -260,6 +274,7 @@ const HeroSection = () => {
             >
               <span className="relative z-10">Learn More</span>
             </button>
+            </Link>
           </div>
 
           {/* Community Stats Section */}
@@ -397,7 +412,7 @@ const FashionGrid = () => {
       scale: "scale-100",
       offset: "translate-y-0",
       image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQM5gjG8J1vcqUrsAsbi2YxCqcFuklMh0p3Tw&s",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBczj9G43iR5t1k-HDl35EHrD5HcQ41Dkilw&s",
     },
     {
       id: 2,
@@ -405,7 +420,7 @@ const FashionGrid = () => {
       scale: "scale-110",
       offset: "-translate-y-4",
       image:
-        "https://cdn.dribbble.com/userupload/3605379/file/original-6ee09c18336d4046b43f19820b361db2.png?resize=400x0",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpaISeKB3mnV8Vj0WXUKrcAkJDLpxGpXnjKg&s",
     },
     {
       id: 3,
@@ -413,7 +428,7 @@ const FashionGrid = () => {
       scale: "scale-105",
       offset: "translate-x-4",
       image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVa2vjKhPWJaNFBB1h_GMCisHkN7LLvp2YLg&s",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiCiPi-ple_XZrh27xOi67AZwfTbHJGF09xQ&s",
     },
     {
       id: 4,
@@ -421,7 +436,7 @@ const FashionGrid = () => {
       scale: "scale-125",
       offset: "translate-y-6",
       image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
+        "https://cdn.dribbble.com/userupload/3605379/file/original-6ee09c18336d4046b43f19820b361db2.png?resize=400x0",
     },
   ];
 
@@ -582,31 +597,167 @@ const FashionGrid = () => {
 };
 export { FashionGrid };
 
-const Home: NextPage = () => {
+// Redesigned Product Card Component
+const ProductCard = ({ product }: { product: Product }) => {
   return (
-    <>
-      <StyleSheet />
-      <div
-        className={`min-h-screen relative overflow-hidden text-[${COLORS.text.primary}] ${styles.backgroundGradient}`}
-      >
-        <BackgroundElements />
-        <EcoCharacter />
-        <Navbar />
-        <main className="relative z-10">
-          <HeroSection />
-          <FashionMarquee />
-          <FeaturedCollection />
-          <TopFashionItems />
-        </main>
-        {/* <Footer /> */}
+    <motion.div 
+      className="relative group overflow-hidden rounded-xl"
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Background Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/0 via-purple-900/40 to-purple-900/90 opacity-70 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+      
+      {/* Glow Effect on Hover */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] rounded-xl opacity-0 group-hover:opacity-70 blur-md group-hover:blur-lg transition-all duration-300" />
+      
+      {/* Card Content Container */}
+      <div className="relative bg-purple-900/20 backdrop-blur-md border border-purple-500/10 rounded-xl overflow-hidden z-20">
+        {/* Image Container */}
+        <div className="relative aspect-[4/5]">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          
+          {/* Top Badges */}
+          <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20">
+            {product.isAvailableForExchange && (
+              <div className="px-3 py-1 rounded-full bg-[#00FFD1]/20 backdrop-blur-md text-[#00FFFF] text-xs font-medium border border-[#00FFD1]/30">
+                Exchange
+              </div>
+            )}
+            
+            {/* Like Button */}
+            <motion.button 
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white/70 hover:text-[#FF1B6B] transition-colors"
+              whileTap={{ scale: 0.9 }}
+            >
+              <Heart size={14} />
+            </motion.button>
+          </div>
+        </div>
+        
+        {/* Card Details */}
+        <div className="relative p-4 bg-gradient-to-b from-purple-900/60 to-purple-900/90 backdrop-blur-md">
+          {/* Product Info */}
+          <div className="mb-3">
+            <h3 className="font-medium text-white truncate">{product.name}</h3>
+            <p className="text-sm text-white/70 truncate">{product.brand}</p>
+          </div>
+          
+          {/* Price and Action */}
+          <div className="flex justify-between items-center">
+            <div>
+              {product.tokenPrice > 0n && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-[#00FFD1]/30 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-[#00FFD1]"></div>
+                  </div>
+                  <p className="text-sm font-medium text-[#00FFD1]">
+                    {formatEther(product.tokenPrice)} THRIFT
+                  </p>
+                </div>
+              )}
+              {product.ethPrice > 0n && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-blue-500/30 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  </div>
+                  <p className="text-sm font-medium text-white">
+                    {formatEther(product.ethPrice)} ETH
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Enhanced Neon View Button */}
+            <div className="overflow-hidden">
+              <motion.button
+                className="
+                  py-1.5 px-4 
+                  rounded-full 
+                  bg-[#7B42FF] 
+                  text-white 
+                  text-xs 
+                  font-medium 
+                  transform 
+                  translate-y-8 
+                  opacity-0 
+                  group-hover:translate-y-0 
+                  group-hover:opacity-100 
+                  transition-all 
+                  duration-300
+                  shadow-[0_0_10px_rgba(123,66,255,0.7)]
+                  hover:shadow-[0_0_20px_rgba(123,66,255,0.9)]
+                  hover:bg-[#8A2BE2]
+                  relative
+                  overflow-hidden
+                  border
+                  border-[#7B42FF]/50
+                "
+                whileHover={{ 
+                  scale: 1.05,
+                  textShadow: "0 0 8px rgba(255,255,255,0.8)" 
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {/* Inner glow effect */}
+                <span className="absolute inset-0 bg-gradient-to-r from-[#7B42FF]/0 via-[#8A2BE2]/30 to-[#7B42FF]/0 animate-pulse"></span>
+                
+                {/* Button text */}
+                <span className="relative z-10">View Item</span>
+                
+                {/* Animated border glow */}
+                <span className="absolute inset-0 -z-10 bg-gradient-to-r from-[#7B42FF] via-[#FF00FF] to-[#7B42FF] opacity-70 blur-md group-hover:animate-pulse"></span>
+              </motion.button>
+            </div>
+          </div>
+          
+          {/* Animated Progress Bar - Decorative */}
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-1000"></div>
+        </div>
       </div>
-    </>
+    </motion.div>
   );
 };
 
-export default Home;
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center h-64">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00FFD1]"></div>
+  </div>
+);
 
-// Continuing from Part 1, here's Part 2 with FashionMarquee, FeaturedCollection, and related components:
+const ErrorDisplay = ({ message }: { message: string }) => (
+  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3">
+    <AlertCircle className="w-6 h-6 text-red-500" />
+    <p className="text-red-700">{message}</p>
+  </div>
+);
+
+const EmptyState = () => (
+  <div className="text-center py-12 backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl">
+    <Package className="w-12 h-12 mx-auto mb-4 text-white/40" />
+    <p className="text-white/70 mb-6">No products found in the marketplace</p>
+    <Link href="/marketplace/create">
+      <button className={`
+        px-8 py-3.5
+        bg-gradient-to-r from-[${COLORS.secondary.main}] to-[${COLORS.secondary.light}]
+        text-[${COLORS.background.dark}]
+        rounded-full font-medium
+        relative
+        overflow-hidden
+        transform transition-all duration-300
+        hover:scale-105
+        hover:shadow-[0_0_20px_rgba(0,255,209,0.4)]
+      `}>
+        List a Product
+      </button>
+    </Link>
+  </div>
+);
 
 const FashionMarquee = () => {
   const brands = [
@@ -614,26 +765,37 @@ const FashionMarquee = () => {
     "Eco-Friendly",
     "Web3 Fashion",
     "Digital Wardrobe",
-    "Fashion NFTs",
     "Circular Economy",
     "Swap & Earn",
     "Community Driven",
   ];
 
   return (
-    <div className="py-12 overflow-hidden bg-[${COLORS.background.light}]/30">
-      <div className="flex animate-marquee whitespace-nowrap">
-        {[...brands, ...brands].map((brand, index) => (
+    <div className="py-12 overflow-hidden bg-purple-900/30 relative">
+      <style jsx>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-100%); }
+        }
+        
+        .marquee-container {
+          display: flex;
+          white-space: nowrap;
+          animation: marquee 30s linear infinite;
+        }
+        
+        /* Ensure we have enough items to create a seamless loop */
+        .marquee-container:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      
+      <div className="marquee-container">
+        {/* Duplicate the items to create a seamless loop */}
+        {[...brands, ...brands, ...brands].map((brand, index) => (
           <div
             key={index}
-            className={`
-              mx-8 py-2 px-6
-              rounded-full
-              text-[${COLORS.text.secondary}]
-              border border-[${COLORS.primary.main}]/20
-              bg-[${COLORS.glass.background}]
-              backdrop-blur-sm
-            `}
+            className="mx-8 py-2 px-6 rounded-full text-pink border border-purple-500/20 bg-purple-900/40 backdrop-blur-sm"
           >
             {brand}
           </div>
@@ -643,6 +805,98 @@ const FashionMarquee = () => {
   );
 };
 
+// Marketplace Section with Real Products
+const MarketplaceSection = () => {
+  const { allActiveProducts, searchProducts } = useMarketplace();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (allActiveProducts) {
+      setProducts(allActiveProducts as Product[]);
+      setLoading(false);
+    }
+  }, [allActiveProducts]);
+
+
+  return (
+    <section className="py-20 container mx-auto px-4 relative">
+      <div className="flex justify-between items-end mb-12">
+        <div>
+          <h2 className="text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient">
+          Top Fashion Items
+          </h2>
+          <p className="text-white/70 max-w-2xl">
+          Discover the most sought-after pieces in our community marketplace.
+          Each item is verified for authenticity and quality.
+          </p>
+        </div>
+        
+        <div className="flex gap-4">
+          <Link href="/marketplace">
+            <button className="flex items-center gap-2 px-6 py-3 rounded-lg border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-colors">
+                View All <ArrowRight size={16} />
+            </button>
+          </Link>
+        </div>
+      </div>
+      
+
+      {error && <ErrorDisplay message={error} />}
+
+      {/* Products Grid with Ambient Effects */}
+      <div className="relative">
+        {loading ? (
+          <LoadingSpinner />
+        ) : products.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <Link
+                key={product.id.toString()}
+                href={`/marketplace/product/${product.id}`}
+                className="group"
+              >
+                <ProductCard product={product} />
+              </Link>
+            ))}
+          </div>
+        )}
+        
+        {/* Background Glow Effects */}
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-[#7B42FF]/10 rounded-full blur-[150px] -z-10"></div>
+        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-[#00FFD1]/10 rounded-full blur-[150px] -z-10"></div>
+      </div>
+      
+      {/* Pagination */}
+      {products.length > 0 && (
+        <div className="mt-12 flex justify-center">
+          <div className="flex gap-2">
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
+              &lt;
+            </button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#7B42FF] text-white">
+              1
+            </button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
+              2
+            </button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
+              3
+            </button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
+              &gt;
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+// Featured Collections Section
 const FeaturedCollection = () => {
   const collections = [
     {
@@ -675,31 +929,20 @@ const FeaturedCollection = () => {
     <section className="py-20 container mx-auto px-4">
       <div className="flex justify-between items-end mb-12">
         <div>
-          <h2
-            className={`text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-green via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient`}
-          >
+          <h2 className="text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient">
             Featured Collections
           </h2>
-          <p className={`text-[${COLORS.text.secondary}] max-w-xl`}>
+          <p className="text-white/70 max-w-xl">
             Explore curated collections from top sustainable fashion creators
             and brands. Each piece tells a unique story of style and
             sustainability.
           </p>
         </div>
-        <button
-          className={`
-          flex items-center gap-2
-          px-6 py-3
-          rounded-lg
-          border border-[${COLORS.secondary.main}]
-          text-[${COLORS.secondary.main}]
-          hover:bg-[${COLORS.secondary.main}]/10
-          transition-colors
-        `}
-        >
-          View All
-          <ArrowRight size={20} />
-        </button>
+        <Link href="/marketplace">
+            <button className="flex items-center gap-2 px-6 py-3 rounded-lg border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-colors">
+                View All <ArrowRight size={16} />
+            </button>
+          </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -724,7 +967,7 @@ const FeaturedItemCard: React.FC<{ collection: Collection }> = ({
 }) => {
   return (
     <motion.div
-      className={styles.glassCard}
+      className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl overflow-hidden"
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3 }}
     >
@@ -746,15 +989,7 @@ const FeaturedItemCard: React.FC<{ collection: Collection }> = ({
             <TimeBox value={collection.items} label="Items" />
             <TimeBox value={collection.value} label="Value" />
           </div>
-          <button
-            className={`
-            p-3 rounded-full
-            bg-[${COLORS.primary.main}]/10
-            hover:bg-[${COLORS.primary.main}]/20
-            text-[${COLORS.primary.main}]
-            transition-colors
-          `}
-          >
+          <button className="p-3 rounded-full bg-[#7B42FF]/10 hover:bg-[#7B42FF]/20 text-[#7B42FF] transition-colors">
             <Heart size={20} />
           </button>
         </div>
@@ -768,227 +1003,30 @@ const TimeBox: React.FC<{ value: string | number; label: string }> = ({
   label,
 }) => {
   return (
-    <div
-      className={`
-      px-4 py-2 rounded-lg
-      bg-[${COLORS.glass.background}]
-      backdrop-blur-sm
-      border border-[${COLORS.glass.border}]
-    `}
-    >
-      <div className={`text-[${COLORS.text.primary}] font-bold`}>{value}</div>
-      <div className={`text-[${COLORS.text.secondary}] text-sm`}>{label}</div>
+    <div className="px-4 py-2 rounded-lg bg-purple-900/30 backdrop-blur-sm border border-purple-500/10">
+      <div className="text-white font-bold">{value}</div>
+      <div className="text-white/70 text-sm">{label}</div>
     </div>
   );
 };
 
-// Additional utility components
-
-const GlassButton: React.FC<{
-  children: React.ReactNode;
-  onClick: () => void;
-  className?: string;
-}> = ({ children, onClick, className = "" }) => {
+const Home: NextPage = () => {
   return (
-    <button
-      onClick={onClick}
-      className={`
-        ${styles.glassEffect}
-        hover:bg-[${COLORS.glass.background}]/40
-        transition-colors
-        ${className}
-      `}
-    >
-      {children}
-    </button>
+    <>
+      <StyleSheet />
+      <div className="min-h-screen relative overflow-hidden text-white bg-gradient-to-b from-[#2A1B54] to-[#1A0B3B]">
+        <BackgroundElements />
+        <EcoCharacter />
+        <Navbar />
+        <main className="relative z-10">
+          <HeroSection />
+          <FashionMarquee />
+          <MarketplaceSection />
+          <FeaturedCollection />
+        </main>
+      </div>
+    </>
   );
 };
 
-const Badge: React.FC<{ children: React.ReactNode; color?: string }> = ({
-  children,
-  color = COLORS.primary.main,
-}) => {
-  return (
-    <span
-      className={`
-      px-3 py-1
-      rounded-full
-      text-sm
-      bg-[${color}]/10
-      text-[${color}]
-      border border-[${color}]/20
-    `}
-    >
-      {children}
-    </span>
-  );
-};
-
-const TopFashionItems = () => {
-  const fashionItems = [
-    {
-      id: 1,
-      title: "Vintage Leather Jacket",
-      description: "Authentic 1970s leather jacket with unique patina",
-      price: "120 ACE",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
-      owner: "vintage.eth",
-      likes: 234,
-      timeLeft: "2 days",
-      tags: ["Vintage", "Leather", "Outerwear"],
-    },
-    {
-      id: 2,
-      title: "Eco-friendly Denim Set",
-      description: "Sustainable denim collection made from recycled materials",
-      price: "85 ACE",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
-      owner: "sustainable.eth",
-      likes: 189,
-      timeLeft: "4 days",
-      tags: ["Sustainable", "Denim", "Set"],
-    },
-    {
-      id: 3,
-      title: "Designer Silk Scarf",
-      description: "Limited edition silk scarf with digital art print",
-      price: "95 ACE",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
-      owner: "artfashion.eth",
-      likes: 156,
-      timeLeft: "1 day",
-      tags: ["Designer", "Accessories", "Limited"],
-    },
-    {
-      id: 4,
-      title: "Smart Casual Blazer",
-      description: "Tech-integrated blazer with temperature regulation",
-      price: "150 ACE",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpTYpxmocGZllM4_21N7KICnBH9Jn7jiNI1w&s",
-      owner: "future.eth",
-      likes: 278,
-      timeLeft: "3 days",
-      tags: ["Smart", "Formal", "Innovation"],
-    },
-  ];
-
-  return (
-    <section className="py-20 container mx-auto px-4">
-      <div className="flex justify-between items-end mb-12">
-        <div>
-          <h2
-            className={`text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-cyan-green via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient`}
-          >
-            Top Fashion Items
-          </h2>
-          <p className={`text-[${COLORS.text.secondary}] max-w-xl`}>
-            Discover the most sought-after pieces in our community marketplace.
-            Each item is verified for authenticity and quality.
-          </p>
-        </div>
-        <div className="flex gap-4">
-          <GlassButton onClick={() => {}}>
-            <Repeat size={20} />
-            <span>Refresh</span>
-          </GlassButton>
-          <button
-            className={`
-            flex items-center gap-2
-            px-6 py-3
-            rounded-lg
-            bg-[${COLORS.primary.main}]
-            text-white
-            hover:bg-[${COLORS.primary.dark}]
-            transition-colors
-          `}
-          >
-            View All Items
-            <ArrowRight size={20} />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {fashionItems.map((item) => (
-          <FashionItemCard key={item.id} item={item} />
-        ))}
-      </div>
-    </section>
-  );
-};
-
-interface FashionItem {
-  id: number;
-  title: string;
-  description: string;
-  price: string;
-  image: string;
-  owner: string;
-  likes: number;
-  timeLeft: string;
-  tags: string[];
-}
-
-const FashionItemCard = ({ item }: { item: FashionItem }) => {
-  return (
-    <motion.div
-      className={styles.glassCard}
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="relative aspect-square">
-        <Image
-          src={item.image}
-          alt={item.title}
-          layout="fill"
-          objectFit="cover"
-          className="transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent" />
-      </div>
-
-      <div className="p-6">
-        <p className={`text-sm text-[${COLORS.text.secondary}] mb-4`}>
-          {item.description}
-        </p>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {item.tags.map((tag: string, index: number) => (
-            <Badge key={index}>{tag}</Badge>
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div>
-            <div className={`text-[${COLORS.secondary.main}] font-bold`}>
-              {item.price}
-            </div>
-            <div className={`text-sm text-[${COLORS.text.secondary}]`}>
-              @{item.owner}
-            </div>
-          </div>
-          <button
-            className={`
-            px-4 py-2
-            rounded-lg
-            bg-[${COLORS.secondary.main}]
-            text-[${COLORS.background.dark}]
-            font-medium
-            hover:bg-[${COLORS.secondary.dark}]
-            transition-colors
-          `}
-          >
-            Swap Now
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// Export all components
-export { TopFashionItems, FashionItemCard, GlassButton, Badge };
+export default Home;

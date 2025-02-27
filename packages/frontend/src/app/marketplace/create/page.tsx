@@ -8,11 +8,50 @@ import {
   ProductCondition,
   ProductGender,
 } from "@/types/market";
-import { AESTHETICS } from "@/constants/aesthetics"; // Import from constants instead of using the type
+import { AESTHETICS } from "@/constants/aesthetics";
 import { parseEther } from "viem";
-import { Upload, RefreshCw, AlertCircle } from "lucide-react";
+import { Upload, RefreshCw, AlertCircle, ArrowLeft, Package } from "lucide-react";
 import { motion } from "framer-motion";
-import Navbar from "../_components/navbar";
+
+// Color System from the first code
+const COLORS = {
+  primary: {
+    main: "#7B42FF",
+    light: "#8A2BE2",
+    dark: "#4A00E0",
+  },
+  secondary: {
+    main: "#00FFD1",
+    light: "#00FFFF",
+    dark: "#00E6BD",
+  },
+  accent: {
+    pink: "#FF00FF",
+    red: "#FF1B6B",
+  },
+  background: {
+    dark: "#1A0B3B",
+    light: "#2A1B54",
+  },
+  text: {
+    primary: "#FFFFFF",
+    secondary: "rgba(255, 255, 255, 0.7)",
+    muted: "rgba(255, 255, 255, 0.5)",
+  },
+};
+
+const BackgroundElements = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#2A1B54] to-[#1A0B3B]" />
+
+      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#FF00FF] rounded-full filter blur-[120px] opacity-[0.15] animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#7B42FF] rounded-full filter blur-[150px] opacity-[0.12] animate-pulse" />
+      <div className="absolute top-1/3 left-1/4 w-[250px] h-[250px] bg-[#00FFFF] rounded-full filter blur-[100px] opacity-[0.1] animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-[#FF1B6B] rounded-full filter blur-[130px] opacity-[0.08] animate-pulse" />
+    </div>
+  );
+};
 
 const CreateProduct = () => {
   const router = useRouter();
@@ -94,20 +133,35 @@ const CreateProduct = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      {/* <Navbar /> */}
-      <div className="max-w-3xl mx-auto px-4">
+    <div className="min-h-screen relative">
+      <BackgroundElements />
+      
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-sm p-6 md:p-8"
+          className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-6 md:p-8 shadow-lg"
         >
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          <div className="flex items-center justify-between mb-8">
+            <button 
+              onClick={() => router.push('/marketplace')}
+              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+            >
+              <ArrowLeft size={18} />
+              <span>Back to Marketplace</span>
+            </button>
+            
+            <div className="w-10 h-10 rounded-full bg-[#00FFD1]/20 flex items-center justify-center">
+              <Package className="w-5 h-5 text-[#00FFD1]" />
+            </div>
+          </div>
+          
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent mb-6">
             Create New Product
           </h1>
 
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2 text-red-700">
+            <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-2 text-red-400">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <p>{error}</p>
             </div>
@@ -117,7 +171,7 @@ const CreateProduct = () => {
             {/* Basic Information */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Product Name
                 </label>
                 <input
@@ -126,13 +180,13 @@ const CreateProduct = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Description
                 </label>
                 <textarea
@@ -143,7 +197,7 @@ const CreateProduct = () => {
                       description: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40 h-32"
                   required
                 />
               </div>
@@ -152,7 +206,7 @@ const CreateProduct = () => {
             {/* Product Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Brand
                 </label>
                 <input
@@ -161,13 +215,13 @@ const CreateProduct = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, brand: e.target.value }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Size
                 </label>
                 <input
@@ -176,13 +230,13 @@ const CreateProduct = () => {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, size: e.target.value }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Condition
                 </label>
                 <select
@@ -193,7 +247,7 @@ const CreateProduct = () => {
                       condition: e.target.value as ProductCondition,
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white appearance-none"
                 >
                   <option value="New">New</option>
                   <option value="Like New">Like New</option>
@@ -203,7 +257,7 @@ const CreateProduct = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Gender
                 </label>
                 <select
@@ -214,7 +268,7 @@ const CreateProduct = () => {
                       gender: e.target.value as ProductGender,
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white appearance-none"
                 >
                   <option value="Men">Men</option>
                   <option value="Women">Women</option>
@@ -226,67 +280,81 @@ const CreateProduct = () => {
 
             {/* Categories */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Categories (Select multiple)
+              <label className="block text-sm font-medium text-white/80 mb-1">
+                Aesthetic Categories (Select multiple)
               </label>
               <select
                 multiple
                 value={formData.categories}
                 onChange={handleCategoryChange}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white h-32"
               >
-                {/* Fixed: Using AESTHETICS instead of Aesthetics */}
-                {AESTHETICS.map((aesthetic) => (
+                {Object.values(AESTHETICS).map((aesthetic) => (
                   <option key={aesthetic} value={aesthetic}>
                     {aesthetic}
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-xs text-white/50">Hold Ctrl/Cmd to select multiple options</p>
             </div>
 
             {/* Pricing */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   THRIFT Price
                 </label>
-                <input
-                  type="text"
-                  value={formData.tokenPrice}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      tokenPrice: e.target.value,
-                    }))
-                  }
-                  placeholder="0.00"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.tokenPrice}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        tokenPrice: e.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40 pl-10"
+                  />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-5 h-5 rounded-full bg-[#00FFD1]/30 flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#00FFD1]"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   ETH Price
                 </label>
-                <input
-                  type="text"
-                  value={formData.ethPrice}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      ethPrice: e.target.value,
-                    }))
-                  }
-                  placeholder="0.00"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.ethPrice}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ethPrice: e.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40 pl-10"
+                  />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500/30 flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Quantity and Exchange */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Quantity
                 </label>
                 <input
@@ -299,25 +367,30 @@ const CreateProduct = () => {
                       quantity: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40"
                   required
                 />
               </div>
 
               <div className="flex items-center">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isAvailableForExchange}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        isAvailableForExchange: e.target.checked,
-                      }))
-                    }
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={formData.isAvailableForExchange}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isAvailableForExchange: e.target.checked,
+                        }))
+                      }
+                      className="sr-only"
+                    />
+                    <div className={`w-10 h-5 rounded-full transition-colors duration-300 ${formData.isAvailableForExchange ? 'bg-[#00FFD1]' : 'bg-white/20'}`}>
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform duration-300 ${formData.isAvailableForExchange ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-white/80">
                     Available for Exchange
                   </span>
                 </label>
@@ -326,7 +399,7 @@ const CreateProduct = () => {
 
             {formData.isAvailableForExchange && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white/80 mb-1">
                   Exchange Preferences
                 </label>
                 <textarea
@@ -337,7 +410,7 @@ const CreateProduct = () => {
                       exchangePreference: e.target.value,
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40 h-24"
                   placeholder="Describe what you'd like to exchange for..."
                 />
               </div>
@@ -345,7 +418,7 @@ const CreateProduct = () => {
 
             {/* Image URL */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white/80 mb-1">
                 Image URL
               </label>
               <input
@@ -354,7 +427,7 @@ const CreateProduct = () => {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, image: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40"
                 required
                 placeholder="https://"
               />
@@ -362,14 +435,21 @@ const CreateProduct = () => {
 
             {/* Submit Button */}
             <motion.button
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ 
+                scale: 1.02,
+                boxShadow: "0 0 20px rgba(0,255,209,0.4)" 
+              }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className={`w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 ${
-                loading
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              } text-white`}
+              className={`
+                w-full py-3.5 rounded-lg font-medium flex items-center justify-center gap-2
+                ${loading ? "bg-opacity-70 cursor-not-allowed" : ""}
+                bg-gradient-to-r from-[#00FFD1] to-[#00FFFF] 
+                text-[#1A0B3B] 
+                shadow-[0_0_10px_rgba(0,255,209,0.3)]
+                transition-all duration-300
+              `}
             >
               {loading ? (
                 <>
@@ -383,6 +463,9 @@ const CreateProduct = () => {
                 </>
               )}
             </motion.button>
+            
+            {/* Animated Progress Bar - Decorative */}
+            <div className={`h-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] rounded-full transition-all duration-300 ${loading ? 'w-full' : 'w-0'}`}></div>
           </form>
         </motion.div>
       </div>

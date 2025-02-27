@@ -3,6 +3,7 @@
 
 import { CartProvider } from "@/contexts/cartContext";
 import Navbar from "./_components/navbar";
+import Footer from "@/components/footer";
 export default function MarketplaceLayout({
   children,
 }: {
@@ -13,6 +14,7 @@ export default function MarketplaceLayout({
       <CartProvider>
         <Navbar />
         {children}
+        <Footer />
       </CartProvider>
       ;
     </>
