@@ -7,8 +7,17 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import Navbar from "@/components/navbar";
 import EcoCharacter from "@/components/eco-character";
-import { AlertCircle, Package, Search, Filter, Heart, ArrowRight, Clock, Repeat } from "lucide-react";
-import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
+import {
+  AlertCircle,
+  Package,
+  Search,
+  Filter,
+  Heart,
+  ArrowRight,
+  Clock,
+  Repeat,
+} from "lucide-react";
+import { useMarketplace } from "@/blockchain/hooks/useMarketplace1";
 import { Product } from "@/types/market";
 import { formatEther } from "ethers";
 
@@ -219,8 +228,8 @@ const HeroSection = () => {
           <div className="flex gap-4 mb-12">
             {/* Start Swapping Button */}
             <Link href="/marketplace">
-            <button
-              className={`
+              <button
+                className={`
             px-8 py-3.5
             bg-gradient-to-r from-[${COLORS.secondary.main}] to-[${COLORS.secondary.light}]
             text-[${COLORS.background.dark}]
@@ -241,15 +250,15 @@ const HeroSection = () => {
             before:duration-300
             hover:before:opacity-20
           `}
-            >
-              <span className="relative z-10">Start Swapping</span>
-            </button>
+              >
+                <span className="relative z-10">Start Swapping</span>
+              </button>
             </Link>
 
             {/* Learn More Button */}
             <Link href="/marketplace">
-            <button
-              className={`
+              <button
+                className={`
             px-8 py-3.5
             border border-[${COLORS.secondary.main}]
             text-[${COLORS.secondary.main}]
@@ -271,9 +280,9 @@ const HeroSection = () => {
             before:duration-300
             hover:before:opacity-10
           `}
-            >
-              <span className="relative z-10">Learn More</span>
-            </button>
+              >
+                <span className="relative z-10">Learn More</span>
+              </button>
             </Link>
           </div>
 
@@ -600,17 +609,17 @@ export { FashionGrid };
 // Redesigned Product Card Component
 const ProductCard = ({ product }: { product: Product }) => {
   return (
-    <motion.div 
+    <motion.div
       className="relative group overflow-hidden rounded-xl"
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
     >
       {/* Background Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/0 via-purple-900/40 to-purple-900/90 opacity-70 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-      
+
       {/* Glow Effect on Hover */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] rounded-xl opacity-0 group-hover:opacity-70 blur-md group-hover:blur-lg transition-all duration-300" />
-      
+
       {/* Card Content Container */}
       <div className="relative bg-purple-900/20 backdrop-blur-md border border-purple-500/10 rounded-xl overflow-hidden z-20">
         {/* Image Container */}
@@ -621,7 +630,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
-          
+
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20">
             {product.isAvailableForExchange && (
@@ -629,9 +638,9 @@ const ProductCard = ({ product }: { product: Product }) => {
                 Exchange
               </div>
             )}
-            
+
             {/* Like Button */}
-            <motion.button 
+            <motion.button
               className="w-8 h-8 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white/70 hover:text-[#FF1B6B] transition-colors"
               whileTap={{ scale: 0.9 }}
             >
@@ -639,7 +648,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             </motion.button>
           </div>
         </div>
-        
+
         {/* Card Details */}
         <div className="relative p-4 bg-gradient-to-b from-purple-900/60 to-purple-900/90 backdrop-blur-md">
           {/* Product Info */}
@@ -647,7 +656,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             <h3 className="font-medium text-white truncate">{product.name}</h3>
             <p className="text-sm text-white/70 truncate">{product.brand}</p>
           </div>
-          
+
           {/* Price and Action */}
           <div className="flex justify-between items-center">
             <div>
@@ -672,7 +681,7 @@ const ProductCard = ({ product }: { product: Product }) => {
                 </div>
               )}
             </div>
-            
+
             {/* Enhanced Neon View Button */}
             <div className="overflow-hidden">
               <motion.button
@@ -698,24 +707,24 @@ const ProductCard = ({ product }: { product: Product }) => {
                   border
                   border-[#7B42FF]/50
                 "
-                whileHover={{ 
+                whileHover={{
                   scale: 1.05,
-                  textShadow: "0 0 8px rgba(255,255,255,0.8)" 
+                  textShadow: "0 0 8px rgba(255,255,255,0.8)",
                 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {/* Inner glow effect */}
                 <span className="absolute inset-0 bg-gradient-to-r from-[#7B42FF]/0 via-[#8A2BE2]/30 to-[#7B42FF]/0 animate-pulse"></span>
-                
+
                 {/* Button text */}
                 <span className="relative z-10">View Item</span>
-                
+
                 {/* Animated border glow */}
                 <span className="absolute inset-0 -z-10 bg-gradient-to-r from-[#7B42FF] via-[#FF00FF] to-[#7B42FF] opacity-70 blur-md group-hover:animate-pulse"></span>
               </motion.button>
             </div>
           </div>
-          
+
           {/* Animated Progress Bar - Decorative */}
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-1000"></div>
         </div>
@@ -742,7 +751,8 @@ const EmptyState = () => (
     <Package className="w-12 h-12 mx-auto mb-4 text-white/40" />
     <p className="text-white/70 mb-6">No products found in the marketplace</p>
     <Link href="/marketplace/create">
-      <button className={`
+      <button
+        className={`
         px-8 py-3.5
         bg-gradient-to-r from-[${COLORS.secondary.main}] to-[${COLORS.secondary.light}]
         text-[${COLORS.background.dark}]
@@ -752,7 +762,8 @@ const EmptyState = () => (
         transform transition-all duration-300
         hover:scale-105
         hover:shadow-[0_0_20px_rgba(0,255,209,0.4)]
-      `}>
+      `}
+      >
         List a Product
       </button>
     </Link>
@@ -774,22 +785,26 @@ const FashionMarquee = () => {
     <div className="py-12 overflow-hidden bg-purple-900/30 relative">
       <style jsx>{`
         @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-100%); }
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
         }
-        
+
         .marquee-container {
           display: flex;
           white-space: nowrap;
           animation: marquee 30s linear infinite;
         }
-        
+
         /* Ensure we have enough items to create a seamless loop */
         .marquee-container:hover {
           animation-play-state: paused;
         }
       `}</style>
-      
+
       <div className="marquee-container">
         {/* Duplicate the items to create a seamless loop */}
         {[...brands, ...brands, ...brands].map((brand, index) => (
@@ -819,29 +834,27 @@ const MarketplaceSection = () => {
     }
   }, [allActiveProducts]);
 
-
   return (
     <section className="py-20 container mx-auto px-4 relative">
       <div className="flex justify-between items-end mb-12">
         <div>
           <h2 className="text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient">
-          Top Fashion Items
+            Top Fashion Items
           </h2>
           <p className="text-white/70 max-w-2xl">
-          Discover the most sought-after pieces in our community marketplace.
-          Each item is verified for authenticity and quality.
+            Discover the most sought-after pieces in our community marketplace.
+            Each item is verified for authenticity and quality.
           </p>
         </div>
-        
+
         <div className="flex gap-4">
           <Link href="/marketplace">
             <button className="flex items-center gap-2 px-6 py-3 rounded-lg border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-colors">
-                View All <ArrowRight size={16} />
+              View All <ArrowRight size={16} />
             </button>
           </Link>
         </div>
       </div>
-      
 
       {error && <ErrorDisplay message={error} />}
 
@@ -864,12 +877,12 @@ const MarketplaceSection = () => {
             ))}
           </div>
         )}
-        
+
         {/* Background Glow Effects */}
         <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-[#7B42FF]/10 rounded-full blur-[150px] -z-10"></div>
         <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-[#00FFD1]/10 rounded-full blur-[150px] -z-10"></div>
       </div>
-      
+
       {/* Pagination */}
       {products.length > 0 && (
         <div className="mt-12 flex justify-center">
@@ -939,10 +952,10 @@ const FeaturedCollection = () => {
           </p>
         </div>
         <Link href="/marketplace">
-            <button className="flex items-center gap-2 px-6 py-3 rounded-lg border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-colors">
-                View All <ArrowRight size={16} />
-            </button>
-          </Link>
+          <button className="flex items-center gap-2 px-6 py-3 rounded-lg border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 transition-colors">
+            View All <ArrowRight size={16} />
+          </button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

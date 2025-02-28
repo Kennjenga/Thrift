@@ -10,35 +10,41 @@ import {
 } from "@/types/market";
 import { AESTHETICS } from "@/constants/aesthetics";
 import { parseEther } from "viem";
-import { Upload, RefreshCw, AlertCircle, ArrowLeft, Package } from "lucide-react";
+import {
+  Upload,
+  RefreshCw,
+  AlertCircle,
+  ArrowLeft,
+  Package,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 // Color System from the first code
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-  },
-};
+// const COLORS = {
+//   primary: {
+//     main: "#7B42FF",
+//     light: "#8A2BE2",
+//     dark: "#4A00E0",
+//   },
+//   secondary: {
+//     main: "#00FFD1",
+//     light: "#00FFFF",
+//     dark: "#00E6BD",
+//   },
+//   accent: {
+//     pink: "#FF00FF",
+//     red: "#FF1B6B",
+//   },
+//   background: {
+//     dark: "#1A0B3B",
+//     light: "#2A1B54",
+//   },
+//   text: {
+//     primary: "#FFFFFF",
+//     secondary: "rgba(255, 255, 255, 0.7)",
+//     muted: "rgba(255, 255, 255, 0.5)",
+//   },
+// };
 
 const BackgroundElements = () => {
   return (
@@ -55,6 +61,7 @@ const BackgroundElements = () => {
 
 const CreateProduct = () => {
   const router = useRouter();
+  // Use the updated productOperations hook
   const { createProduct } = useMarketplace();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -97,21 +104,22 @@ const CreateProduct = () => {
         throw new Error("At least one price (ETH or THRIFT) must be set");
       }
 
-      await createProduct(
-        formData.name,
-        formData.description,
-        formData.size,
-        formData.condition,
-        formData.brand,
-        formData.categories,
-        formData.gender,
-        formData.image,
-        tokenPriceValue,
-        ethPriceValue,
-        BigInt(formData.quantity),
-        formData.isAvailableForExchange,
-        formData.exchangePreference
-      );
+      // Use the new hook format
+      await createProduct({
+        name: formData.name,
+        description: formData.description,
+        size: formData.size,
+        condition: formData.condition,
+        brand: formData.brand,
+        categories: formData.categories,
+        gender: formData.gender,
+        image: formData.image,
+        tokenPrice: tokenPriceValue,
+        ethPrice: ethPriceValue,
+        quantity: BigInt(formData.quantity),
+        isAvailableForExchange: formData.isAvailableForExchange,
+        exchangePreference: formData.exchangePreference,
+      });
 
       router.push("/marketplace");
     } catch (err) {
@@ -135,7 +143,7 @@ const CreateProduct = () => {
   return (
     <div className="min-h-screen relative">
       <BackgroundElements />
-      
+
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -143,19 +151,19 @@ const CreateProduct = () => {
           className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-6 md:p-8 shadow-lg"
         >
           <div className="flex items-center justify-between mb-8">
-            <button 
-              onClick={() => router.push('/marketplace')}
+            <button
+              onClick={() => router.push("/marketplace")}
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft size={18} />
               <span>Back to Marketplace</span>
             </button>
-            
+
             <div className="w-10 h-10 rounded-full bg-[#00FFD1]/20 flex items-center justify-center">
               <Package className="w-5 h-5 text-[#00FFD1]" />
             </div>
           </div>
-          
+
           <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent mb-6">
             Create New Product
           </h1>
@@ -295,7 +303,9 @@ const CreateProduct = () => {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-white/50">Hold Ctrl/Cmd to select multiple options</p>
+              <p className="mt-1 text-xs text-white/50">
+                Hold Ctrl/Cmd to select multiple options
+              </p>
             </div>
 
             {/* Pricing */}
@@ -386,8 +396,20 @@ const CreateProduct = () => {
                       }
                       className="sr-only"
                     />
-                    <div className={`w-10 h-5 rounded-full transition-colors duration-300 ${formData.isAvailableForExchange ? 'bg-[#00FFD1]' : 'bg-white/20'}`}>
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform duration-300 ${formData.isAvailableForExchange ? 'translate-x-5' : 'translate-x-0.5'}`}></div>
+                    <div
+                      className={`w-10 h-5 rounded-full transition-colors duration-300 ${
+                        formData.isAvailableForExchange
+                          ? "bg-[#00FFD1]"
+                          : "bg-white/20"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform duration-300 ${
+                          formData.isAvailableForExchange
+                            ? "translate-x-5"
+                            : "translate-x-0.5"
+                        }`}
+                      ></div>
                     </div>
                   </div>
                   <span className="text-sm font-medium text-white/80">
@@ -435,9 +457,9 @@ const CreateProduct = () => {
 
             {/* Submit Button */}
             <motion.button
-              whileHover={{ 
+              whileHover={{
                 scale: 1.02,
-                boxShadow: "0 0 20px rgba(0,255,209,0.4)" 
+                boxShadow: "0 0 20px rgba(0,255,209,0.4)",
               }}
               whileTap={{ scale: 0.98 }}
               type="submit"
@@ -463,9 +485,13 @@ const CreateProduct = () => {
                 </>
               )}
             </motion.button>
-            
+
             {/* Animated Progress Bar - Decorative */}
-            <div className={`h-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] rounded-full transition-all duration-300 ${loading ? 'w-full' : 'w-0'}`}></div>
+            <div
+              className={`h-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] rounded-full transition-all duration-300 ${
+                loading ? "w-full" : "w-0"
+              }`}
+            ></div>
           </form>
         </motion.div>
       </div>

@@ -188,6 +188,13 @@ contract MarketplaceStorage is IMarketplaceStorage, ReentrancyGuard, Ownable {
         return authorizedContracts[contractAddress];
     }
 
+    /**
+     * @dev Get the current product count
+     */
+    function getProductCount() external view returns (uint256) {
+        return _productIds.current();
+    }
+
     // Product-related functions
     function getProduct(
         uint256 productId

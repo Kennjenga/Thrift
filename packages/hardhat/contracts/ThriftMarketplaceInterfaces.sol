@@ -31,35 +31,61 @@ interface IUserAesthetics {
 }
 
 /**
- * Interface definitions for marketplace contracts
+ * @title IMarketplaceStorage
+ * @dev Interface for the central storage contract
  */
 interface IMarketplaceStorage {
-    // Configuration getters
+    // Constants
+    function MAX_BULK_PURCHASE() external view returns (uint256);
+    function BURN_PERCENTAGE() external view returns (uint256);
+    function TREASURY_PERCENTAGE() external view returns (uint256);
+    function SPENDING_REWARD_PERCENTAGE() external view returns (uint256);
+
+    // Config getters
     function thriftToken() external view returns (address);
     function userAesthetics() external view returns (address);
     function treasuryWallet() external view returns (address);
+    function isPaused() external view returns (bool);
     function tokenPlatformFee() external view returns (uint256);
     function ethPlatformFee() external view returns (uint256);
-    function isPaused() external view returns (bool);
 
-    // Product-related functions
+    // Product getters
     function getProduct(
         uint256 productId
     ) external view returns (Product memory);
     function getProductWithAvailability(
         uint256 productId
     ) external view returns (ProductWithAvailability memory);
+    function getUserProductIds(
+        address user
+    ) external view returns (uint256[] memory);
+    function getProductsInCategory(
+        string memory category
+    ) external view returns (uint256[] memory);
     function getAvailableQuantity(
         uint256 productId
     ) external view returns (uint256);
+    function getProductCount() external view returns (uint256);
 
-    // Escrow-related functions
+    // Escrow getters
     function getEscrow(uint256 escrowId) external view returns (Escrow memory);
     function getUserEscrowTracking(
         address user
     ) external view returns (UserEscrowTracking memory);
+    function getExchangeOffersForProduct(
+        uint256 productId
+    ) external view returns (ExchangeOffer[] memory);
 
-    // Storage modification functions - only accessible by authorized contracts
+    // Authorization
+    function isAuthorizedContract(
+        address contractAddress
+    ) external view returns (bool);
+    function setAuthorizedContract(
+        address contractAddress,
+        bool authorized
+    ) external;
+
+    // Product functions
     function createProduct(
         address seller,
         uint256 tokenPrice,
@@ -105,6 +131,7 @@ interface IMarketplaceStorage {
     function markProductSold(uint256 productId) external;
     function markProductDeleted(uint256 productId) external;
 
+    // Escrow functions
     function createEscrow(
         uint256 productId,
         address buyer,
@@ -155,29 +182,6 @@ interface IMarketplaceStorage {
     function togglePause() external;
     function emergencyTokenWithdraw(address token, uint256 amount) external;
     function emergencyEthWithdraw() external;
-
-    // Auth functions
-    function setAuthorizedContract(
-        address contractAddress,
-        bool authorized
-    ) external;
-    function isAuthorizedContract(
-        address contractAddress
-    ) external view returns (bool);
-
-    function getUserProductIds(
-        address user
-    ) external view returns (uint256[] memory);
-
-    function getExchangeOffersForProduct(
-        uint256 productId
-    ) external view returns (ExchangeOffer[] memory);
-
-    function BURN_PERCENTAGE() external pure returns (uint256);
-    function TREASURY_PERCENTAGE() external pure returns (uint256);
-    function SPENDING_REWARD_PERCENTAGE() external pure returns (uint256);
-    function MAX_ESCROW_DURATION() external pure returns (uint256);
-    function MAX_BULK_PURCHASE() external pure returns (uint256);
 }
 
 interface IMarketplaceProduct {

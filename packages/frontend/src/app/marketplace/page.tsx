@@ -4,45 +4,24 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { AlertCircle, Package, Search, Filter, Heart, ArrowRight, Clock, Repeat } from "lucide-react";
+import {
+  AlertCircle,
+  Package,
+  Search,
+  Filter,
+  Heart,
+  ArrowRight,
+  Repeat,
+} from "lucide-react";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
-import { Product, ProductCondition, ProductGender } from "@/types/market";
+import {
+  ProductCondition,
+  ProductGender,
+  ProductWithAvailability,
+  SearchParams,
+} from "@/types/market";
 import { AESTHETICS } from "@/constants/aesthetics";
 import { formatEther } from "ethers";
-
-
-// Color System
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  glass: {
-    background: "rgba(42, 27, 84, 0.2)",
-    border: "rgba(123, 66, 255, 0.1)",
-  },
-};
 
 // Styles object
 const styles = {
@@ -103,19 +82,23 @@ const BackgroundElements = () => {
   );
 };
 
-const ProductCard = ({ product }: { product: Product }) => {
+interface ProductCardProps {
+  product: ProductWithAvailability;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
-    <motion.div 
+    <motion.div
       className="relative group overflow-hidden rounded-xl"
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
     >
       {/* Background Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/0 via-purple-900/40 to-purple-900/90 opacity-70 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-      
+
       {/* Glow Effect on Hover */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] rounded-xl opacity-0 group-hover:opacity-70 blur-md group-hover:blur-lg transition-all duration-300" />
-      
+
       {/* Card Content Container */}
       <div className="relative bg-purple-900/20 backdrop-blur-md border border-purple-500/10 rounded-xl overflow-hidden z-20">
         {/* Image Container */}
@@ -126,7 +109,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
-          
+
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20">
             {product.isAvailableForExchange && (
@@ -134,9 +117,9 @@ const ProductCard = ({ product }: { product: Product }) => {
                 Exchange
               </div>
             )}
-            
+
             {/* Like Button */}
-            <motion.button 
+            <motion.button
               className="w-8 h-8 flex items-center justify-center rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white/70 hover:text-[#FF1B6B] transition-colors"
               whileTap={{ scale: 0.9 }}
             >
@@ -144,7 +127,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             </motion.button>
           </div>
         </div>
-        
+
         {/* Card Details */}
         <div className="relative p-4 bg-gradient-to-b from-purple-900/60 to-purple-900/90 backdrop-blur-md">
           {/* Product Info */}
@@ -152,7 +135,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             <h3 className="font-medium text-white truncate">{product.name}</h3>
             <p className="text-sm text-white/70 truncate">{product.brand}</p>
           </div>
-          
+
           {/* Price and Action */}
           <div className="flex justify-between items-center">
             <div>
@@ -177,7 +160,7 @@ const ProductCard = ({ product }: { product: Product }) => {
                 </div>
               )}
             </div>
-            
+
             {/* Enhanced Neon View Button */}
             <div className="overflow-hidden">
               <motion.button
@@ -203,24 +186,24 @@ const ProductCard = ({ product }: { product: Product }) => {
                   border
                   border-[#7B42FF]/50
                 "
-                whileHover={{ 
+                whileHover={{
                   scale: 1.05,
-                  textShadow: "0 0 8px rgba(255,255,255,0.8)" 
+                  textShadow: "0 0 8px rgba(255,255,255,0.8)",
                 }}
                 whileTap={{ scale: 0.95 }}
               >
                 {/* Inner glow effect */}
                 <span className="absolute inset-0 bg-gradient-to-r from-[#7B42FF]/0 via-[#8A2BE2]/30 to-[#7B42FF]/0 animate-pulse"></span>
-                
+
                 {/* Button text */}
                 <span className="relative z-10">View Item</span>
-                
+
                 {/* Animated border glow */}
                 <span className="absolute inset-0 -z-10 bg-gradient-to-r from-[#7B42FF] via-[#FF00FF] to-[#7B42FF] opacity-70 blur-md group-hover:animate-pulse"></span>
               </motion.button>
             </div>
           </div>
-          
+
           {/* Animated Progress Bar - Decorative */}
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-1000"></div>
         </div>
@@ -235,7 +218,11 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const ErrorDisplay = ({ message }: { message: string }) => (
+interface ErrorDisplayProps {
+  message: string;
+}
+
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message }) => (
   <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3">
     <AlertCircle className="w-6 h-6 text-red-500" />
     <p className="text-red-700">{message}</p>
@@ -260,19 +247,37 @@ const MarketplaceHeader = () => (
       Digital Fashion Marketplace
     </h2>
     <p className="text-white/70 max-w-2xl mx-auto">
-      Discover unique fashion items from sustainable creators around the world. Buy with crypto, exchange items, or swap with Thrift tokens.
+      Discover unique fashion items from sustainable creators around the world.
+      Buy with crypto, exchange items, or swap with Thrift tokens.
     </p>
   </div>
 );
 
-const FilterSection = ({ 
-  filters, 
-  setFilters, 
-  handleSearch 
-}: { 
-  filters: any, 
-  setFilters: React.Dispatch<React.SetStateAction<any>>, 
-  handleSearch: () => void 
+interface FilterState {
+  nameQuery: string;
+  categories: string[];
+  brand: string;
+  condition: ProductCondition | "";
+  gender: ProductGender | "";
+  size: string;
+  minPrice: string;
+  maxPrice: string;
+  onlyAvailable: boolean;
+  exchangeOnly: boolean;
+  page: bigint;
+  pageSize: bigint;
+}
+
+interface FilterSectionProps {
+  filters: FilterState;
+  setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
+  handleSearch: () => void;
+}
+
+const FilterSection: React.FC<FilterSectionProps> = ({
+  filters,
+  setFilters,
+  handleSearch,
 }) => (
   <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-3 mb-8">
     <div className="flex items-center w-full gap-2">
@@ -284,7 +289,10 @@ const FilterSection = ({
           className="w-full py-2 px-8 bg-white/10 border border-white/20 rounded-full text-white placeholder-white/50 focus:outline-none focus:border-[#00FFD1] text-sm"
           value={filters.nameQuery}
           onChange={(e) =>
-            setFilters((prev: any) => ({ ...prev, nameQuery: e.target.value }))
+            setFilters((prev: FilterState) => ({
+              ...prev,
+              nameQuery: e.target.value,
+            }))
           }
         />
         <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
@@ -297,7 +305,7 @@ const FilterSection = ({
           className="py-2 px-3 bg-white/10 border border-white/20 rounded-full text-white appearance-none text-sm focus:outline-none focus:border-[#00FFD1] w-full"
           value={filters.categories[0] || ""}
           onChange={(e) =>
-            setFilters((prev: any) => ({
+            setFilters((prev: FilterState) => ({
               ...prev,
               categories: e.target.value ? [e.target.value] : [],
             }))
@@ -316,9 +324,9 @@ const FilterSection = ({
           className="py-2 px-3 bg-white/10 border border-white/20 rounded-full text-white appearance-none text-sm focus:outline-none focus:border-[#00FFD1] w-full"
           value={filters.condition}
           onChange={(e) =>
-            setFilters((prev: any) => ({
+            setFilters((prev: FilterState) => ({
               ...prev,
-              condition: e.target.value as ProductCondition,
+              condition: e.target.value as ProductCondition | "",
             }))
           }
         >
@@ -337,7 +345,10 @@ const FilterSection = ({
             className="w-full bg-transparent text-white placeholder-white/50 focus:outline-none text-sm text-center"
             value={filters.minPrice}
             onChange={(e) =>
-              setFilters((prev: any) => ({ ...prev, minPrice: e.target.value }))
+              setFilters((prev: FilterState) => ({
+                ...prev,
+                minPrice: e.target.value,
+              }))
             }
             min="0"
           />
@@ -348,7 +359,10 @@ const FilterSection = ({
             className="w-full bg-transparent text-white placeholder-white/50 focus:outline-none text-sm text-center"
             value={filters.maxPrice}
             onChange={(e) =>
-              setFilters((prev: any) => ({ ...prev, maxPrice: e.target.value }))
+              setFilters((prev: FilterState) => ({
+                ...prev,
+                maxPrice: e.target.value,
+              }))
             }
             min="0"
           />
@@ -364,7 +378,7 @@ const FilterSection = ({
             type="checkbox"
             checked={filters.exchangeOnly}
             onChange={(e) =>
-              setFilters((prev: any) => ({
+              setFilters((prev: FilterState) => ({
                 ...prev,
                 exchangeOnly: e.target.checked,
               }))
@@ -387,12 +401,39 @@ const FilterSection = ({
   </div>
 );
 
-const MarketplacePage = () => {
-  const { allActiveProducts, searchProducts } = useMarketplace();
-  const [products, setProducts] = useState<Product[]>([]);
+const MarketplacePage: React.FC = () => {
+  const {
+    activeProducts,
+    isLoadingProducts,
+    refetchProducts,
+    useProductSearch,
+  } = useMarketplace();
+
+  // For search functionality
+  const [searchParams, setSearchParams] = useState<SearchParams | undefined>(
+    undefined
+  );
+
+  const {
+    results: searchResults,
+    isLoading: isSearchLoading,
+    error: searchError,
+  } = useProductSearch(searchParams) as {
+    results: {
+      products: ProductWithAvailability[];
+      totalResults: bigint;
+      totalPages: bigint;
+      currentPage: bigint;
+    } | null;
+    isLoading: boolean;
+    error: string | null;
+  };
+
+  const [products, setProducts] = useState<ProductWithAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
+
+  const [filters, setFilters] = useState<FilterState>({
     nameQuery: "",
     categories: [] as string[],
     brand: "",
@@ -407,60 +448,67 @@ const MarketplacePage = () => {
     pageSize: 12n,
   });
 
+  // Initial load of products
   useEffect(() => {
-    if (allActiveProducts) {
-      setProducts(allActiveProducts as Product[]);
+    if (activeProducts && Array.isArray(activeProducts)) {
+      setProducts(activeProducts);
       setLoading(false);
     }
-  }, [allActiveProducts]);
+  }, [activeProducts]);
 
-  const handleSearch = async () => {
+  // Handle search results
+  useEffect(() => {
+    if (searchParams) {
+      if (searchResults && searchResults.products) {
+        setProducts(searchResults.products);
+      } else if (searchError) {
+        setError("An error occurred while searching. Please try again.");
+      }
+      setLoading(false);
+    }
+  }, [searchResults, searchError, searchParams]);
+
+  const handleSearch = () => {
     setLoading(true);
     setError(null);
 
-    try {
-      const result = await searchProducts(
-        filters.nameQuery,
-        filters.categories,
-        filters.brand,
-        filters.condition,
-        filters.gender,
-        filters.size,
-        filters.minPrice ? BigInt(parseFloat(filters.minPrice) * 1e18) : 0n,
-        filters.maxPrice ? BigInt(parseFloat(filters.maxPrice) * 1e18) : 0n,
-        filters.onlyAvailable,
-        filters.exchangeOnly,
-        filters.page,
-        filters.pageSize
-      );
-
-      if (result && result.success && result.data) {
-        setProducts(result.data.products || []);
-      } else {
-        setProducts([]);
-        if (result.error) {
-          setError("An error occurred while searching. Please try again.");
-        }
-      }
-    } catch (error) {
-      console.error("Error searching products:", error);
-      setError("Failed to search products. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // Create search params object for the hook
+    setSearchParams({
+      nameQuery: filters.nameQuery,
+      categories: filters.categories,
+      brand: filters.brand,
+      condition: filters.condition,
+      gender: filters.gender,
+      size: filters.size,
+      minPrice: filters.minPrice
+        ? BigInt(Math.floor(parseFloat(filters.minPrice) * 1e18))
+        : 0n,
+      maxPrice: filters.maxPrice
+        ? BigInt(Math.floor(parseFloat(filters.maxPrice) * 1e18))
+        : 0n,
+      onlyAvailable: filters.onlyAvailable,
+      exchangeOnly: filters.exchangeOnly,
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
   };
+
+  // Set loading state based on hook state
+  useEffect(() => {
+    setLoading(isLoadingProducts || isSearchLoading);
+  }, [isLoadingProducts, isSearchLoading]);
 
   return (
     <div className="min-h-screen relative">
       <BackgroundElements />
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
         <MarketplaceHeader />
-        
-        <FilterSection 
-          filters={filters} 
-          setFilters={setFilters} 
-          handleSearch={handleSearch} 
+
+        <FilterSection
+          filters={filters}
+          setFilters={setFilters}
+          handleSearch={handleSearch}
         />
 
         {/* Action Buttons */}
@@ -507,13 +555,18 @@ const MarketplacePage = () => {
             </div>
             <p className="text-white/70">Active Sellers</p>
           </div>
-          
+
           <div className="flex gap-3">
-            <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white">
+            <button
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
+              onClick={() => refetchProducts()}
+            >
               <Repeat size={20} />
             </button>
             <Link href="/marketplace/create">
-              <button className={`${styles.button} ${styles.primaryButton} flex items-center gap-2`}>
+              <button
+                className={`${styles.button} ${styles.primaryButton} flex items-center gap-2`}
+              >
                 List Item <ArrowRight size={16} />
               </button>
             </Link>
@@ -539,29 +592,78 @@ const MarketplacePage = () => {
             ))}
           </div>
         )}
-        
+
         {/* Pagination */}
-        {products.length > 0 && (
-          <div className="mt-12 flex justify-center">
-            <div className="flex gap-2">
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
-                &lt;
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#7B42FF] text-white">
-                1
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
-                2
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
-                3
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors">
-                &gt;
-              </button>
+        {searchResults &&
+          "totalPages" in searchResults &&
+          searchResults.totalPages > 1n && (
+            <div className="mt-12 flex justify-center">
+              <div className="flex gap-2">
+                <button
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  onClick={() => {
+                    if (filters.page > 1n) {
+                      const newPage = filters.page - 1n;
+                      setFilters((prev: FilterState) => ({
+                        ...prev,
+                        page: newPage,
+                      }));
+                      handleSearch();
+                    }
+                  }}
+                  disabled={filters.page <= 1n}
+                >
+                  &lt;
+                </button>
+
+                {/* Generate page buttons */}
+                {Array.from(
+                  { length: Number(searchResults.totalPages) },
+                  (_, i) => (
+                    <button
+                      key={i}
+                      className={`w-10 h-10 flex items-center justify-center rounded-lg ${
+                        BigInt(i + 1) === filters.page
+                          ? "bg-[#7B42FF] text-white"
+                          : "bg-white/10 text-white hover:bg-white/20"
+                      } transition-colors`}
+                      onClick={() => {
+                        const newPage = BigInt(i + 1);
+                        setFilters((prev: FilterState) => ({
+                          ...prev,
+                          page: newPage,
+                        }));
+                        handleSearch();
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  )
+                )}
+
+                <button
+                  className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                  onClick={() => {
+                    if (
+                      searchResults &&
+                      "totalPages" in searchResults &&
+                      filters.page < searchResults.totalPages
+                    ) {
+                      const newPage = filters.page + 1n;
+                      setFilters((prev: FilterState) => ({
+                        ...prev,
+                        page: newPage,
+                      }));
+                      handleSearch();
+                    }
+                  }}
+                  disabled={filters.page >= searchResults.totalPages}
+                >
+                  &gt;
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

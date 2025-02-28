@@ -30,11 +30,15 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
         Product memory product,
         SearchParams memory params
     ) internal pure returns (bool) {
+        // Skip invalid products (deleted or ID == 0)
+        if (product.id == 0 || product.isDeleted) {
+            return false;
+        }
+
         // Check if product is available
         if (
             params.onlyAvailable &&
-            (product.isDeleted ||
-                product.isSold ||
+            (product.isSold ||
                 (product.quantity - product.inEscrowQuantity) == 0)
         ) {
             return false;
@@ -45,9 +49,8 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
             return false;
         }
 
-        // Name query match
+        // Name query match (case insensitive)
         if (bytes(params.nameQuery).length > 0) {
-            // Simple contains check - can be improved with more advanced search
             bytes memory nameBytes = bytes(product.name);
             bytes memory queryBytes = bytes(params.nameQuery);
             bool nameMatch = false;
@@ -61,7 +64,19 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
                 ) {
                     bool isMatching = true;
                     for (uint j = 0; j < queryBytes.length; j++) {
-                        if (nameBytes[i + j] != queryBytes[j]) {
+                        // Convert to lowercase for case-insensitive comparison
+                        bytes1 nameChar = nameBytes[i + j];
+                        bytes1 queryChar = queryBytes[j];
+
+                        // Convert uppercase to lowercase for both strings
+                        if (nameChar >= 0x41 && nameChar <= 0x5A) {
+                            nameChar = bytes1(uint8(nameChar) + 32);
+                        }
+                        if (queryChar >= 0x41 && queryChar <= 0x5A) {
+                            queryChar = bytes1(uint8(queryChar) + 32);
+                        }
+
+                        if (nameChar != queryChar) {
                             isMatching = false;
                             break;
                         }
@@ -127,7 +142,7 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
     }
 
     /**
-     * @dev Search products with filters and pagination
+     * @dev Search products with filters and pagination - improved to use actual product count
      */
     function searchProducts(
         SearchParams memory params
@@ -139,68 +154,67 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
             "Invalid page size"
         );
 
-        // For a real implementation, you would need to have a way to iterate through all product IDs
-        // Here we're using a simple approach assuming products are numbered from 1 to 1000
-        // This would need to be improved in a production environment
-        uint256 totalProducts = 1000;
+        // Get the actual product count from storage
+        uint256 latestProductId = marketplaceStorage.getProductCount();
+
+        // Two-pass approach to handle pagination properly
+        // First pass: count matching products
         uint256 totalMatches = 0;
 
-        // First pass: count total matches
-        for (uint256 i = 1; i <= totalProducts; i++) {
+        for (uint256 i = 1; i <= latestProductId; i++) {
             Product memory product = marketplaceStorage.getProduct(i);
 
-            // Skip invalid products (id == 0 means product doesn't exist)
-            if (product.id == 0) continue;
-
             if (_productMatchesSearch(product, params)) {
-                unchecked {
-                    ++totalMatches;
-                }
+                totalMatches++;
             }
         }
 
         // Calculate pagination values
-        uint256 totalPages = (totalMatches + params.pageSize - 1) /
-            params.pageSize;
+        uint256 totalPages = totalMatches > 0
+            ? (totalMatches + params.pageSize - 1) / params.pageSize
+            : 1;
+
         uint256 startIndex = (params.page - 1) * params.pageSize;
 
         // Ensure valid page number
-        if (totalMatches == 0) {
-            totalPages = 1;
-        }
         require(params.page <= totalPages, "Page number exceeds total pages");
 
         // Create array for current page results
+        uint256 resultsSize = Math.min(params.pageSize, totalMatches);
         ProductWithAvailability[]
             memory pageProducts = new ProductWithAvailability[](
-                Math.min(params.pageSize, totalMatches)
+                resultsSize > 0 ? resultsSize : 0
             );
 
-        uint256 currentIndex = 0;
-        uint256 matchesFound = 0;
+        // Early return if no matches
+        if (totalMatches == 0) {
+            return
+                SearchResult({
+                    products: pageProducts,
+                    totalResults: 0,
+                    totalPages: 1,
+                    currentPage: params.page
+                });
+        }
 
-        // Second pass: fill matching products array for current page
+        // Second pass: collect matching products for current page
+        uint256 matchCount = 0;
+        uint256 resultIndex = 0;
+
         for (
             uint256 i = 1;
-            i <= totalProducts && currentIndex < pageProducts.length;
+            i <= latestProductId && resultIndex < resultsSize;
             i++
         ) {
             Product memory product = marketplaceStorage.getProduct(i);
 
-            // Skip invalid products
-            if (product.id == 0) continue;
-
             if (_productMatchesSearch(product, params)) {
-                if (matchesFound >= startIndex) {
-                    pageProducts[currentIndex] = marketplaceStorage
+                if (matchCount >= startIndex) {
+                    pageProducts[resultIndex] = marketplaceStorage
                         .getProductWithAvailability(i);
-                    unchecked {
-                        ++currentIndex;
-                    }
+                    resultIndex++;
                 }
-                unchecked {
-                    ++matchesFound;
-                }
+                matchCount++;
             }
         }
 
@@ -250,7 +264,7 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
     }
 
     /**
-     * @dev Gets products by their IDs
+     * @dev Gets products by their IDs with better error handling
      */
     function getProductsById(
         uint256[] calldata productIds
@@ -260,9 +274,21 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
         );
 
         for (uint256 i = 0; i < productIds.length; i++) {
-            result[i] = marketplaceStorage.getProductWithAvailability(
+            // Skip invalid IDs
+            if (productIds[i] == 0) {
+                continue;
+            }
+
+            Product memory product = marketplaceStorage.getProduct(
                 productIds[i]
             );
+
+            // Only get availability for valid products
+            if (product.id > 0) {
+                result[i] = marketplaceStorage.getProductWithAvailability(
+                    productIds[i]
+                );
+            }
         }
 
         return result;

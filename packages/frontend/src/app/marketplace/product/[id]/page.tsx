@@ -3,14 +3,12 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { formatEther, type Address, parseEther } from "viem";
-import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
+import { formatEther, parseEther } from "viem";
 import {
-  useGetProductById,
-  // useGetProductsByIds,
-  useGetUserProducts,
+  useMarketplace,
+  useProductsData,
 } from "@/blockchain/hooks/useMarketplace";
-import { useCart } from "@/contexts/cartContext";
+import { useCart, CartItem as ContextCartItem } from "@/contexts/cartContext";
 import {
   ShoppingCart,
   RefreshCw,
@@ -18,41 +16,41 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
-import { Product, PaymentMethod } from "@/types/market";
+import { ProductWithAvailability, PaymentMethod } from "@/types/market";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
 
-const ProductPage = () => {
+const ProductPage: React.FC = () => {
   const params = useParams();
   const productId = params?.id as string;
-
-  console.log("Product ID from params:", productId); // Debug log
 
   const { address } = useAccount();
   const { addItem } = useCart();
 
-  // Product data loading
+  // Get marketplace hooks
   const {
-    data: productData,
+    useProductDetails,
+    createExchangeOffer,
+    createEscrowWithEth,
+    createEscrowWithTokens,
+  } = useMarketplace();
+
+  // Product data loading using the new hook
+  const {
+    product: productData,
     isLoading: productLoading,
     error: productError,
-  } = useGetProductById(productId ? BigInt(productId) : undefined);
+    refetch: refetchProduct,
+  } = useProductDetails(productId ? BigInt(productId) : undefined);
 
-  console.log("Product Data:", productData); // Debug log
-  console.log("Product Loading:", productLoading); // Debug log
-  console.log("Product Error:", productError); // Debug log
+  // State for user products
+  const [userProductsData, setUserProductsData] = useState<
+    ProductWithAvailability[]
+  >([]);
+  const [loadingUserProducts, setLoadingUserProducts] = useState(false);
 
-  // Get user's products for exchange
-  const { data: userProductsData } = useGetUserProducts(address as Address);
-  console.log("User Products:", userProductsData); // Debug log
-
-  // Get marketplace functions for transactions
-  const { createExchangeOffer, createEscrowWithEth, createEscrowWithTokens } =
-    useMarketplace();
-
-  const [product, setProduct] = useState<Product | null>(null);
-  const [userProducts, setUserProducts] = useState<Product[]>([]);
-  const [quantity, setQuantity] = useState<bigint>(BigInt(1));
+  // State for product and UI
+  const [quantity, setQuantity] = useState<bigint>(1n);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("ETH");
   const [exchangeMode, setExchangeMode] = useState(false);
   const [tokenTopUp, setTokenTopUp] = useState("");
@@ -63,22 +61,126 @@ const ProductPage = () => {
   const [success, setSuccess] = useState("");
   const [processing, setProcessing] = useState(false);
 
-  // Update product when data is loaded
-  useEffect(() => {
-    console.log("Product Data in useEffect:", productData); // Debug log
-    if (productData) {
-      const formattedProduct = productData as Product;
-      console.log("Formatted Product:", formattedProduct); // Debug log
-      setProduct(formattedProduct);
-    }
-  }, [productData]);
+  // Fetch user products when needed
+  const { userProducts } = useProductsData(
+    "0xd51ae371a9941d7942346f4c5948767d6b3393ec"
+  );
 
-  // Update user products when data is loaded
   useEffect(() => {
-    if (userProductsData) {
-      setUserProducts(userProductsData as Product[]);
+    if (userProducts && userProducts.data && Array.isArray(userProducts.data)) {
+      setUserProductsData(userProducts.data);
+      setLoadingUserProducts(userProducts.isLoading);
     }
-  }, [userProductsData]);
+  }, [userProducts]);
+  console.log("userdata", userProducts);
+  console.log("product details: ", productData);
+
+  // Clear messages when parameters change
+  useEffect(() => {
+    setError("");
+    setSuccess("");
+  }, [
+    productId,
+    quantity,
+    paymentMethod,
+    exchangeMode,
+    selectedExchangeProduct,
+  ]);
+
+  const handleAddToCart = () => {
+    if (!productData) return;
+
+    // Create a cart item that matches what the context expects
+    const cartItem: ContextCartItem = {
+      // Directly include Product properties
+      id: productData.id,
+      name: productData.name,
+      description: productData.description,
+      size: productData.size,
+      brand: productData.brand,
+      condition: productData.condition,
+      gender: productData.gender,
+      image: productData.image,
+      ethPrice: productData.ethPrice,
+      tokenPrice: productData.tokenPrice,
+      isAvailableForExchange: productData.isAvailableForExchange,
+      seller: productData.seller,
+      categories: productData.categories || [],
+      exchangePreference: productData.exchangePreference || "",
+      isSold: false,
+      isDeleted: false,
+      inEscrowQuantity: 0n,
+
+      // CartItem specific properties
+      quantity: quantity,
+      paymentType: paymentMethod === "ETH" ? "ETH" : "TOKEN", // Match the enum in the context
+    };
+
+    addItem(cartItem);
+    setSuccess("Item added to cart!");
+  };
+
+  const handlePurchase = async () => {
+    if (!productData || !address) return;
+    setError("");
+    setSuccess("");
+    setProcessing(true);
+
+    try {
+      if (paymentMethod === "ETH") {
+        if (!productData.ethPrice) {
+          throw new Error("ETH price not set for this product");
+        }
+        const totalCost = productData.ethPrice * quantity;
+        await createEscrowWithEth(productData.id, quantity, totalCost);
+      } else {
+        if (!productData.tokenPrice) {
+          throw new Error("THRIFT price not set for this product");
+        }
+        await createEscrowWithTokens(productData.id, quantity);
+      }
+      setSuccess("Purchase initiated! Check your escrow status.");
+      refetchProduct();
+    } catch (err) {
+      console.error("Purchase error:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to create purchase escrow"
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleExchange = async () => {
+    if (!productData || !selectedExchangeProduct || !address) return;
+    setError("");
+    setSuccess("");
+    setProcessing(true);
+
+    try {
+      await createExchangeOffer(
+        selectedExchangeProduct,
+        productData.id,
+        1n, // Quantity for exchange is typically 1
+        tokenTopUp ? parseEther(tokenTopUp) : 0n
+      );
+      setSuccess("Exchange offer created! Check your escrow status.");
+      refetchProduct();
+    } catch (err) {
+      console.error("Exchange error:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to create exchange offer"
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const toggleExchangeMode = () => {
+    setExchangeMode(!exchangeMode);
+    setSelectedExchangeProduct(null);
+    setTokenTopUp("");
+  };
 
   // Loading state
   if (productLoading) {
@@ -99,7 +201,7 @@ const ProductPage = () => {
   }
 
   // No product found state
-  if (!productLoading && !product) {
+  if (!productLoading && !productData) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-500">
         <p>Product not found</p>
@@ -108,89 +210,7 @@ const ProductPage = () => {
   }
 
   // At this point, we know product is not null
-  const safeProduct = product as Product;
-
-  const handleAddToCart = () => {
-    if (!product) return;
-
-    addItem({
-      id: product.id,
-      quantity,
-      paymentType: paymentMethod,
-      name: product.name,
-      description: product.description,
-      size: product.size,
-      brand: product.brand,
-      condition: product.condition,
-      gender: product.gender,
-      image: product.image,
-      ethPrice: product.ethPrice,
-      tokenPrice: product.tokenPrice,
-      isAvailableForExchange: product.isAvailableForExchange,
-      seller: product.seller,
-      categories: product.categories ? product.categories : [],
-      exchangePreference: product.exchangePreference
-        ? product.exchangePreference
-        : "",
-      isSold: false,
-      isDeleted: false,
-      inEscrowQuantity: 0n,
-    });
-    setSuccess("Item added to cart!");
-  };
-
-  const handlePurchase = async () => {
-    if (!product || !address) return;
-    setError("");
-    setSuccess("");
-    setProcessing(true);
-
-    try {
-      if (paymentMethod === "ETH") {
-        if (!product.ethPrice) {
-          throw new Error("ETH price not set for this product");
-        }
-        const totalCost = product.ethPrice * quantity;
-        await createEscrowWithEth(product.id, quantity, totalCost);
-      } else {
-        await createEscrowWithTokens(product.id, quantity);
-      }
-      setSuccess("Purchase initiated! Check your escrow status.");
-    } catch {
-      console.error("Purchase error:", error);
-      setError(error || "Failed to create purchase escrow");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleExchange = async () => {
-    if (!product || !selectedExchangeProduct || !address) return;
-    setError("");
-    setSuccess("");
-    setProcessing(true);
-
-    try {
-      await createExchangeOffer(
-        selectedExchangeProduct,
-        product.id,
-        quantity,
-        tokenTopUp ? parseEther(tokenTopUp) : 0n
-      );
-      setSuccess("Exchange offer created! Check your escrow status.");
-    } catch {
-      console.error("Exchange error:", error);
-      setError(error || "Failed to create exchange offer");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const toggleExchangeMode = () => {
-    setExchangeMode(!exchangeMode);
-    setSelectedExchangeProduct(null);
-    setTokenTopUp("");
-  };
+  const product = productData as ProductWithAvailability;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -199,8 +219,8 @@ const ProductPage = () => {
           {/* Product Image */}
           <div className="relative aspect-square rounded-xl overflow-hidden">
             <Image
-              src={safeProduct.image}
-              alt={safeProduct.name}
+              src={product.image}
+              alt={product.name}
               fill
               className="object-cover"
             />
@@ -210,40 +230,44 @@ const ProductPage = () => {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {safeProduct.name}
+                {product.name}
               </h1>
-              <p className="text-lg text-gray-600">{safeProduct.brand}</p>
+              <p className="text-lg text-gray-600">{product.brand}</p>
             </div>
             <div className="space-y-2">
-              <p className="text-gray-600">{safeProduct.description}</p>
+              <p className="text-gray-600">{product.description}</p>
               <div className="flex gap-4">
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
-                  {safeProduct.condition}
+                  {product.condition}
                 </span>
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
-                  {safeProduct.size}
+                  {product.size}
                 </span>
                 <span className="text-sm bg-gray-100 px-3 py-1 rounded-full">
-                  {safeProduct.gender}
+                  {product.gender}
                 </span>
               </div>
             </div>
 
             <div className="space-y-4">
-              {safeProduct.tokenPrice > 0n && (
+              {product.tokenPrice > 0n && (
                 <p className="text-xl font-semibold">
-                  {formatEther(safeProduct.tokenPrice)} THRIFT
+                  {formatEther(product.tokenPrice)} THRIFT
                 </p>
               )}
-              {safeProduct.ethPrice > 0n && (
+              {product.ethPrice > 0n && (
                 <p className="text-xl font-semibold">
-                  {formatEther(safeProduct.ethPrice)} ETH
+                  {formatEther(product.ethPrice)} ETH
                 </p>
               )}
+              <p className="text-sm text-gray-500">
+                Available: {product.availableQuantity.toString()} of{" "}
+                {product.totalQuantity.toString()}
+              </p>
             </div>
 
             {/* Exchange Toggle Button */}
-            {safeProduct.isAvailableForExchange && (
+            {product.isAvailableForExchange && (
               <button
                 onClick={toggleExchangeMode}
                 className="flex items-center gap-2 text-blue-600 font-medium"
@@ -261,10 +285,12 @@ const ProductPage = () => {
                   <input
                     type="number"
                     min="1"
-                    max={Number(safeProduct.quantity)}
+                    max={Number(product.availableQuantity)}
                     value={Number(quantity)}
                     onChange={(e) =>
-                      setQuantity(BigInt(parseInt(e.target.value) || 1))
+                      setQuantity(
+                        BigInt(Math.max(1, parseInt(e.target.value) || 1))
+                      )
                     }
                     className="w-20 p-2 border rounded"
                   />
@@ -278,7 +304,7 @@ const ProductPage = () => {
                         : "bg-gray-200 text-gray-700"
                     }`}
                     onClick={() => setPaymentMethod("ETH")}
-                    disabled={!safeProduct.ethPrice}
+                    disabled={!product.ethPrice || product.ethPrice === 0n}
                   >
                     Pay with ETH
                   </button>
@@ -289,7 +315,7 @@ const ProductPage = () => {
                         : "bg-gray-200 text-gray-700"
                     }`}
                     onClick={() => setPaymentMethod("TOKEN")}
-                    disabled={!safeProduct.tokenPrice}
+                    disabled={!product.tokenPrice || product.tokenPrice === 0n}
                   >
                     Pay with THRIFT
                   </button>
@@ -299,8 +325,12 @@ const ProductPage = () => {
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={handleAddToCart}
-                    disabled={processing}
-                    className="w-1/2 py-4 bg-gray-200 text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2"
+                    disabled={processing || product.availableQuantity < 1n}
+                    className={`w-1/2 py-4 bg-gray-200 text-gray-800 rounded-lg font-medium flex items-center justify-center gap-2 ${
+                      product.availableQuantity < 1n
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
                   >
                     <ShoppingCart className="w-5 h-5" />
                     Add to Cart
@@ -309,8 +339,12 @@ const ProductPage = () => {
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={handlePurchase}
-                    disabled={processing}
-                    className="w-1/2 py-4 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                    disabled={processing || product.availableQuantity < 1n}
+                    className={`w-1/2 py-4 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 ${
+                      product.availableQuantity < 1n
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
                   >
                     {processing ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -331,7 +365,11 @@ const ProductPage = () => {
                     Exchange for Your Product
                   </h3>
 
-                  {userProducts.length > 0 ? (
+                  {loadingUserProducts ? (
+                    <div className="flex justify-center py-4">
+                      <RefreshCw className="w-6 h-6 animate-spin text-gray-500" />
+                    </div>
+                  ) : userProductsData.length > 0 ? (
                     <>
                       <div className="space-y-2">
                         <label className="text-gray-700 block">
@@ -347,12 +385,14 @@ const ProductPage = () => {
                           }
                         >
                           <option value="">Select a product</option>
-                          {userProducts.map((item) => (
+                          {userProductsData.map((item) => (
                             <option
                               key={item.id.toString()}
                               value={item.id.toString()}
+                              disabled={item.availableQuantity < 1n}
                             >
-                              {item.name} ({item.brand})
+                              {item.name} ({item.brand}) -{" "}
+                              {item.availableQuantity.toString()} available
                             </option>
                           ))}
                         </select>
@@ -367,7 +407,13 @@ const ProductPage = () => {
                           className="w-full p-2 border rounded-lg"
                           placeholder="Amount in THRIFT"
                           value={tokenTopUp}
-                          onChange={(e) => setTokenTopUp(e.target.value)}
+                          onChange={(e) => {
+                            // Allow only valid decimal numbers
+                            const value = e.target.value;
+                            if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                              setTokenTopUp(value);
+                            }
+                          }}
                         />
                         <p className="text-sm text-gray-500">
                           Add THRIFT tokens to make your exchange offer more
@@ -378,8 +424,17 @@ const ProductPage = () => {
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleExchange}
-                        disabled={processing || !selectedExchangeProduct}
-                        className="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                        disabled={
+                          processing ||
+                          !selectedExchangeProduct ||
+                          product.availableQuantity < 1n
+                        }
+                        className={`w-full mt-4 py-3 bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 ${
+                          !selectedExchangeProduct ||
+                          product.availableQuantity < 1n
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
                         {processing ? (
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
