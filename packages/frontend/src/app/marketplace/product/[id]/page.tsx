@@ -44,6 +44,7 @@ const ProductPage = () => {
 
   // Get user's products for exchange
   const { data: userProductsData } = useGetUserProducts(address as Address);
+  console.log("User Products:", userProductsData); // Debug log
 
   // Get marketplace functions for transactions
   const { createExchangeOffer, createEscrowWithEth, createEscrowWithTokens } =
