@@ -52,6 +52,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
      * @dev Updates product quantity
      */
     function updateProductQuantity(
+        address originalSender,
         uint256 productId,
         uint256 newQuantity
     ) public whenNotPaused {
@@ -59,7 +60,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
 
         Product memory product = marketplaceStorage.getProduct(productId);
         require(product.id > 0, "Product does not exist");
-        require(product.seller == msg.sender, "Not your product");
+        require(product.seller == originalSender, "Not your product");
         require(!product.isDeleted && !product.isSold, "Product not available");
         require(
             newQuantity >= product.inEscrowQuantity,
@@ -76,6 +77,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
      * @dev Batch update product quantities
      */
     function batchUpdateQuantities(
+        address originalSender,
         uint256[] calldata productIds,
         uint256[] calldata newQuantities
     ) external whenNotPaused {
@@ -85,7 +87,11 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
 
         for (uint256 i = 0; i < productIds.length; ) {
             // Use this. to explicitly call the function on this contract
-            this.updateProductQuantity(productIds[i], newQuantities[i]);
+            this.updateProductQuantity(
+                originalSender,
+                productIds[i],
+                newQuantities[i]
+            );
             unchecked {
                 ++i;
             }
@@ -97,6 +103,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
      * @return uint256 ID of the created product
      */
     function createProduct(
+        address originalSender,
         string memory name,
         string memory description,
         string memory size,
@@ -111,7 +118,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
         bool isAvailableForExchange,
         string memory exchangePreference
     ) external whenNotPaused returns (uint256) {
-        require(msg.sender != address(0), "Invalid sender address");
+        require(originalSender != address(0), "Invalid sender address");
         require(quantity > 0, "Quantity must be positive");
         require(tokenPrice > 0 || ethPrice > 0, "Must set at least one price");
         require(
@@ -123,7 +130,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
         require(bytes(description).length <= 1000, "Description too long");
 
         uint256 productId = marketplaceStorage.createProduct(
-            msg.sender,
+            originalSender,
             tokenPrice,
             ethPrice,
             quantity,
@@ -139,7 +146,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
             exchangePreference
         );
 
-        emit ProductCreated(productId, msg.sender, name, quantity);
+        emit ProductCreated(productId, originalSender, name, quantity);
 
         return productId;
     }
@@ -148,6 +155,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
      * @dev Updates an existing product
      */
     function updateProduct(
+        address originalSender,
         uint256 productId,
         string memory name,
         string memory description,
@@ -167,7 +175,7 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
         // Get product from storage to check ownership
         Product memory product = marketplaceStorage.getProduct(productId);
         require(product.id > 0, "Product does not exist");
-        require(product.seller == msg.sender, "Not your product");
+        require(product.seller == originalSender, "Not your product");
         require(!product.isDeleted && !product.isSold, "Product not available");
         require(tokenPrice > 0 || ethPrice > 0, "Must set at least one price");
         require(
@@ -191,7 +199,13 @@ contract MarketplaceProduct is IMarketplaceProduct, Ownable {
             exchangePreference
         );
 
-        emit ProductUpdated(productId, msg.sender, name, tokenPrice, ethPrice);
+        emit ProductUpdated(
+            productId,
+            originalSender,
+            name,
+            tokenPrice,
+            ethPrice
+        );
     }
 
     /**

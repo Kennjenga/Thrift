@@ -64,8 +64,6 @@ contract Marketplace is Ownable {
         }
     }
 
-    // The following functions are simple pass-through functions to delegate to the appropriate contract
-
     // Product functions
     function createProduct(
         string memory name,
@@ -84,6 +82,7 @@ contract Marketplace is Ownable {
     ) external returns (uint256) {
         return
             marketplaceProduct.createProduct(
+                msg.sender, // Pass original sender
                 name,
                 description,
                 size,
@@ -116,6 +115,7 @@ contract Marketplace is Ownable {
         string memory exchangePreference
     ) external {
         marketplaceProduct.updateProduct(
+            msg.sender, // Pass original sender
             productId,
             name,
             description,
@@ -136,14 +136,22 @@ contract Marketplace is Ownable {
         uint256 productId,
         uint256 newQuantity
     ) external {
-        marketplaceProduct.updateProductQuantity(productId, newQuantity);
+        marketplaceProduct.updateProductQuantity(
+            msg.sender, // Pass original sender
+            productId,
+            newQuantity
+        );
     }
 
     function batchUpdateQuantities(
         uint256[] calldata productIds,
         uint256[] calldata newQuantities
     ) external {
-        marketplaceProduct.batchUpdateQuantities(productIds, newQuantities);
+        marketplaceProduct.batchUpdateQuantities(
+            msg.sender, // Pass original sender
+            productIds,
+            newQuantities
+        );
     }
 
     function getUserProducts(
@@ -166,6 +174,7 @@ contract Marketplace is Ownable {
         uint256 quantity
     ) external payable {
         marketplaceEscrow.createEscrowWithEth{value: msg.value}(
+            msg.sender, // Pass original sender
             productId,
             quantity
         );
@@ -175,7 +184,11 @@ contract Marketplace is Ownable {
         uint256 productId,
         uint256 quantity
     ) external {
-        marketplaceEscrow.createEscrowWithTokens(productId, quantity);
+        marketplaceEscrow.createEscrowWithTokens(
+            msg.sender, // Pass original sender
+            productId,
+            quantity
+        );
     }
 
     function createExchangeOffer(
@@ -185,6 +198,7 @@ contract Marketplace is Ownable {
         uint256 tokenTopUp
     ) external {
         marketplaceEscrow.createExchangeOffer(
+            msg.sender, // Pass original sender
             offeredProductId,
             wantedProductId,
             quantity,
@@ -198,6 +212,7 @@ contract Marketplace is Ownable {
     ) external payable returns (uint256[] memory) {
         return
             marketplaceEscrow.createBulkEscrowWithEth{value: msg.value}(
+                msg.sender, // Pass original sender
                 productIds,
                 quantities
             );
@@ -209,31 +224,32 @@ contract Marketplace is Ownable {
     ) external returns (uint256[] memory) {
         return
             marketplaceEscrow.createBulkEscrowWithTokens(
+                msg.sender, // Pass original sender
                 productIds,
                 quantities
             );
     }
 
     function confirmEscrow(uint256 escrowId) external {
-        marketplaceEscrow.confirmEscrow(escrowId);
+        marketplaceEscrow.confirmEscrow(msg.sender, escrowId);
     }
 
     function rejectEscrow(uint256 escrowId, string memory reason) external {
-        marketplaceEscrow.rejectEscrow(escrowId, reason);
+        marketplaceEscrow.rejectEscrow(msg.sender, escrowId, reason);
     }
 
     function cancelEscrow(uint256 escrowId) external {
-        marketplaceEscrow.cancelEscrow(escrowId);
+        marketplaceEscrow.cancelEscrow(msg.sender, escrowId);
     }
 
     function bulkConfirmEscrowsAsBuyer(uint256[] calldata escrowIds) external {
-        marketplaceEscrow.bulkConfirmEscrowsAsBuyer(escrowIds);
+        marketplaceEscrow.bulkConfirmEscrowsAsBuyer(msg.sender, escrowIds);
     }
 
     function bulkConfirmEscrowsForSeller(
         uint256[] calldata escrowIds
     ) external {
-        marketplaceEscrow.bulkConfirmEscrowsForSeller(escrowIds);
+        marketplaceEscrow.bulkConfirmEscrowsForSeller(msg.sender, escrowIds);
     }
 
     function getUserActiveEscrowsAsBuyer(

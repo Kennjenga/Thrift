@@ -12,112 +12,53 @@ import {
   ArrowRightLeft,
   ShoppingBag,
 } from "lucide-react";
-import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
+import {
+  useEscrowData,
+  useMarketplace,
+} from "@/blockchain/hooks/useMarketplace";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 const EscrowPage: React.FC = () => {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAccount() || {
+    address: "",
+    isConnected: false,
+  };
 
   // Use the marketplace hook to get escrow-related functions
-  const {
-    confirmEscrow,
-    rejectEscrow,
-    cancelEscrow,
-    buyerEscrows: buyerEscrowIds,
-    sellerEscrows: sellerEscrowIds,
-    isLoadingEscrows,
-    refetchEscrows,
-  } = useMarketplace();
+  const { confirmEscrow, rejectEscrow, cancelEscrow, refetchEscrows } =
+    useMarketplace();
 
   // Component state
-  const [buyerEscrows, setBuyerEscrows] = useState<Escrow[]>([]);
-  const [sellerEscrows, setSellerEscrows] = useState<Escrow[]>([]);
+  const [buyerEscrowz, setBuyerEscrowz] = useState<bigint[]>([]);
+  const [sellerEscrowz, setSellerEscrowz] = useState<bigint[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<bigint | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  console.log(refreshTrigger);
 
-  // Check for wallet connection
+  // Get escrow data using the hook
+  // Using a fixed address for development/testing - replace with actual user address in production
+  const { buyerEscrows, sellerEscrows } = useEscrowData(address);
+
+  // Update the local state arrays when the hook data changes
   useEffect(() => {
-    if (!isConnected) {
-      setLoading(false);
+    if (buyerEscrows?.data && Array.isArray(buyerEscrows.data)) {
+      setBuyerEscrowz(buyerEscrows.data);
     }
-  }, [isConnected]);
 
-  // Fetch escrow details when we have escrow IDs
+    if (sellerEscrows?.data && Array.isArray(sellerEscrows.data)) {
+      setSellerEscrowz(sellerEscrows.data);
+    }
+  }, [buyerEscrows?.data, sellerEscrows?.data]);
+
+  // Update loading state based on escrow data loading state
   useEffect(() => {
-    const fetchEscrowDetails = async () => {
-      if (!isConnected || !address) return;
-
-      try {
-        setLoading(true);
-
-        // Process buyer escrows
-        if (Array.isArray(buyerEscrowIds) && buyerEscrowIds.length > 0) {
-          const escrowPromises = buyerEscrowIds.map(async (escrowId) => {
-            try {
-              const result = await fetch(`/api/escrows/${escrowId.toString()}`);
-              if (!result.ok)
-                throw new Error(`Error fetching escrow: ${result.statusText}`);
-              return await result.json();
-            } catch (err) {
-              console.error(`Error fetching escrow ${escrowId}:`, err);
-              return null;
-            }
-          });
-
-          const fetchedEscrows = await Promise.all(escrowPromises);
-          const validEscrows = fetchedEscrows.filter(
-            (escrow) => escrow !== null
-          );
-          setBuyerEscrows(validEscrows);
-        } else {
-          setBuyerEscrows([]);
-        }
-
-        // Process seller escrows
-        if (Array.isArray(sellerEscrowIds) && sellerEscrowIds.length > 0) {
-          const escrowPromises = sellerEscrowIds.map(async (escrowId) => {
-            try {
-              const result = await fetch(`/api/escrows/${escrowId.toString()}`);
-              if (!result.ok)
-                throw new Error(`Error fetching escrow: ${result.statusText}`);
-              return await result.json();
-            } catch (err) {
-              console.error(`Error fetching escrow ${escrowId}:`, err);
-              return null;
-            }
-          });
-
-          const fetchedEscrows = await Promise.all(escrowPromises);
-          const validEscrows = fetchedEscrows.filter(
-            (escrow) => escrow !== null
-          );
-          setSellerEscrows(validEscrows);
-        } else {
-          setSellerEscrows([]);
-        }
-      } catch (err) {
-        console.error("Error fetching escrow details:", err);
-        setError("Failed to load escrow data. Please try refreshing the page.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!isLoadingEscrows) {
-      fetchEscrowDetails();
-    }
-  }, [
-    buyerEscrowIds,
-    sellerEscrowIds,
-    isLoadingEscrows,
-    isConnected,
-    address,
-    refreshTrigger,
-  ]);
+    const isLoading = buyerEscrows?.isLoading || sellerEscrows?.isLoading;
+    setLoading(isLoading || !isConnected);
+  }, [buyerEscrows?.isLoading, sellerEscrows?.isLoading, isConnected]);
 
   // Handle escrow acceptance
   const handleAcceptEscrow = async (escrowId: bigint) => {
@@ -132,6 +73,8 @@ const EscrowPage: React.FC = () => {
 
       // Refetch data after successful action
       refetchEscrows();
+      if (buyerEscrows?.refetch) buyerEscrows.refetch();
+      if (sellerEscrows?.refetch) sellerEscrows.refetch();
       setRefreshTrigger((prev) => prev + 1);
     } catch (err: unknown) {
       console.error("Error accepting escrow:", err);
@@ -156,6 +99,8 @@ const EscrowPage: React.FC = () => {
 
       // Refetch data after successful action
       refetchEscrows();
+      if (buyerEscrows?.refetch) buyerEscrows.refetch();
+      if (sellerEscrows?.refetch) sellerEscrows.refetch();
       setRefreshTrigger((prev) => prev + 1);
     } catch (err: unknown) {
       console.error("Error rejecting escrow:", err);
@@ -180,6 +125,8 @@ const EscrowPage: React.FC = () => {
 
       // Refetch data after successful action
       refetchEscrows();
+      if (buyerEscrows?.refetch) buyerEscrows.refetch();
+      if (sellerEscrows?.refetch) sellerEscrows.refetch();
       setRefreshTrigger((prev) => prev + 1);
     } catch (err: unknown) {
       console.error("Error cancelling escrow:", err);
@@ -195,6 +142,8 @@ const EscrowPage: React.FC = () => {
   const handleRefresh = () => {
     setLoading(true);
     refetchEscrows();
+    if (buyerEscrows?.refetch) buyerEscrows.refetch();
+    if (sellerEscrows?.refetch) sellerEscrows.refetch();
     setRefreshTrigger((prev) => prev + 1);
     setError("");
     setSuccess("");
@@ -202,6 +151,12 @@ const EscrowPage: React.FC = () => {
 
   // Get escrow status label and class
   const getStatusInfo = (escrow: Escrow) => {
+    if (!escrow)
+      return {
+        label: "Unknown",
+        class: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+      };
+
     if (escrow.completed) {
       return {
         label: "Completed",
@@ -238,15 +193,65 @@ const EscrowPage: React.FC = () => {
     };
   };
 
-  // Escrow card component
-  const EscrowCard = ({
-    escrow,
+  // Escrow card component that takes just an ID and handles its own data fetching
+  const EscrowCardById = ({
+    escrowId,
     isSeller,
   }: {
-    escrow: Escrow;
+    escrowId: bigint;
     isSeller: boolean;
   }) => {
-    const statusInfo = getStatusInfo(escrow);
+    const { useEscrowDetails, useProductDetails } = useMarketplace();
+    const { escrow, isLoading: isLoadingEscrow } = useEscrowDetails(
+      escrowId
+    ) as { escrow: Escrow; isLoading: boolean };
+
+    // Fetch product details once we have the escrow
+    const [productId, setProductId] = useState<bigint | undefined>(undefined);
+
+    useEffect(() => {
+      if (escrow && escrow.productId) {
+        setProductId(escrow.productId);
+      }
+    }, [escrow]);
+
+    const { product, isLoading: isLoadingProduct } =
+      useProductDetails(productId);
+
+    const isLoading = isLoadingEscrow || isLoadingProduct;
+
+    // Return a loading placeholder if still loading
+    if (isLoading || !escrow) {
+      return (
+        <div className="bg-[#1A0B3B] border border-purple-500/10 rounded-xl p-6 mb-4 animate-pulse">
+          <div className="h-16 bg-purple-800/20 rounded-lg mb-4"></div>
+          <div className="h-4 bg-purple-800/20 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-purple-800/20 rounded w-1/2"></div>
+        </div>
+      );
+    }
+
+    // Combine escrow with product data
+    const escrowWithProduct: Escrow = {
+      ...escrow,
+      product: product || undefined,
+      escrowId: escrow.escrowId,
+      buyer: escrow.buyer,
+      seller: escrow.seller,
+      amount: escrow.amount,
+      completed: escrow.completed,
+      refunded: escrow.refunded,
+      buyerConfirmed: escrow.buyerConfirmed,
+      sellerConfirmed: escrow.sellerConfirmed,
+      isToken: escrow.isToken,
+      quantity: escrow.quantity,
+      isExchange: escrow.isExchange,
+      exchangeProductId: escrow.exchangeProductId,
+      tokenTopUp: escrow.tokenTopUp,
+    };
+
+    // Once loaded, render the full card
+    const statusInfo = getStatusInfo(escrowWithProduct);
 
     return (
       <motion.div
@@ -261,11 +266,11 @@ const EscrowPage: React.FC = () => {
         <div className="bg-[#1A0B3B] border border-purple-500/10 rounded-xl p-6 mb-4 relative z-10">
           <div className="flex justify-between items-start mb-4">
             <div className="flex gap-4">
-              {escrow.product?.image && (
+              {escrowWithProduct.product?.image && (
                 <div className="relative h-16 w-16 flex-shrink-0 rounded-lg overflow-hidden">
                   <Image
-                    src={escrow.product.image}
-                    alt={escrow.product?.name || "Product"}
+                    src={escrowWithProduct.product.image}
+                    alt={escrowWithProduct.product?.name || "Product"}
                     fill
                     className="object-cover"
                   />
@@ -274,18 +279,19 @@ const EscrowPage: React.FC = () => {
 
               <div>
                 <h3 className="text-lg font-semibold text-white">
-                  {escrow.product?.name || `Product #${escrow.productId}`}
+                  {escrowWithProduct.product?.name ||
+                    `Product #${escrowWithProduct.productId}`}
                 </h3>
                 <p className="text-gray-400">
-                  {escrow.product?.description?.slice(0, 60) ||
+                  {escrowWithProduct.product?.description?.slice(0, 60) ||
                     "No description available"}
-                  {escrow.product?.description &&
-                  escrow.product.description.length > 60
+                  {escrowWithProduct.product?.description &&
+                  escrowWithProduct.product.description.length > 60
                     ? "..."
                     : ""}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Escrow ID: {escrow.escrowId.toString()}
+                  Escrow ID: {escrowWithProduct.escrowId.toString()}
                 </p>
               </div>
             </div>
@@ -297,20 +303,20 @@ const EscrowPage: React.FC = () => {
                 {statusInfo.label}
               </span>
               <p className="text-sm text-gray-400 mt-2">
-                {escrow.isToken ? "THRIFT Payment" : "ETH Payment"}
+                {escrowWithProduct.isToken ? "THRIFT Payment" : "ETH Payment"}
               </p>
               <p className="text-sm text-gray-400">
-                Quantity: {escrow.quantity?.toString() || "0"}
+                Quantity: {escrowWithProduct.quantity?.toString() || "0"}
               </p>
             </div>
           </div>
 
           <div className="mb-4">
-            {!escrow.isExchange ? (
+            {!escrowWithProduct.isExchange ? (
               <p className="text-lg font-medium text-white">
-                {!escrow.isToken
-                  ? `${formatEther(escrow.amount || 0n)} ETH`
-                  : `${formatEther(escrow.amount || 0n)} THRIFT`}
+                {!escrowWithProduct.isToken
+                  ? `${formatEther(escrowWithProduct.amount || 0n)} ETH`
+                  : `${formatEther(escrowWithProduct.amount || 0n)} THRIFT`}
               </p>
             ) : (
               <div className="bg-purple-900/30 p-3 rounded-lg">
@@ -320,11 +326,11 @@ const EscrowPage: React.FC = () => {
                 </div>
                 <p className="text-sm text-gray-400 mt-1">
                   Exchange Product ID:{" "}
-                  {escrow.exchangeProductId?.toString() || "N/A"}
+                  {escrowWithProduct.exchangeProductId?.toString() || "N/A"}
                 </p>
-                {escrow.tokenTopUp > 0n && (
+                {escrowWithProduct.tokenTopUp > 0n && (
                   <p className="text-sm text-[#00FFD1] mt-1">
-                    Top-up: {formatEther(escrow.tokenTopUp)} THRIFT
+                    Top-up: {formatEther(escrowWithProduct.tokenTopUp)} THRIFT
                   </p>
                 )}
               </div>
@@ -333,18 +339,20 @@ const EscrowPage: React.FC = () => {
 
           <div className="flex flex-wrap gap-2">
             {isSeller &&
-              !escrow.sellerConfirmed &&
-              !escrow.completed &&
-              !escrow.refunded && (
+              !escrowWithProduct.sellerConfirmed &&
+              !escrowWithProduct.completed &&
+              !escrowWithProduct.refunded && (
                 <>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleAcceptEscrow(escrow.escrowId)}
+                    onClick={() =>
+                      handleAcceptEscrow(escrowWithProduct.escrowId)
+                    }
                     disabled={processing !== null}
                     className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-green-500/20"
                   >
-                    {processing === escrow.escrowId ? (
+                    {processing === escrowWithProduct.escrowId ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <Check className="w-4 h-4" />
@@ -354,11 +362,13 @@ const EscrowPage: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleRejectEscrow(escrow.escrowId)}
+                    onClick={() =>
+                      handleRejectEscrow(escrowWithProduct.escrowId)
+                    }
                     disabled={processing !== null}
                     className="bg-gradient-to-r from-red-500 to-rose-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-red-500/20"
                   >
-                    {processing === escrow.escrowId ? (
+                    {processing === escrowWithProduct.escrowId ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <X className="w-4 h-4" />
@@ -369,18 +379,20 @@ const EscrowPage: React.FC = () => {
               )}
 
             {!isSeller &&
-              !escrow.buyerConfirmed &&
-              !escrow.completed &&
-              !escrow.refunded && (
+              !escrowWithProduct.buyerConfirmed &&
+              !escrowWithProduct.completed &&
+              !escrowWithProduct.refunded && (
                 <>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleAcceptEscrow(escrow.escrowId)}
+                    onClick={() =>
+                      handleAcceptEscrow(escrowWithProduct.escrowId)
+                    }
                     disabled={processing !== null}
                     className="bg-gradient-to-r from-[#00FFD1] to-[#00FFFF] text-[#1A0B3B] px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-[#00FFD1]/20"
                   >
-                    {processing === escrow.escrowId ? (
+                    {processing === escrowWithProduct.escrowId ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <Check className="w-4 h-4" />
@@ -390,11 +402,13 @@ const EscrowPage: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleCancelEscrow(escrow.escrowId)}
+                    onClick={() =>
+                      handleCancelEscrow(escrowWithProduct.escrowId)
+                    }
                     disabled={processing !== null}
                     className="bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50"
                   >
-                    {processing === escrow.escrowId ? (
+                    {processing === escrowWithProduct.escrowId ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <X className="w-4 h-4" />
@@ -444,7 +458,7 @@ const EscrowPage: React.FC = () => {
   }
 
   // Loading state
-  if (loading || isLoadingEscrows) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#2A1B54] to-[#1A0B3B]">
         <RefreshCw className="w-12 h-12 animate-spin text-[#00FFD1]" />
@@ -506,19 +520,15 @@ const EscrowPage: React.FC = () => {
             <h2 className="text-2xl font-bold mb-6 text-white">
               My Purchase/Exchange Requests
             </h2>
-            {!Array.isArray(buyerEscrowIds) || buyerEscrowIds.length === 0 ? (
+            {!buyerEscrowz || buyerEscrowz.length === 0 ? (
               <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-6">
                 <p className="text-gray-400">No active escrows as buyer</p>
               </div>
-            ) : buyerEscrows.length === 0 ? (
-              <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-6">
-                <p className="text-gray-400">Loading escrow details...</p>
-              </div>
             ) : (
-              buyerEscrows.map((escrow) => (
-                <EscrowCard
-                  key={escrow.escrowId.toString()}
-                  escrow={escrow}
+              buyerEscrowz.map((escrowId) => (
+                <EscrowCardById
+                  key={escrowId.toString()}
+                  escrowId={escrowId}
                   isSeller={false}
                 />
               ))
@@ -530,19 +540,15 @@ const EscrowPage: React.FC = () => {
             <h2 className="text-2xl font-bold mb-6 text-white">
               Received Requests
             </h2>
-            {!Array.isArray(sellerEscrowIds) || sellerEscrowIds.length === 0 ? (
+            {!sellerEscrowz || sellerEscrowz.length === 0 ? (
               <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-6">
                 <p className="text-gray-400">No active escrows as seller</p>
               </div>
-            ) : sellerEscrows.length === 0 ? (
-              <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-6">
-                <p className="text-gray-400">Loading escrow details...</p>
-              </div>
             ) : (
-              sellerEscrows.map((escrow) => (
-                <EscrowCard
-                  key={escrow.escrowId.toString()}
-                  escrow={escrow}
+              sellerEscrowz.map((escrowId) => (
+                <EscrowCardById
+                  key={escrowId.toString()}
+                  escrowId={escrowId}
                   isSeller={true}
                 />
               ))

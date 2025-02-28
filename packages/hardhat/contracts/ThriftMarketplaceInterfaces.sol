@@ -186,6 +186,7 @@ interface IMarketplaceStorage {
 
 interface IMarketplaceProduct {
     function createProduct(
+        address originalSender,
         string memory name,
         string memory description,
         string memory size,
@@ -202,6 +203,7 @@ interface IMarketplaceProduct {
     ) external returns (uint256);
 
     function updateProduct(
+        address originalSender,
         uint256 productId,
         string memory name,
         string memory description,
@@ -218,16 +220,22 @@ interface IMarketplaceProduct {
     ) external;
 
     function updateProductQuantity(
+        address originalSender,
         uint256 productId,
         uint256 newQuantity
     ) external;
+
     function batchUpdateQuantities(
+        address originalSender,
         uint256[] calldata productIds,
         uint256[] calldata newQuantities
     ) external;
+
+    // View methods don't need originalSender as they don't modify state
     function getUserProducts(
         address user
     ) external view returns (ProductWithAvailability[] memory);
+
     function getAllActiveProducts()
         external
         view
@@ -236,41 +244,66 @@ interface IMarketplaceProduct {
 
 interface IMarketplaceEscrow {
     function createEscrowWithEth(
+        address originalSender,
         uint256 productId,
         uint256 quantity
     ) external payable;
+
     function createEscrowWithTokens(
+        address originalSender,
         uint256 productId,
         uint256 quantity
     ) external;
+
     function createExchangeOffer(
+        address originalSender,
         uint256 offeredProductId,
         uint256 wantedProductId,
         uint256 quantity,
         uint256 tokenTopUp
     ) external;
+
     function createBulkEscrowWithEth(
+        address originalSender,
         uint256[] calldata productIds,
         uint256[] calldata quantities
     ) external payable returns (uint256[] memory);
+
     function createBulkEscrowWithTokens(
+        address originalSender,
         uint256[] calldata productIds,
         uint256[] calldata quantities
     ) external returns (uint256[] memory);
-    function confirmEscrow(uint256 escrowId) external;
-    function rejectEscrow(uint256 escrowId, string memory reason) external;
-    function cancelEscrow(uint256 escrowId) external;
-    function bulkConfirmEscrowsAsBuyer(uint256[] calldata escrowIds) external;
-    function bulkConfirmEscrowsForSeller(uint256[] calldata escrowIds) external;
+
+    function confirmEscrow(address originalSender, uint256 escrowId) external;
+    function rejectEscrow(
+        address originalSender,
+        uint256 escrowId,
+        string memory reason
+    ) external;
+    function cancelEscrow(address originalSender, uint256 escrowId) external;
+    function bulkConfirmEscrowsAsBuyer(
+        address originalSender,
+        uint256[] calldata escrowIds
+    ) external;
+    function bulkConfirmEscrowsForSeller(
+        address originalSender,
+        uint256[] calldata escrowIds
+    ) external;
+
+    // View functions don't need the sender parameter since they don't modify state
     function getUserActiveEscrowsAsBuyer(
         address user
     ) external view returns (uint256[] memory);
+
     function getUserActiveEscrowsAsSeller(
         address user
     ) external view returns (uint256[] memory);
+
     function getUserCompletedEscrows(
         address user
     ) external view returns (uint256[] memory);
+
     function getExchangeOffers(
         uint256 productId
     ) external view returns (ExchangeOffer[] memory);

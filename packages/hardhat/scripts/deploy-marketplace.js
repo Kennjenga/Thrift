@@ -106,6 +106,10 @@ async function main() {
     );
     const marketplaceAddress = await marketplace.getAddress();
 
+    // After deploying MarketplaceStorage:
+    // await marketplaceStorage.transferOwnership(deployer.address);
+    console.log("Ownership transferred to deployer");
+
     // Authorize contracts in MarketplaceStorage
     console.log("Authorizing contracts...");
     const authorizeContracts = async (storage, contractAddress) => {
@@ -148,11 +152,35 @@ main()
     process.exit(1);
   });
 
+//   fury@Furiosa:~/E/web3/Thrift/packages/hardhat$ npm run deploy:market
+
+// > thrift@1.0.0 deploy:market
+// > npx hardhat run ./ignition/modules/deploy-marketplace.js --network sepolia
+
+// Starting Marketplace deployment process...
+// Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+// Deploying MarketplaceStorage...
+// MarketplaceStorage deployed to: 0x4354BFf5271A6306B69dDf7CE63977039e08dAf8
+// Deploying MarketplaceProduct...
+// MarketplaceProduct deployed to: 0x0614cf6788B184344d881d161dFcB7F8e81d26Db
+// Deploying MarketplaceEscrow...
+// MarketplaceEscrow deployed to: 0x65b70496FF24d789087444B0330Aa84469509FB4
+// Deploying MarketplaceQuery...
+// MarketplaceQuery deployed to: 0x0e42ebb4AeD77C1BeF25600Fd6E9d5a59baD7289
+// Deploying Marketplace...
+// Marketplace deployed to: 0xc8A33DcfcFeDf6e881018049E4A533ab9B2d81f9
+// Authorizing contracts...
+// Authorized 0x0614cf6788B184344d881d161dFcB7F8e81d26Db
+// Authorized 0x65b70496FF24d789087444B0330Aa84469509FB4
+// Authorized 0x0e42ebb4AeD77C1BeF25600Fd6E9d5a59baD7289
+// Authorized 0xc8A33DcfcFeDf6e881018049E4A533ab9B2d81f9
+
 // Deployment Summary:
 // --------------------
-// MarketplaceStorage: 0xD3063fc5b4880ABF3F7327454e97f45DfbcdE8F0
-// MarketplaceProduct: 0x27074dF1dF0061FaDa3a10d226f8dff22AB0a246
-// MarketplaceEscrow: 0x13EfffDB3b1999Df9d08b72d8f34eA5438C319f9
-// MarketplaceQuery: 0x99105A334B2F2EDfc200E4cd5c56FB68f72AE7F3
-// Marketplace: 0x296DFf9366C0bc9BC433D49A5193475D0B1485ca
+// MarketplaceStorage: 0x4354BFf5271A6306B69dDf7CE63977039e08dAf8
+// MarketplaceProduct: 0x0614cf6788B184344d881d161dFcB7F8e81d26Db
+// MarketplaceEscrow: 0x65b70496FF24d789087444B0330Aa84469509FB4
+// MarketplaceQuery: 0x0e42ebb4AeD77C1BeF25600Fd6E9d5a59baD7289
+// Marketplace: 0xc8A33DcfcFeDf6e881018049E4A533ab9B2d81f9
 // Deployer Address: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+// Network: sepolia

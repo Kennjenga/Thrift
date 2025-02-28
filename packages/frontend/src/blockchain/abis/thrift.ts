@@ -2785,245 +2785,8 @@ export const DONATION_AND_RECYCLING_ABI = [
 
 export const DONATION_AND_RECYCLING_ADDRESS = "0xA85B7366aD844A23dbcd81EC3439e293da5Ea196"
 
-// export const USERAESTHETICS_ADDRESS = "0x784d1f5Bc247aCbC4E42c260Cf710d0828B5F26A"
-// export const USERAESTHETICS_ABI =  [
-//   {
-//     "anonymous": false,
-//     "inputs": [
-//       {
-//         "indexed": true,
-//         "internalType": "address",
-//         "name": "user",
-//         "type": "address"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "string[]",
-//         "name": "aesthetics",
-//         "type": "string[]"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "uint256",
-//         "name": "timestamp",
-//         "type": "uint256"
-//       }
-//     ],
-//     "name": "AestheticsUpdated",
-//     "type": "event"
-//   },
-//   {
-//     "anonymous": false,
-//     "inputs": [
-//       {
-//         "indexed": true,
-//         "internalType": "address",
-//         "name": "user",
-//         "type": "address"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "uint256",
-//         "name": "timestamp",
-//         "type": "uint256"
-//       }
-//     ],
-//     "name": "ProfileDeleted",
-//     "type": "event"
-//   },
-//   {
-//     "anonymous": false,
-//     "inputs": [
-//       {
-//         "indexed": true,
-//         "internalType": "address",
-//         "name": "user",
-//         "type": "address"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "string",
-//         "name": "name",
-//         "type": "string"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "string",
-//         "name": "phone",
-//         "type": "string"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "string",
-//         "name": "email",
-//         "type": "string"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "string",
-//         "name": "location",
-//         "type": "string"
-//       },
-//       {
-//         "indexed": false,
-//         "internalType": "uint256",
-//         "name": "timestamp",
-//         "type": "uint256"
-//       }
-//     ],
-//     "name": "ProfileUpdated",
-//     "type": "event"
-//   },
-//   {
-//     "inputs": [],
-//     "name": "deleteUserAesthetics",
-//     "outputs": [],
-//     "stateMutability": "nonpayable",
-//     "type": "function"
-//   },
-//   {
-//     "inputs": [],
-//     "name": "deleteUserProfile",
-//     "outputs": [],
-//     "stateMutability": "nonpayable",
-//     "type": "function"
-//   },
-//   {
-//     "inputs": [
-//       {
-//         "internalType": "address",
-//         "name": "user",
-//         "type": "address"
-//       }
-//     ],
-//     "name": "getUserAesthetics",
-//     "outputs": [
-//       {
-//         "internalType": "string[]",
-//         "name": "aesthetics",
-//         "type": "string[]"
-//       },
-//       {
-//         "internalType": "bool",
-//         "name": "isSet",
-//         "type": "bool"
-//       },
-//       {
-//         "internalType": "uint256",
-//         "name": "lastUpdated",
-//         "type": "uint256"
-//       }
-//     ],
-//     "stateMutability": "view",
-//     "type": "function"
-//   },
-//   {
-//     "inputs": [
-//       {
-//         "internalType": "address",
-//         "name": "user",
-//         "type": "address"
-//       }
-//     ],
-//     "name": "getUserProfile",
-//     "outputs": [
-//       {
-//         "internalType": "string",
-//         "name": "name",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "phone",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "email",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "location",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "bool",
-//         "name": "isProfileSet",
-//         "type": "bool"
-//       },
-//       {
-//         "internalType": "uint256",
-//         "name": "profileLastUpdated",
-//         "type": "uint256"
-//       }
-//     ],
-//     "stateMutability": "view",
-//     "type": "function"
-//   },
-//   {
-//     "inputs": [
-//       {
-//         "internalType": "string[]",
-//         "name": "aesthetics",
-//         "type": "string[]"
-//       }
-//     ],
-//     "name": "setUserAesthetics",
-//     "outputs": [],
-//     "stateMutability": "nonpayable",
-//     "type": "function"
-//   },
-//   {
-//     "inputs": [
-//       {
-//         "internalType": "string",
-//         "name": "name",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "phone",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "email",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "location",
-//         "type": "string"
-//       }
-//     ],
-//     "name": "setUserProfile",
-//     "outputs": [],
-//     "stateMutability": "nonpayable",
-//     "type": "function"
-//   },
-//   {
-//     "inputs": [
-//       {
-//         "internalType": "string",
-//         "name": "fieldName",
-//         "type": "string"
-//       },
-//       {
-//         "internalType": "string",
-//         "name": "value",
-//         "type": "string"
-//       }
-//     ],
-//     "name": "updateProfileField",
-//     "outputs": [],
-//     "stateMutability": "nonpayable",
-//     "type": "function"
-//   }
-// ]
-
-export const USERAESTHETICS_ADDRESS  = "0x93864C5a18c10cEca82BC18a12d147Dec0666E2D"
-export const USERAESTHETICS_ABI =[
+export const USERAESTHETICS_ADDRESS = "0x784d1f5Bc247aCbC4E42c260Cf710d0828B5F26A"
+export const USERAESTHETICS_ABI =  [
   {
     "anonymous": false,
     "inputs": [
@@ -3050,8 +2813,77 @@ export const USERAESTHETICS_ABI =[
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProfileDeleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProfileUpdated",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "deleteUserAesthetics",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "deleteUserProfile",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -3088,6 +2920,50 @@ export const USERAESTHETICS_ABI =[
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserProfile",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isProfileSet",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "profileLastUpdated",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string[]",
         "name": "aesthetics",
         "type": "string[]"
@@ -3097,11 +2973,57 @@ export const USERAESTHETICS_ABI =[
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      }
+    ],
+    "name": "setUserProfile",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "fieldName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "value",
+        "type": "string"
+      }
+    ],
+    "name": "updateProfileField",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
- ]
+]
  
 
-export const MARKETPLACE_STORAGE_ADDRESS = "0xcdc8BfD9Bb20858098128Cf1848d5F91979759F4"
+export const MARKETPLACE_STORAGE_ADDRESS = "0xD3063fc5b4880ABF3F7327454e97f45DfbcdE8F0"
 export const MARKETPLACE_STORAGE_ABI = [
   {
     "inputs": [
@@ -4809,8 +4731,8 @@ export const MARKETPLACE_STORAGE_ABI = [
   }
 ]
 
-export const MARKETPLACE_PRODUCT_ADDRESS = "0x6A6F0ea255047c2975d69B436434AEbC6b37Ff5a"
-export const MARKETPLACE_PRODUCT_ABI =[
+export const MARKETPLACE_PRODUCT_ADDRESS = "0x27074dF1dF0061FaDa3a10d226f8dff22AB0a246"
+export const MARKETPLACE_PRODUCT_ABI = [
   {
     "inputs": [
       {
@@ -4937,6 +4859,11 @@ export const MARKETPLACE_PRODUCT_ABI =[
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "productIds",
         "type": "uint256[]"
@@ -4954,6 +4881,11 @@ export const MARKETPLACE_PRODUCT_ABI =[
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
       {
         "internalType": "string",
         "name": "name",
@@ -5451,6 +5383,11 @@ export const MARKETPLACE_PRODUCT_ABI =[
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "productId",
         "type": "uint256"
@@ -5524,6 +5461,11 @@ export const MARKETPLACE_PRODUCT_ABI =[
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "productId",
         "type": "uint256"
@@ -5541,8 +5483,8 @@ export const MARKETPLACE_PRODUCT_ABI =[
   }
 ]
 
-export const MARKETPLACE_ESCROW_ADDRESS = "0x954635c5FF6f95664f962b01aA12B85ac1ADFF31"
-export const MARKETPLACE_ESCROW_ABI = [
+export const MARKETPLACE_ESCROW_ADDRESS = "0x13EfffDB3b1999Df9d08b72d8f34eA5438C319f9"
+export const MARKETPLACE_ESCROW_ABI =  [
   {
     "inputs": [
       {
@@ -5639,6 +5581,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "escrowIds",
         "type": "uint256[]"
@@ -5651,6 +5598,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
       {
         "internalType": "uint256[]",
         "name": "escrowIds",
@@ -5665,6 +5617,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "escrowId",
         "type": "uint256"
@@ -5678,6 +5635,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "escrowId",
         "type": "uint256"
@@ -5690,6 +5652,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
       {
         "internalType": "uint256[]",
         "name": "productIds",
@@ -5715,6 +5682,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "productIds",
         "type": "uint256[]"
@@ -5739,6 +5711,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "productId",
         "type": "uint256"
@@ -5757,6 +5734,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "productId",
         "type": "uint256"
@@ -5774,6 +5756,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "offeredProductId",
@@ -5937,6 +5924,11 @@ export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "originalSender",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
         "name": "escrowId",
         "type": "uint256"
@@ -5974,7 +5966,7 @@ export const MARKETPLACE_ESCROW_ABI = [
   }
 ]
 
-export const MARKETPLACE_QUERY_ADDRESS = "0x2570fD46C88b91ac104fB7c2D7277B8AB0648fa1"
+export const MARKETPLACE_QUERY_ADDRESS = "0x99105A334B2F2EDfc200E4cd5c56FB68f72AE7F3"
 export const MARKETPLACE_QUERY_ABI = [
   {
     "inputs": [
@@ -6518,7 +6510,7 @@ export const MARKETPLACE_QUERY_ABI = [
   }
 ]
 
-export const MARKETPLACE_ADDRESS = "0xd51AE371A9941d7942346F4c5948767d6b3393Ec"
+export const MARKETPLACE_ADDRESS = "0x296DFf9366C0bc9BC433D49A5193475D0B1485ca"
 export const MARKETPLACE_ABI = [
   {
     "inputs": [
@@ -7910,12 +7902,14 @@ export const MARKETPLACE_ABI = [
 // Deploying contracts with the account: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
 // ThriftToken deployed to: 0xCD6152307d4b223C00D1beF239F401101e4FBE78
 // DonationAndRecycling deployed to: 0x9BfBD2C5af21f9821Bea7018FCA7F1547f8Fa6Ec  0xA85B7366aD844A23dbcd81EC3439e293da5Ea196
-// Userprofile deployed to : 0xea8c7b7E831BADe33C1E563CC178fe4cBEd5B925
-// MarketplaceStorage: 0xcdc8BfD9Bb20858098128Cf1848d5F91979759F4
-// MarketplaceProduct: 0x6A6F0ea255047c2975d69B436434AEbC6b37Ff5a
-// MarketplaceEscrow: 0x954635c5FF6f95664f962b01aA12B85ac1ADFF31
-// MarketplaceQuery: 0x2570fD46C88b91ac104fB7c2D7277B8AB0648fa1
-// Marketplace: 0xd51AE371A9941d7942346F4c5948767d6b3393Ec
+// Userprofile deployed to : 0x784d1f5Bc247aCbC4E42c260Cf710d0828B5F26A
+// MarketplaceStorage: 0xD3063fc5b4880ABF3F7327454e97f45DfbcdE8F0
+// MarketplaceProduct: 0x27074dF1dF0061FaDa3a10d226f8dff22AB0a246
+// MarketplaceEscrow: 0x13EfffDB3b1999Df9d08b72d8f34eA5438C319f9
+// MarketplaceQuery: 0x99105A334B2F2EDfc200E4cd5c56FB68f72AE7F3
+// Marketplace: 0x296DFf9366C0bc9BC433D49A5193475D0B1485ca
+// Deployer Address: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
+
 // Deployment complete!\
 
 

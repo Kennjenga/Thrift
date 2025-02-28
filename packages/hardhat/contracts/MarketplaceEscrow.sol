@@ -10,8 +10,11 @@ import "./ThriftMarketplaceInterfaces.sol";
  * @title MarketplaceEscrow
  * @dev Contract that handles escrow and exchange functionality
  */
-contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
-    // Reference to the central storage contract
+ contract MarketplaceEscrow is
+    IMarketplaceEscrow,
+    Ownable,
+    ReentrancyGuard
+{
     // Reference to the central storage contract
     IMarketplaceStorage public marketplaceStorage;
 
@@ -39,6 +42,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
      * @dev Creates an exchange offer
      */
     function createExchangeOffer(
+        address originalSender,
         uint256 offeredProductId,
         uint256 wantedProductId,
         uint256 quantity,
@@ -51,7 +55,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
             wantedProductId
         );
 
-        require(offeredProduct.seller == msg.sender, "Not your product");
+        require(offeredProduct.seller == originalSender, "Not your product");
         require(
             !offeredProduct.isDeleted &&
                 !offeredProduct.isSold &&
@@ -77,7 +81,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         if (tokenTopUp > 0) {
             IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
             require(
-                token.transferFrom(msg.sender, address(this), tokenTopUp),
+                token.transferFrom(originalSender, address(this), tokenTopUp),
                 "Token top-up transfer failed"
             );
         }
@@ -97,7 +101,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         // Create escrow for the exchange
         uint256 escrowId = marketplaceStorage.createEscrow(
             offeredProductId,
-            msg.sender,
+            originalSender,
             wantedProduct.seller,
             0, // no direct payment amount
             quantity,
@@ -111,13 +115,13 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         marketplaceStorage.createExchangeOffer(
             offeredProductId,
             wantedProductId,
-            msg.sender,
+            originalSender,
             tokenTopUp,
             escrowId
         );
 
         // Add to user escrow tracking
-        marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+        marketplaceStorage.addToUserActiveEscrows(originalSender, escrowId);
         marketplaceStorage.addToUserActiveEscrows(
             wantedProduct.seller,
             escrowId
@@ -128,6 +132,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
      * @dev Creates multiple escrows with ETH payment in a single transaction
      */
     function createBulkEscrowWithEth(
+        address originalSender,
         uint256[] calldata productIds,
         uint256[] calldata quantities
     ) external payable whenNotPaused nonReentrant returns (uint256[] memory) {
@@ -193,7 +198,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
             // Create escrow
             uint256 escrowId = marketplaceStorage.createEscrow(
                 productIds[i],
-                msg.sender,
+                originalSender,
                 product.seller,
                 productCost,
                 quantities[i],
@@ -206,7 +211,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
             escrowIds[i] = escrowId;
 
             // Add to tracking
-            marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+            marketplaceStorage.addToUserActiveEscrows(originalSender, escrowId);
             marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
         }
 
@@ -217,6 +222,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
      * @dev Creates multiple escrows with token payment in a single transaction
      */
     function createBulkEscrowWithTokens(
+        address originalSender,
         uint256[] calldata productIds,
         uint256[] calldata quantities
     ) external whenNotPaused nonReentrant returns (uint256[] memory) {
@@ -265,7 +271,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         // Transfer tokens for all products at once
         IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
         require(
-            token.transferFrom(msg.sender, address(this), totalCost),
+            token.transferFrom(originalSender, address(this), totalCost),
             "Token transfer failed"
         );
 
@@ -286,7 +292,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
             // Create escrow
             uint256 escrowId = marketplaceStorage.createEscrow(
                 productIds[i],
-                msg.sender,
+                originalSender,
                 product.seller,
                 productCost,
                 quantities[i],
@@ -299,7 +305,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
             escrowIds[i] = escrowId;
 
             // Add to tracking
-            marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+            marketplaceStorage.addToUserActiveEscrows(originalSender, escrowId);
             marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
         }
 
@@ -309,13 +315,16 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
     /**
      * @dev Confirms an escrow
      */
-    function confirmEscrow(uint256 escrowId) external nonReentrant {
+    function confirmEscrow(
+        address originalSender,
+        uint256 escrowId
+    ) external nonReentrant {
         Escrow memory escrow = marketplaceStorage.getEscrow(escrowId);
         require(!escrow.completed && !escrow.refunded, "Escrow not active");
         require(block.timestamp <= escrow.deadline, "Escrow expired");
 
-        bool isBuyer = msg.sender == escrow.buyer;
-        bool isSeller = msg.sender == escrow.seller;
+        bool isBuyer = originalSender == escrow.buyer;
+        bool isSeller = originalSender == escrow.seller;
         require(isBuyer || isSeller, "Not authorized");
 
         bool buyerConfirmed = escrow.buyerConfirmed;
@@ -487,6 +496,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
      * @dev Common escrow rejection/cancellation logic
      */
     function _rejectOrCancelEscrow(
+        address originalSender,
         uint256 escrowId,
         bool isSeller,
         string memory reason
@@ -495,9 +505,9 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
 
         // Validate permissions
         if (isSeller) {
-            require(escrow.seller == msg.sender, "Not authorized");
+            require(escrow.seller == originalSender, "Not authorized");
         } else {
-            require(escrow.buyer == msg.sender, "Not authorized");
+            require(escrow.buyer == originalSender, "Not authorized");
             require(!escrow.sellerConfirmed, "Seller already confirmed");
         }
 
@@ -560,23 +570,28 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
      * @dev Rejects an escrow (seller only)
      */
     function rejectEscrow(
+        address originalSender,
         uint256 escrowId,
         string memory reason
     ) external nonReentrant {
-        _rejectOrCancelEscrow(escrowId, true, reason);
+        _rejectOrCancelEscrow(originalSender, escrowId, true, reason);
     }
 
     /**
      * @dev Cancels an escrow (buyer only)
      */
-    function cancelEscrow(uint256 escrowId) external nonReentrant {
-        _rejectOrCancelEscrow(escrowId, false, "");
+    function cancelEscrow(
+        address originalSender,
+        uint256 escrowId
+    ) external nonReentrant {
+        _rejectOrCancelEscrow(originalSender, escrowId, false, "");
     }
 
     /**
      * @dev Confirms multiple escrows
      */
     function _bulkConfirmEscrows(
+        address originalSender,
         uint256[] calldata escrowIds,
         bool isBuyer
     ) internal {
@@ -591,7 +606,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
 
             // Validate permissions and status
             if (isBuyer) {
-                require(escrow.buyer == msg.sender, "Not buyer's escrow");
+                require(escrow.buyer == originalSender, "Not buyer's escrow");
                 require(!escrow.buyerConfirmed, "Already confirmed");
 
                 // Update escrow status
@@ -603,7 +618,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
                     false // not refunded
                 );
             } else {
-                require(escrow.seller == msg.sender, "Not seller's escrow");
+                require(escrow.seller == originalSender, "Not seller's escrow");
                 require(!escrow.sellerConfirmed, "Already confirmed");
 
                 // Update escrow status
@@ -637,24 +652,27 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
      * @dev Bulk confirm all escrows for the buyer
      */
     function bulkConfirmEscrowsAsBuyer(
+        address originalSender,
         uint256[] calldata escrowIds
     ) external nonReentrant {
-        _bulkConfirmEscrows(escrowIds, true);
+        _bulkConfirmEscrows(originalSender, escrowIds, true);
     }
 
     /**
      * @dev Bulk confirm multiple escrows from the same seller
      */
     function bulkConfirmEscrowsForSeller(
+        address originalSender,
         uint256[] calldata escrowIds
     ) external nonReentrant {
-        _bulkConfirmEscrows(escrowIds, false);
+        _bulkConfirmEscrows(originalSender, escrowIds, false);
     }
 
     /**
      * @dev Creates an escrow with ETH payment
      */
     function createEscrowWithEth(
+        address originalSender,
         uint256 productId,
         uint256 quantity
     ) external payable whenNotPaused nonReentrant {
@@ -687,7 +705,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         // Create escrow record
         uint256 escrowId = marketplaceStorage.createEscrow(
             productId,
-            msg.sender,
+            originalSender, // Use originalSender instead of msg.sender
             product.seller,
             totalCost,
             quantity,
@@ -698,17 +716,18 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         );
 
         // Add to user escrow lists
-        marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+        marketplaceStorage.addToUserActiveEscrows(originalSender, escrowId);
         marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
 
         // Emit event
-        emit EscrowCreated(escrowId, msg.sender, product.seller);
+        emit EscrowCreated(escrowId, originalSender, product.seller);
     }
 
     /**
      * @dev Creates an escrow with token payment
      */
     function createEscrowWithTokens(
+        address originalSender,
         uint256 productId,
         uint256 quantity
     ) external whenNotPaused nonReentrant {
@@ -737,7 +756,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         // Get token contract and process transfer
         IThriftToken token = IThriftToken(marketplaceStorage.thriftToken());
         require(
-            token.transferFrom(msg.sender, address(this), totalCost),
+            token.transferFrom(originalSender, address(this), totalCost),
             "Transfer failed"
         );
 
@@ -747,7 +766,7 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         // Create escrow record
         uint256 escrowId = marketplaceStorage.createEscrow(
             productId,
-            msg.sender,
+            originalSender, // Use originalSender instead of msg.sender
             product.seller,
             totalCost,
             quantity,
@@ -758,14 +777,12 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         );
 
         // Add to user escrow lists
-        marketplaceStorage.addToUserActiveEscrows(msg.sender, escrowId);
+        marketplaceStorage.addToUserActiveEscrows(originalSender, escrowId);
         marketplaceStorage.addToUserActiveEscrows(product.seller, escrowId);
 
         // Emit event
-        emit EscrowCreated(escrowId, msg.sender, product.seller);
+        emit EscrowCreated(escrowId, originalSender, product.seller);
     }
-
-    // ...existing code for other methods...
 
     /**
      * @dev Get user's active escrows where user is buyer - improved implementation

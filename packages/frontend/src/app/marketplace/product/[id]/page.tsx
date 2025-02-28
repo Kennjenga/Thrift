@@ -62,9 +62,7 @@ const ProductPage: React.FC = () => {
   const [processing, setProcessing] = useState(false);
 
   // Fetch user products when needed
-  const { userProducts } = useProductsData(
-    "0xd51ae371a9941d7942346f4c5948767d6b3393ec"
-  );
+  const { userProducts } = useProductsData(address);
 
   useEffect(() => {
     if (userProducts && userProducts.data && Array.isArray(userProducts.data)) {

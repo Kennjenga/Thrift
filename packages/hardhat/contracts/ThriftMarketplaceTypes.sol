@@ -2,10 +2,9 @@
 pragma solidity ^0.8.0;
 
 /**
- * Common interfaces and type definitions
+ * Common data structures used across contracts
  */
 
-// Common data structures used across contracts
 struct Product {
     uint256 id;
     address seller;

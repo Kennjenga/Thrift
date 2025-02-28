@@ -155,6 +155,7 @@ contract MarketplaceQuery is IMarketplaceQuery, Ownable {
         );
 
         // Get the actual product count from storage
+        // Get the actual product count from storage
         uint256 latestProductId = marketplaceStorage.getProductCount();
 
         // Two-pass approach to handle pagination properly
