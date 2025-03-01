@@ -6,31 +6,31 @@ import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 
 // Color System from the marketplace design
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-  },
-};
+// const COLORS = {
+//   primary: {
+//     main: "#7B42FF",
+//     light: "#8A2BE2",
+//     dark: "#4A00E0",
+//   },
+//   secondary: {
+//     main: "#00FFD1",
+//     light: "#00FFFF",
+//     dark: "#00E6BD",
+//   },
+//   accent: {
+//     pink: "#FF00FF",
+//     red: "#FF1B6B",
+//   },
+//   background: {
+//     dark: "#1A0B3B",
+//     light: "#2A1B54",
+//   },
+//   text: {
+//     primary: "#FFFFFF",
+//     secondary: "rgba(255, 255, 255, 0.7)",
+//     muted: "rgba(255, 255, 255, 0.5)",
+//   },
+// };
 
 const Footer: React.FC = () => {
   const footerLinks = [
@@ -127,9 +127,9 @@ const Footer: React.FC = () => {
                   className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:border-[#00FFD1] text-white placeholder-white/40"
                 />
                 <motion.button
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.02,
-                    boxShadow: "0 0 15px rgba(0,255,209,0.4)" 
+                    boxShadow: "0 0 15px rgba(0,255,209,0.4)",
                   }}
                   whileTap={{ scale: 0.98 }}
                   className="px-6 py-3 bg-gradient-to-r from-[#00FFD1] to-[#00FFFF] text-[#1A0B3B] rounded-lg font-medium shadow-[0_0_10px_rgba(0,255,209,0.3)] transition-all duration-300"
@@ -145,10 +145,10 @@ const Footer: React.FC = () => {
                   key={index}
                   href={link.url}
                   className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/70 hover:text-white hover:border-[#00FFD1]/50 transition-colors"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     rotate: 5,
-                    boxShadow: "0 0 15px rgba(0,255,209,0.3)"
+                    boxShadow: "0 0 15px rgba(0,255,209,0.3)",
                   }}
                   title={link.label}
                 >
@@ -169,12 +169,16 @@ const Footer: React.FC = () => {
               <ul className="space-y-4">
                 {section.links.map((link) => (
                   <motion.li key={link.label}>
-                    <a 
-                      href={link.url} 
+                    <a
+                      href={link.url}
                       className="text-white/70 hover:text-[#00FFD1] transition-colors flex items-center group"
                     >
-                      <span className="w-0 overflow-hidden group-hover:w-4 transition-all duration-300 text-[#00FFD1]">→</span>
-                      <span className="group-hover:translate-x-2 transition-transform duration-300">{link.label}</span>
+                      <span className="w-0 overflow-hidden group-hover:w-4 transition-all duration-300 text-[#00FFD1]">
+                        →
+                      </span>
+                      <span className="group-hover:translate-x-2 transition-transform duration-300">
+                        {link.label}
+                      </span>
                     </a>
                   </motion.li>
                 ))}
@@ -188,7 +192,7 @@ const Footer: React.FC = () => {
           {/* Divider with glow */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7B42FF]/50 to-transparent"></div>
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7B42FF]/30 to-transparent blur-sm"></div>
-          
+
           <p className="text-white/70">
             © {new Date().getFullYear()} Eco Fashion. All rights reserved.
           </p>

@@ -43,18 +43,21 @@ const EcoAssistant: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Cute, adorable eco-fashion messages
-  const messages = [
-    "Omg, that would look *so* cute on you! Let's add it to cart! 💖",
-    "Sustainable fashion? More like sustainably fabulous! 💚✨",
-    "Green is totally your color, bestie! Let's shop! 🌿👛",
-    "Your shopping cart looks lonely... Let's find it some friends! 🛍️",
-    "This eco-friendly outfit is giving main character energy! ✨👗",
-    "Psst! These sustainable pieces are *chef's kiss* for your style! 💋",
-    "Cute AND eco-friendly? That's what I call a perfect match! 💕",
-    "OMG stop it! This would look adorbs on you! *wink* 👀",
-    "Your wardrobe called. It wants more cuteness ASAP! 📱💖",
-    "Let's save the planet, one super cute outfit at a time! 🌎✨"
-  ];
+  const messages = React.useMemo(
+    () => [
+      "Omg, that would look *so* cute on you! Let's add it to cart! 💖",
+      "Sustainable fashion? More like sustainably fabulous! 💚✨",
+      "Green is totally your color, bestie! Let's shop! 🌿👛",
+      "Your shopping cart looks lonely... Let's find it some friends! 🛍️",
+      "This eco-friendly outfit is giving main character energy! ✨👗",
+      "Psst! These sustainable pieces are *chef's kiss* for your style! 💋",
+      "Cute AND eco-friendly? That's what I call a perfect match! 💕",
+      "OMG stop it! This would look adorbs on you! *wink* 👀",
+      "Your wardrobe called. It wants more cuteness ASAP! 📱💖",
+      "Let's save the planet, one super cute outfit at a time! 🌎✨",
+    ],
+    []
+  );
 
   // Character styles with eco-friendly floating leaves
   const characterStyles = `
@@ -414,44 +417,45 @@ const EcoAssistant: React.FC = () => {
   // Add random eco sparkles around the character
   useEffect(() => {
     if (!containerRef.current) return;
-    
+
     const createSparkles = () => {
       // Remove existing sparkles
-      const existingSparkles = containerRef.current?.querySelectorAll('.eco-sparkle');
-      existingSparkles?.forEach(sparkle => sparkle.remove());
-      
+      const existingSparkles =
+        containerRef.current?.querySelectorAll(".eco-sparkle");
+      existingSparkles?.forEach((sparkle) => sparkle.remove());
+
       // Create new sparkles
       const sparkleCount = 6;
       for (let i = 0; i < sparkleCount; i++) {
-        const sparkle = document.createElement('div');
-        sparkle.className = 'eco-sparkle';
-        
+        const sparkle = document.createElement("div");
+        sparkle.className = "eco-sparkle";
+
         // Random position around the character
         const angle = Math.random() * Math.PI * 2;
         const distance = 50 + Math.random() * 40;
         const x = Math.cos(angle) * distance + 80;
         const y = Math.sin(angle) * distance + 90;
-        
+
         sparkle.style.left = `${x}px`;
         sparkle.style.top = `${y}px`;
-        
+
         // Random animation delay
         sparkle.style.animationDelay = `${Math.random() * 2}s`;
-        
+
         // Random color - either teal or green
         if (Math.random() > 0.5) {
           sparkle.style.background = COLORS.secondary.light;
         } else {
           sparkle.style.background = COLORS.accent.green;
         }
-        
+
         containerRef.current?.appendChild(sparkle);
       }
     };
-    
+
     createSparkles();
     const sparkleInterval = setInterval(createSparkles, 4000);
-    
+
     return () => clearInterval(sparkleInterval);
   }, []);
 
@@ -462,26 +466,26 @@ const EcoAssistant: React.FC = () => {
         const rect = characterRef.current.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
+
         // Calculate direction from character to mouse
         const deltaX = e.clientX - centerX;
         const deltaY = e.clientY - centerY;
-        
+
         // Normalize and limit eye movement
         const maxMove = 4;
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         const normalizedX = distance > 0 ? (deltaX / distance) * maxMove : 0;
         const normalizedY = distance > 0 ? (deltaY / distance) * maxMove : 0;
-        
-        setEyePosition({ 
-          x: normalizedX, 
-          y: normalizedY 
+
+        setEyePosition({
+          x: normalizedX,
+          y: normalizedY,
         });
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   // Random blinking effect
@@ -490,31 +494,33 @@ const EcoAssistant: React.FC = () => {
       setBlinking(true);
       setTimeout(() => setBlinking(false), 200);
     }, Math.random() * 3000 + 2000); // Random blink between 2-5 seconds
-    
+
     return () => clearInterval(blinkInterval);
   }, []);
 
   // Random winking effect
   useEffect(() => {
     const winkInterval = setInterval(() => {
-      if (Math.random() > 0.7) { // 30% chance to wink
+      if (Math.random() > 0.7) {
+        // 30% chance to wink
         setIsWinking(true);
         setTimeout(() => setIsWinking(false), 500);
       }
     }, 5000);
-    
+
     return () => clearInterval(winkInterval);
   }, []);
 
   // Random mouth changes
   useEffect(() => {
     const mouthInterval = setInterval(() => {
-      if (Math.random() > 0.7) { // 30% chance to change mouth
+      if (Math.random() > 0.7) {
+        // 30% chance to change mouth
         setIsSmiling(false);
         setTimeout(() => setIsSmiling(true), 1000);
       }
     }, 6000);
-    
+
     return () => clearInterval(mouthInterval);
   }, []);
 
@@ -525,21 +531,21 @@ const EcoAssistant: React.FC = () => {
       const randomIndex = Math.floor(Math.random() * messages.length);
       setCurrentMessage(messages[randomIndex]);
       setShowMessage(true);
-      
+
       // Auto-hide message after a random time between 5-10 seconds
       const hideTime = Math.floor(Math.random() * 5000) + 5000;
       const hideTimer = setTimeout(() => {
         setShowMessage(false);
       }, hideTime);
-      
+
       setMessageTimer(hideTimer);
     };
-    
+
     // Initial random delay before first message (5-15 seconds after component mounts)
     const initialDelay = setTimeout(() => {
       showRandomMessage();
     }, Math.floor(Math.random() * 10000) + 5000);
-    
+
     // Set up interval for random message appearances
     const messageInterval = setInterval(() => {
       // Only show a new message if no message is currently showing
@@ -548,28 +554,33 @@ const EcoAssistant: React.FC = () => {
         showRandomMessage();
       }
     }, 8000); // Check every 8 seconds if we should show a message
-    
+
     return () => {
       clearTimeout(initialDelay);
       clearInterval(messageInterval);
       if (messageTimer) clearTimeout(messageTimer);
     };
-  }, [showMessage, messages]);
+  }, [showMessage, messages, messageTimer]);
 
   // Create floating hearts/leaves on click
   const createHeart = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
-    
-    const heart = document.createElement('div');
+
+    const heart = document.createElement("div");
     // Randomly choose between hearts, leaves, and recycling emojis
-    const symbols = ['💖', '🌿', '♻️', '🌱', '💚'];
+    const symbols = ["💖", "🌿", "♻️", "🌱", "💚"];
     heart.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
-    heart.className = Math.random() > 0.5 ? 'heart heart-pink' : 'heart heart-green';
-    heart.style.left = `${e.clientX - containerRef.current.getBoundingClientRect().left}px`;
-    heart.style.top = `${e.clientY - containerRef.current.getBoundingClientRect().top}px`;
-    
+    heart.className =
+      Math.random() > 0.5 ? "heart heart-pink" : "heart heart-green";
+    heart.style.left = `${
+      e.clientX - containerRef.current.getBoundingClientRect().left
+    }px`;
+    heart.style.top = `${
+      e.clientY - containerRef.current.getBoundingClientRect().top
+    }px`;
+
     containerRef.current.appendChild(heart);
-    
+
     setTimeout(() => {
       if (containerRef.current && containerRef.current.contains(heart)) {
         containerRef.current.removeChild(heart);
@@ -579,20 +590,20 @@ const EcoAssistant: React.FC = () => {
 
   const handleCharacterClick = (e: React.MouseEvent) => {
     createHeart(e);
-    
+
     if (messageTimer) clearTimeout(messageTimer);
-    
+
     if (!showMessage) {
       const randomIndex = Math.floor(Math.random() * messages.length);
       setCurrentMessage(messages[randomIndex]);
       setShowMessage(true);
-      
+
       // Auto-hide message after a random time between 5-10 seconds
       const hideTime = Math.floor(Math.random() * 5000) + 5000;
       const hideTimer = setTimeout(() => {
         setShowMessage(false);
       }, hideTime);
-      
+
       setMessageTimer(hideTimer);
     } else {
       // Show a different message when already showing one
@@ -600,16 +611,16 @@ const EcoAssistant: React.FC = () => {
       do {
         randomIndex = Math.floor(Math.random() * messages.length);
       } while (messages[randomIndex] === currentMessage);
-      
+
       setCurrentMessage(messages[randomIndex]);
-      
+
       // Reset the auto-hide timer
       if (messageTimer) clearTimeout(messageTimer);
       const hideTime = Math.floor(Math.random() * 5000) + 5000;
       const hideTimer = setTimeout(() => {
         setShowMessage(false);
       }, hideTime);
-      
+
       setMessageTimer(hideTimer);
     }
   };
@@ -623,7 +634,7 @@ const EcoAssistant: React.FC = () => {
   return (
     <div className="eco-assistant-container" ref={containerRef}>
       <style>{characterStyles}</style>
-      
+
       <motion.div
         className="eco-assistant"
         ref={characterRef}
@@ -635,7 +646,7 @@ const EcoAssistant: React.FC = () => {
             duration: 4,
             repeat: Infinity,
             repeatType: "reverse",
-            ease: "easeInOut"
+            ease: "easeInOut",
           },
         }}
         onClick={handleCharacterClick}
@@ -644,41 +655,43 @@ const EcoAssistant: React.FC = () => {
       >
         <div className="assistant-head">
           <div className="assistant-eye left">
-            <div 
-              className="eye-pupil" 
-              style={{ 
-                transform: `translate(${eyePosition.x}px, ${eyePosition.y}px)` 
+            <div
+              className="eye-pupil"
+              style={{
+                transform: `translate(${eyePosition.x}px, ${eyePosition.y}px)`,
               }}
             >
               <div className="eye-highlight"></div>
               <div className="eye-highlight-small"></div>
             </div>
-            <div className={`eye-lid ${blinking ? 'blink' : ''}`}></div>
+            <div className={`eye-lid ${blinking ? "blink" : ""}`}></div>
           </div>
-          
-          <div className={`assistant-eye right ${isWinking ? 'wink' : ''}`}>
-            <div 
-              className="eye-pupil" 
-              style={{ 
-                transform: `translate(${eyePosition.x}px, ${eyePosition.y}px)` 
+
+          <div className={`assistant-eye right ${isWinking ? "wink" : ""}`}>
+            <div
+              className="eye-pupil"
+              style={{
+                transform: `translate(${eyePosition.x}px, ${eyePosition.y}px)`,
               }}
             >
               <div className="eye-highlight"></div>
               <div className="eye-highlight-small"></div>
             </div>
-            <div className={`eye-lid ${blinking ? 'blink' : ''}`}></div>
+            <div className={`eye-lid ${blinking ? "blink" : ""}`}></div>
           </div>
-          
+
           <div className="assistant-blush left"></div>
           <div className="assistant-blush right"></div>
-          
-          <div className={`assistant-mouth ${isSmiling ? 'smile' : 'surprised'}`}></div>
-          
+
+          <div
+            className={`assistant-mouth ${isSmiling ? "smile" : "surprised"}`}
+          ></div>
+
           <div className="recycling-symbol">
             <span></span>
           </div>
         </div>
-        
+
         {/* Floating leaves */}
         <div className="floating-leaf leaf1">
           <div className="leaf-shine"></div>
@@ -693,7 +706,7 @@ const EcoAssistant: React.FC = () => {
           <div className="leaf-shine"></div>
         </div>
       </motion.div>
-      
+
       <AnimatePresence mode="wait">
         {showMessage && (
           <motion.div
@@ -703,42 +716,42 @@ const EcoAssistant: React.FC = () => {
             className="speech-bubble"
           >
             {/* Glow effects */}
-            <div 
+            <div
               style={{
-                position: 'absolute',
-                top: '-50%',
-                left: '-50%',
-                width: '200%',
-                height: '200%',
+                position: "absolute",
+                top: "-50%",
+                left: "-50%",
+                width: "200%",
+                height: "200%",
                 background: `radial-gradient(circle at center, ${COLORS.primary.main}15, transparent 70%)`,
                 opacity: 0.5,
-                pointerEvents: 'none',
+                pointerEvents: "none",
               }}
             />
-            
+
             {/* Close button */}
             <motion.button
               onClick={handleCloseMessage}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                border: 'none',
+                position: "absolute",
+                top: "8px",
+                right: "8px",
+                width: "20px",
+                height: "20px",
+                borderRadius: "50%",
+                border: "none",
                 background: `${COLORS.accent.pink}40`,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 padding: 0,
                 color: COLORS.text.primary,
-                fontSize: '12px',
-                fontWeight: 'bold',
-                transition: 'all 0.2s ease',
+                fontSize: "12px",
+                fontWeight: "bold",
+                transition: "all 0.2s ease",
                 zIndex: 2,
               }}
             >
@@ -765,47 +778,51 @@ const EcoAssistant: React.FC = () => {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
               style={{
-                padding: '8px',
-                paddingTop: '16px',
-                width: '100%',
+                padding: "8px",
+                paddingTop: "16px",
+                width: "100%",
                 flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 fontFamily: "'Poppins', sans-serif",
               }}
             >
-              <p 
-                style={{ 
+              <p
+                style={{
                   margin: 0,
                   textShadow: `0 0 8px ${COLORS.primary.main}30`,
                   fontWeight: 500,
                   lineHeight: 1.4,
-                  fontSize: '0.95rem',
+                  fontSize: "0.95rem",
                 }}
               >
                 {currentMessage}
               </p>
             </motion.div>
-            
+
             {/* Animated border */}
-            <div 
+            <div
               style={{
-                position: 'absolute',
+                position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: '2px',
+                height: "2px",
                 background: `linear-gradient(to right, ${COLORS.secondary.main}, ${COLORS.primary.main}, ${COLORS.accent.green}, ${COLORS.secondary.main})`,
-                backgroundSize: '300% 100%',
-                animation: 'moveGradient 4s linear infinite',
+                backgroundSize: "300% 100%",
+                animation: "moveGradient 4s linear infinite",
                 opacity: 0.7,
               }}
             />
             <style jsx>{`
               @keyframes moveGradient {
-                0% { background-position: 0% 0%; }
-                100% { background-position: 300% 0%; }
+                0% {
+                  background-position: 0% 0%;
+                }
+                100% {
+                  background-position: 300% 0%;
+                }
               }
             `}</style>
           </motion.div>

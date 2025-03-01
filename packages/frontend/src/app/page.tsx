@@ -10,12 +10,12 @@ import EcoCharacter from "@/components/eco-character";
 import {
   AlertCircle,
   Package,
-  Search,
-  Filter,
+  // Search,
+  // Filter,
   Heart,
   ArrowRight,
   Clock,
-  Repeat,
+  // Repeat,
 } from "lucide-react";
 import { useMarketplace } from "@/blockchain/hooks/useMarketplace1";
 import { Product } from "@/types/market";
@@ -604,7 +604,6 @@ const FashionGrid = () => {
     </div>
   );
 };
-export { FashionGrid };
 
 // Redesigned Product Card Component
 const ProductCard = ({ product }: { product: Product }) => {
@@ -822,10 +821,10 @@ const FashionMarquee = () => {
 
 // Marketplace Section with Real Products
 const MarketplaceSection = () => {
-  const { allActiveProducts, searchProducts } = useMarketplace();
+  const { allActiveProducts } = useMarketplace();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     if (allActiveProducts) {
