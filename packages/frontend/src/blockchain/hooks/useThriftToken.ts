@@ -110,6 +110,28 @@ export function useThriftToken() {
     })
   }
 
+  // New function to authorize reward contracts
+  const setRewardContract = async (contractAddress: Address, authorized: boolean) => {
+    if (!address) {
+      throw new Error("User not connected");
+    }
+    
+    try {
+      const tx = await writeContract({
+        address: THRIFT_ADDRESS,
+        abi: THRIFT_ABI,
+        functionName: 'setRewardContract',
+        args: [contractAddress, authorized],
+      });
+      
+      console.log(`Contract ${contractAddress} ${authorized ? 'authorized' : 'unauthorized'} successfully`);
+      return tx;
+    } catch (error) {
+      console.error("Error setting reward contract:", error);
+      throw error;
+    }
+  }
+
   return {
     totalSupply,
     currentCap,
@@ -124,5 +146,6 @@ export function useThriftToken() {
     burn,
     setTokenPrice,
     setCap,
+    setRewardContract, // Added the new function to the returned object
   }
 }

@@ -99,6 +99,7 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [donationAmount, setDonationAmount] = useState("");
+  // const donationWeight  = 0;
   const [recyclingWeight, setRecyclingWeight] = useState("");
   const [tokenAmount, setTokenAmount] = useState("");
   const [description, setDescription] = useState("");

@@ -18,6 +18,7 @@ import {
   CreditCard,
   BarChart,
   Target,
+  Award,
 } from "lucide-react";
 
 export default function ThriftTokenPage() {
@@ -33,6 +34,7 @@ export default function ThriftTokenPage() {
     burn,
     setTokenPrice,
     setCap,
+    setRewardContract,
   } = useThriftToken();
 
   // State management
@@ -58,6 +60,12 @@ export default function ThriftTokenPage() {
   const [burnAmount, setBurnAmount] = useState("");
   const [newTokenPrice, setNewTokenPrice] = useState("");
   const [newCap, setNewCap] = useState("");
+
+  // New state for reward contract authorization
+  const [rewardContractData, setRewardContractData] = useState({
+    contractAddress: "" as Address,
+    authorized: true,
+  });
 
   // Reset messages after 5 seconds
   useEffect(() => {
@@ -156,6 +164,39 @@ export default function ThriftTokenPage() {
       setNewCap("");
     } catch (error) {
       handleError(error as Error, "Cap update");
+    }
+  };
+
+  // New function: Set reward contract
+  const handleSetRewardContract = async () => {
+    try {
+      setLoading(true);
+
+      // Check if address is valid
+      if (
+        !rewardContractData.contractAddress ||
+        !rewardContractData.contractAddress.toString().startsWith("0x") ||
+        rewardContractData.contractAddress.toString().length !== 42
+      ) {
+        throw new Error("Please enter a valid contract address");
+      }
+
+      await setRewardContract(
+        rewardContractData.contractAddress,
+        rewardContractData.authorized
+      );
+
+      handleSuccess(
+        `Contract ${rewardContractData.contractAddress} ${
+          rewardContractData.authorized ? "authorized" : "unauthorized"
+        } successfully!`
+      );
+      setRewardContractData({
+        contractAddress: "" as Address,
+        authorized: true,
+      });
+    } catch (error) {
+      handleError(error as Error, "Reward contract authorization");
     }
   };
 
@@ -416,6 +457,68 @@ export default function ThriftTokenPage() {
                 className="btn-warning w-full"
               >
                 {loading ? "Processing..." : "Set Cap"}
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Set Reward Contract (Admin Only) - New section */}
+          <div className="glass-card p-8 rounded-3xl transform hover:-translate-y-1 transition-transform duration-300 bg-gradient-to-r from-indigo-50 to-purple-50 border-l-4 border-purple-500 col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <Award className="w-6 h-6 text-purple-600" />
+              <h2 className="text-2xl font-semibold text-[#162A2C]">
+                Authorize Reward Contract (Admin)
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 mb-2">
+                This allows a contract to mint reward tokens. Use this to
+                authorize your DonationAndRecycling contract.
+              </p>
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-300 mb-2">
+                <p className="font-medium">Important:</p>
+                <p>
+                  To fix the approveDonation function failing, enter your
+                  DonationAndRecycling contract address (
+                  <code>0xA85B7366aD844A23dbcd81EC3439e293da5Ea196</code>) below
+                  and authorize it.
+                </p>
+              </div>
+              <input
+                type="text"
+                placeholder="Contract Address (0x...)"
+                value={rewardContractData.contractAddress}
+                onChange={(e) =>
+                  setRewardContractData({
+                    ...rewardContractData,
+                    contractAddress: e.target.value as Address,
+                  })
+                }
+                className="w-full px-6 py-3 rounded-full border border-[#DBE0E2] focus:outline-none focus:border-purple-500 bg-white/50"
+              />
+              <div className="flex items-center space-x-2 px-2">
+                <input
+                  type="checkbox"
+                  id="authorized"
+                  checked={rewardContractData.authorized}
+                  onChange={(e) =>
+                    setRewardContractData({
+                      ...rewardContractData,
+                      authorized: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="authorized" className="text-gray-700">
+                  Authorize this contract to mint rewards
+                </label>
+              </div>
+              <button
+                onClick={handleSetRewardContract}
+                disabled={loading}
+                className="w-full px-6 py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex justify-center items-center space-x-2"
+              >
+                {loading ? "Processing..." : "Set Reward Contract"}
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
