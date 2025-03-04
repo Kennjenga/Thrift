@@ -10,11 +10,7 @@ import "./ThriftMarketplaceInterfaces.sol";
  * @title MarketplaceEscrow
  * @dev Contract that handles escrow and exchange functionality
  */
- contract MarketplaceEscrow is
-    IMarketplaceEscrow,
-    Ownable,
-    ReentrancyGuard
-{
+contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
     // Reference to the central storage contract
     IMarketplaceStorage public marketplaceStorage;
 
@@ -540,12 +536,29 @@ import "./ThriftMarketplaceInterfaces.sol";
             false
         );
 
+        // Get product to check if we need to reset isSold flag
+        Product memory product = marketplaceStorage.getProduct(
+            escrow.productId
+        );
+        if (product.isSold && product.quantity > 0) {
+            // Reset isSold flag if product was marked as sold but now has available quantity
+            marketplaceStorage.resetProductSold(escrow.productId);
+        }
+
         if (escrow.isExchange) {
             marketplaceStorage.updateInEscrowQuantity(
                 escrow.exchangeProductId,
                 escrow.quantity,
                 false
             );
+
+            // Also check exchange product's isSold status
+            Product memory exchangeProduct = marketplaceStorage.getProduct(
+                escrow.exchangeProductId
+            );
+            if (exchangeProduct.isSold && exchangeProduct.quantity > 0) {
+                marketplaceStorage.resetProductSold(escrow.exchangeProductId);
+            }
 
             if (escrow.tokenTopUp > 0) {
                 IThriftToken token = IThriftToken(

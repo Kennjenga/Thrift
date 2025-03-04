@@ -134,6 +134,12 @@ contract MarketplaceStorage is IMarketplaceStorage, ReentrancyGuard, Ownable {
         string reason
     );
 
+    event ProductStatusUpdated(
+        uint256 indexed productId,
+        address indexed seller,
+        bool isSold
+    );
+
     event EscrowCancelled(uint256 indexed escrowId, address indexed canceller);
 
     event PlatformFeesUpdated(uint256 newTokenFee, uint256 newEthFee);
@@ -232,6 +238,12 @@ contract MarketplaceStorage is IMarketplaceStorage, ReentrancyGuard, Ownable {
     }
 
     // Escrow-related functions
+    function resetProductSold(uint256 productId) external onlyAuthorized {
+        Product storage product = products[productId];
+        product.isSold = false;
+
+        emit ProductStatusUpdated(productId, product.seller, false);
+    }
     function getEscrow(uint256 escrowId) external view returns (Escrow memory) {
         return escrows[escrowId];
     }

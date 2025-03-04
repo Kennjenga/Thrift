@@ -132,6 +132,7 @@ interface IMarketplaceStorage {
     function markProductDeleted(uint256 productId) external;
 
     // Escrow functions
+    function resetProductSold(uint256 productId) external;
     function createEscrow(
         uint256 productId,
         address buyer,
