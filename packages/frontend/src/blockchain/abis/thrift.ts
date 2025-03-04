@@ -7913,5 +7913,15 @@ export const MARKETPLACE_ABI = [
 // Deployment complete!\
 
 
+// lisk deployment
+// thrift - 0x5f260ceb6bD6937CD3CFf10FbdA4357C9B4C3D53
+// donationandrecycling - 0xAbFCAB601E463c47008CE3270430664e801CF1D4
+// userprofile - 0x51e676cE5B1a404981321B8726A9DdC36D7Ee4c8
+// MarketplaceStorage: 0x4e44554d4091cAa705e86Ab58F0bFa53879Bf8f1
+// MarketplaceProduct: 0xbF80Aa56bcDcf44D5a807614cB8CD8885BB5C491
+// MarketplaceEscrow: 0x1555dcfdCa1a7e8b93cb8064d94BA1A6030Ba046
+// MarketplaceQuery: 0xe39EC07E7F5f781d3b6F5B1941Ba24f58FfeD10B
+// Marketplace: 0x533eed07322555a73DbeD780eda0c7e19DcE19E3
+// Deployer Address: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99
 
 

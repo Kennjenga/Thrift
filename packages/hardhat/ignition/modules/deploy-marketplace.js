@@ -40,9 +40,9 @@ async function main() {
     console.log("Deploying contracts with the account:", deployer.address);
 
     // Predefined addresses
-    const THRIFT_TOKEN_ADDRESS = "0xCD6152307d4b223C00D1beF239F401101e4FBE78";
+    const THRIFT_TOKEN_ADDRESS = "0x5f260ceb6bD6937CD3CFf10FbdA4357C9B4C3D53";
     const USER_AESTHETICS_ADDRESS =
-      "0x784d1f5Bc247aCbC4E42c260Cf710d0828B5F26A";
+      "0x51e676cE5B1a404981321B8726A9DdC36D7Ee4c8";
     const TREASURY_WALLET_ADDRESS =
       "0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99";
 
