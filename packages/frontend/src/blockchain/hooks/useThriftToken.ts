@@ -2,7 +2,7 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { Address } from 'viem'
 import { THRIFT_ABI, THRIFT_ADDRESS } from '@/blockchain/abis/thrift'
 
-const lisksepolia_CHAIN_ID = 4202
+const sepolia_CHAIN_ID = 11155111
 
 export function useThriftToken() {
   const { address } = useAccount()
@@ -13,14 +13,14 @@ export function useThriftToken() {
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'totalSupply',
-    chainId: lisksepolia_CHAIN_ID,
+    chainId: sepolia_CHAIN_ID,
   }) as { data: bigint | undefined }
 
   const { data: currentCap = 0n } = useReadContract({
     address: THRIFT_ADDRESS,
     abi: THRIFT_ABI,
     functionName: 'currentCap',
-    chainId: lisksepolia_CHAIN_ID,
+    chainId: sepolia_CHAIN_ID,
   }) as { data: bigint | undefined }
 
   const { data: tokenPrice = 0n } = useReadContract({
