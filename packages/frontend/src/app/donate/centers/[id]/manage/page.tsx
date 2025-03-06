@@ -22,7 +22,105 @@ import {
   Info,
   Filter,
   Clock,
+  Shirt,
+  Recycle,
+  Coins,
+  AlertCircle,
+  Package,
 } from "lucide-react";
+import { motion } from "framer-motion";
+
+// Color System - Using the cyberpunk theme from marketplace
+const COLORS = {
+  primary: {
+    main: "#7B42FF",
+    light: "#8A2BE2",
+    dark: "#4A00E0",
+  },
+  secondary: {
+    main: "#00FFD1",
+    light: "#00FFFF",
+    dark: "#00E6BD",
+  },
+  accent: {
+    pink: "#FF00FF",
+    red: "#FF1B6B",
+  },
+  background: {
+    dark: "#1A0B3B",
+    light: "#2A1B54",
+  },
+  text: {
+    primary: "#FFFFFF",
+    secondary: "rgba(255, 255, 255, 0.7)",
+    muted: "rgba(255, 255, 255, 0.5)",
+    pink: "#FF00FF",
+    red: "#FF1B6B",
+  },
+  glass: {
+    background: "rgba(42, 27, 84, 0.2)",
+    border: "rgba(123, 66, 255, 0.1)",
+  },
+};
+
+// Styles object
+const styles = {
+  glassCard: `
+    backdrop-blur-md
+    bg-opacity-20 bg-purple-900
+    border border-purple-500/10
+    rounded-xl
+    overflow-hidden
+    hover:shadow-lg hover:shadow-purple-500/20
+    transition-all duration-300
+  `,
+  glassEffect: `
+    backdrop-blur-lg
+    bg-opacity-20 bg-purple-900
+    border border-purple-500/10
+    rounded-lg
+    p-4
+  `,
+  backgroundGradient: `
+    bg-gradient-to-b from-[#2A1B54] to-[#1A0B3B]
+    relative
+  `,
+  gradientText: `
+    bg-clip-text text-transparent 
+    bg-gradient-to-r from-[#00FFD1] to-[#7B42FF]
+  `,
+  button: `
+    px-4 py-2
+    rounded-lg
+    font-medium
+    transition-all duration-300
+    hover:shadow-md
+  `,
+  primaryButton: `
+    bg-gradient-to-r from-[#00FFD1] to-[#00FFFF]
+    text-[#1A0B3B]
+    hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]
+  `,
+  secondaryButton: `
+    border border-[#00FFD1]
+    text-[#00FFD1]
+    hover:bg-[#00FFD1]/10
+  `,
+};
+
+// Background Elements Component
+const BackgroundElements = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#2A1B54] to-[#1A0B3B]" />
+
+      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#FF00FF] rounded-full filter blur-[120px] opacity-[0.15] animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#7B42FF] rounded-full filter blur-[150px] opacity-[0.12] animate-pulse" />
+      <div className="absolute top-1/3 left-1/4 w-[250px] h-[250px] bg-[#00FFFF] rounded-full filter blur-[100px] opacity-[0.1] animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-[#FF1B6B] rounded-full filter blur-[130px] opacity-[0.08] animate-pulse" />
+    </div>
+  );
+};
 
 // Function to format addresses safely
 const formatAddress = (address: Address | string | undefined): string => {
@@ -60,8 +158,6 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { data: centerData, isLoading: isLoadingCenter } =
     useGetDonationCenter(centerId);
 
-  console.log("Manage Page - center data:", centerData);
-
   // Get the donation approval/rejection functions
   const {
     approveDonation,
@@ -78,13 +174,10 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
     isLoading: isLoadingIds,
     refetch: refetchIds,
   } = useGetActiveCenterPendingDonations(centerId);
-  console.log("pending donations ids", pendingDonationIds);
 
   // Get details for those donation IDs
   const { donationsDetails, isLoading: isLoadingDetails } =
     useGetPendingDonationsDetails(pendingDonationIds);
-
-    console.log("pending donations details", donationsDetails);
 
   const isLoading =
     isLoadingCenter ||
@@ -141,19 +234,6 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const center = useMemo(() => {
     if (!centerData || !Array.isArray(centerData)) return null;
 
-    // Based on the console log from other components, centerData is an array with indices:
-    // 0: name
-    // 1: description
-    // 2: location
-    // 3: isActive
-    // 4: acceptsTokens
-    // 5: acceptsRecycling
-    // 6: isDonation
-    // 7: owner
-    // 8: totalDonationsReceived
-    // 9: totalRecyclingReceived
-    // 10: totalTokenDonationsReceived
-
     const processedCenter = {
       id: centerId,
       name: centerData[0] || "",
@@ -169,14 +249,6 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
       totalTokenDonationsReceived: BigInt(centerData[10] || 0),
     } as DonationCenter;
 
-    console.log("Processed center for management:", {
-      ...processedCenter,
-      totalDonationsReceived: processedCenter.totalDonationsReceived.toString(),
-      totalRecyclingReceived: processedCenter.totalRecyclingReceived.toString(),
-      totalTokenDonationsReceived:
-        processedCenter.totalTokenDonationsReceived.toString(),
-    });
-
     return processedCenter;
   }, [centerData, centerId]);
 
@@ -186,16 +258,22 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
       return {
         type: "Token",
         amount: `${donation.tokenAmount.toString()} tokens`,
+        icon: <Coins className="h-5 w-5 text-[#FF00FF]" />,
+        color: "purple",
       };
     } else if (donation.isRecycling) {
       return {
         type: "Recycling",
         amount: `${(Number(donation.weightInKg) / 1000).toFixed(2)} kg`,
+        icon: <Recycle className="h-5 w-5 text-[#00FFD1]" />,
+        color: "green",
       };
     } else {
       return {
         type: "Clothing",
         amount: `${donation.itemCount.toString()} items`,
+        icon: <Shirt className="h-5 w-5 text-[#00FFFF]" />,
+        color: "blue",
       };
     }
   };
@@ -231,13 +309,6 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
       setProcessingDonationId(donation.id.toString());
       setMessage({ type: "", text: "" });
 
-      console.log("Approving donation:", {
-        id: donation.id.toString(),
-        isRecycling: donation.isRecycling,
-        itemCount: donation.isRecycling ? 0 : donation.itemCount.toString(),
-        weightInKg: donation.weightInKg.toString(),
-      });
-
       // For clothing donations: use the actual item count and weight
       // For recycling: use the actual weight
       const verifiedItemCount = donation.isRecycling
@@ -268,10 +339,6 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
     try {
       setProcessingDonationId(donation.id.toString());
       setMessage({ type: "", text: "" });
-
-      console.log("Rejecting donation:", {
-        id: donation.id.toString(),
-      });
 
       await rejectDonation(
         donation.id, // pendingDonationId
@@ -310,10 +377,15 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (isLoadingCenter) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">Loading center details...</p>
+      <div className={`min-h-screen ${styles.backgroundGradient} flex justify-center items-center`}>
+        <BackgroundElements />
+        <div className="text-center relative z-10">
+          <div className="w-16 h-16 mx-auto mb-4 relative">
+            <div className="absolute inset-0 rounded-full bg-[#00FFD1]/20 animate-ping"></div>
+            <div className="absolute inset-2 rounded-full bg-[#00FFD1]/40 animate-pulse"></div>
+            <Loader2 className="h-16 w-16 animate-spin text-[#00FFD1] relative z-10" />
+          </div>
+          <p className="text-white/70 text-lg">Loading center details...</p>
         </div>
       </div>
     );
@@ -321,22 +393,28 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!center) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+      <div className={`min-h-screen ${styles.backgroundGradient} flex justify-center items-center`}>
+        <BackgroundElements />
+        <div className={`text-center ${styles.glassCard} p-8 max-w-md relative z-10`}>
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-4">
             Center Not Found
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-white/70 mb-6">
             The donation center you&apos;re looking for doesn&apos;t exist or
             may have been removed.
           </p>
-          <button
+          <motion.button
             onClick={() => router.push("/donate")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center justify-center mx-auto"
+            className={`${styles.button} ${styles.primaryButton} flex items-center justify-center mx-auto`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Centers
-          </button>
+          </motion.button>
         </div>
       </div>
     );
@@ -348,79 +426,83 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
     center.owner &&
     center.owner.toLowerCase() === userAddress.toLowerCase();
 
-  console.log("Ownership status:", {
-    centerOwner: center.owner,
-    userAddress,
-    showOwnerControls,
-  });
-
-  // Log donations details for debugging
-  console.log("Pending donations:", donationsDetails);
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className={`min-h-screen ${styles.backgroundGradient}`}>
+      <BackgroundElements />
+      
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+        <motion.div 
+          className="flex justify-between items-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div>
-            <h1 className="text-2xl font-bold">
-              <span className="text-cyan-500">Manage</span>{" "}
-              <span className="text-purple-500">Donations</span>{" "}
-              <span className="text-gray-700">
+            <h1 className="text-3xl font-bold">
+              <span className={styles.gradientText}>Manage Donations</span>{" "}
+              <span className="text-white/70">
                 for Center #{resolvedParams.id}
               </span>
             </h1>
             {center && (
-              <div className="flex items-center mt-1">
-                <p className="text-gray-600">{center.name}</p>
+              <div className="flex items-center mt-2">
+                <p className="text-white/80">{center.name}</p>
                 {center.isActive ? (
-                  <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span className="ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00FFD1]/20 text-[#00FFD1] border border-[#00FFD1]/30">
                     Active
                   </span>
                 ) : (
-                  <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  <span className="ml-3 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#FF1B6B]/20 text-[#FF1B6B] border border-[#FF1B6B]/30">
                     Inactive
                   </span>
                 )}
               </div>
             )}
           </div>
-          <div className="flex gap-2">
-            <button
+          <div className="flex gap-3">
+            <motion.button
               onClick={refreshData}
-              className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-gray-800 flex items-center"
+              className="backdrop-blur-md bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-white flex items-center border border-white/10"
               disabled={isLoading}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <RefreshCw
-                className={`h-4 w-4 mr-1 ${isLoading ? "animate-spin" : ""}`}
+                className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
               />
               Refresh
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={() =>
                 router.push(`/donate/centers/${resolvedParams.id}`)
               }
-              className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-gray-800 flex items-center"
+              className="backdrop-blur-md bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white flex items-center border border-white/10"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Center
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {message.text && (
-          <div
-            className={`p-4 mb-4 rounded flex items-start ${
+          <motion.div
+            className={`backdrop-blur-md p-4 mb-6 rounded-lg flex items-start ${
               message.type === "success"
-                ? "bg-green-100 text-green-800"
+                ? "bg-green-500/10 border border-green-500/30 text-green-400"
                 : message.type === "error"
-                ? "bg-red-100 text-red-800"
+                ? "bg-red-500/10 border border-red-500/30 text-red-400"
                 : ""
             }`}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <div className="flex-shrink-0 mt-0.5">
               {message.type === "success" ? (
                 <svg
-                  className="h-5 w-5 text-green-500"
+                  className="h-5 w-5 text-green-400"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -432,7 +514,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 </svg>
               ) : (
                 <svg
-                  className="h-5 w-5 text-red-500"
+                  className="h-5 w-5 text-red-400"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -447,12 +529,17 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
             <div className="ml-3">
               <p className="text-sm">{message.text}</p>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Inactive center warning - only show edit button if user is owner */}
         {!center.isActive && (
-          <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg border border-yellow-200 mb-6 flex items-start">
+          <motion.div 
+            className="backdrop-blur-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 p-6 rounded-lg mb-6 flex items-start"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <AlertOctagon className="h-5 w-5 mr-3 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold">
@@ -463,178 +550,288 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 You can still manage existing pending donations.
               </p>
               {showOwnerControls && (
-                <button
+                <motion.button
                   onClick={() =>
                     router.push(`/donate/centers/${resolvedParams.id}/edit`)
                   }
-                  className="mt-3 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 px-3 py-1 rounded text-sm"
+                  className="mt-4 bg-[#7B42FF] hover:bg-[#8A2BE2] text-white px-4 py-2 rounded-lg text-sm flex items-center w-auto border border-[#7B42FF]/50 shadow-[0_0_10px_rgba(123,66,255,0.3)]"
+                  whileHover={{ 
+                    scale: 1.03,
+                    boxShadow: "0 0 20px rgba(123,66,255,0.5)" 
+                  }}
+                  whileTap={{ scale: 0.97 }}
                 >
                   Edit Center Status
-                </button>
+                </motion.button>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Donation stats */}
         {donationsDetails && donationsDetails.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <h3 className="font-medium text-gray-800 mb-3 flex items-center">
-              <Info className="h-4 w-4 mr-2 text-blue-500" />
+          <motion.div 
+            className={`${styles.glassCard} p-6 mb-6`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <h3 className="font-medium text-white mb-4 flex items-center">
+              <Info className="h-5 w-5 mr-2 text-[#00FFD1]" />
               Pending Donations Overview
             </h3>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600">Total Pending</p>
-                <p className="text-2xl font-bold">{donationStats.total}</p>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-blue-600">Clothing</p>
-                <p className="text-2xl font-bold text-blue-700">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <motion.div 
+                className="backdrop-blur-md bg-white/5 border border-white/10 p-4 rounded-lg relative overflow-hidden"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full"></div>
+                <p className="text-sm text-white/60">Total Pending</p>
+                <p className="text-3xl font-bold text-white mt-1">{donationStats.total}</p>
+              </motion.div>
+              
+              <motion.div 
+                className="backdrop-blur-md bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg relative overflow-hidden"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/10 rounded-full"></div>
+                <div className="flex items-center gap-2">
+                  <Shirt className="h-4 w-4 text-[#00FFFF]" />
+                  <p className="text-sm text-[#00FFFF]">Clothing</p>
+                </div>
+                <p className="text-3xl font-bold text-[#00FFFF] mt-1">
                   {donationStats.clothing}
                 </p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-sm text-green-600">Recycling</p>
-                <p className="text-2xl font-bold text-green-700">
+              </motion.div>
+              
+              <motion.div 
+                className="backdrop-blur-md bg-green-500/10 border border-green-500/20 p-4 rounded-lg relative overflow-hidden"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-green-500/10 rounded-full"></div>
+                <div className="flex items-center gap-2">
+                  <Recycle className="h-4 w-4 text-[#00FFD1]" />
+                  <p className="text-sm text-[#00FFD1]">Recycling</p>
+                </div>
+                <p className="text-3xl font-bold text-[#00FFD1] mt-1">
                   {donationStats.recycling}
                 </p>
-              </div>
-              <div className="bg-purple-50 p-3 rounded-lg">
-                <p className="text-sm text-purple-600">Tokens</p>
-                <p className="text-2xl font-bold text-purple-700">
+              </motion.div>
+              
+              <motion.div 
+                className="backdrop-blur-md bg-purple-500/10 border border-purple-500/20 p-4 rounded-lg relative overflow-hidden"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-purple-500/10 rounded-full"></div>
+                <div className="flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-[#FF00FF]" />
+                  <p className="text-sm text-[#FF00FF]">Tokens</p>
+                </div>
+                <p className="text-3xl font-bold text-[#FF00FF] mt-1">
                   {donationStats.token}
                 </p>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Filter controls */}
         {donationsDetails && donationsDetails.length > 0 && (
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">Filter by:</span>
-              <div className="flex space-x-1">
-                <button
+          <motion.div 
+            className={`${styles.glassEffect} mb-6 flex flex-col sm:flex-row justify-between items-center gap-4`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <div className="flex items-center space-x-3 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-[#00FFD1]" />
+              <span className="text-sm text-white/70">Filter:</span>
+              <div className="flex space-x-2">
+                <motion.button
                   onClick={() => setFilter("all")}
-                  className={`px-2 py-1 text-xs rounded-full ${
+                  className={`px-3 py-1.5 text-xs rounded-full backdrop-blur-md border ${
                     filter === "all"
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-white/20 text-white border-white/30"
+                      : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   All
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => setFilter("clothing")}
-                  className={`px-2 py-1 text-xs rounded-full ${
+                  className={`px-3 py-1.5 text-xs rounded-full backdrop-blur-md border ${
                     filter === "clothing"
-                      ? "bg-blue-600 text-white"
-                      : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      ? "bg-blue-500/20 text-[#00FFFF] border-blue-500/30"
+                      : "bg-blue-500/5 text-blue-400/60 border-blue-500/10 hover:bg-blue-500/10"
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Clothing
-                </button>
-                <button
+                  <div className="flex items-center">
+                    <Shirt className="h-3 w-3 mr-1" />
+                    Clothing
+                  </div>
+                </motion.button>
+                <motion.button
                   onClick={() => setFilter("recycling")}
-                  className={`px-2 py-1 text-xs rounded-full ${
+                  className={`px-3 py-1.5 text-xs rounded-full backdrop-blur-md border ${
                     filter === "recycling"
-                      ? "bg-green-600 text-white"
-                      : "bg-green-100 text-green-800 hover:bg-green-200"
+                      ? "bg-green-500/20 text-[#00FFD1] border-green-500/30"
+                      : "bg-green-500/5 text-green-400/60 border-green-500/10 hover:bg-green-500/10"
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Recycling
-                </button>
-                <button
+                  <div className="flex items-center">
+                    <Recycle className="h-3 w-3 mr-1" />
+                    Recycling
+                  </div>
+                </motion.button>
+                <motion.button
                   onClick={() => setFilter("token")}
-                  className={`px-2 py-1 text-xs rounded-full ${
+                  className={`px-3 py-1.5 text-xs rounded-full backdrop-blur-md border ${
                     filter === "token"
-                      ? "bg-purple-600 text-white"
-                      : "bg-purple-100 text-purple-800 hover:bg-purple-200"
+                      ? "bg-purple-500/20 text-[#FF00FF] border-purple-500/30"
+                      : "bg-purple-500/5 text-purple-400/60 border-purple-500/10 hover:bg-purple-500/10"
                   }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  Tokens
-                </button>
+                  <div className="flex items-center">
+                    <Coins className="h-3 w-3 mr-1" />
+                    Tokens
+                  </div>
+                  </motion.button>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">Sort by:</span>
+            <div className="flex items-center space-x-3 w-full sm:w-auto">
+              <Clock className="h-4 w-4 text-[#00FFD1]" />
+              <span className="text-sm text-white/70">Sort:</span>
               <select
                 value={sortOrder}
                 onChange={(e) =>
                   setSortOrder(e.target.value as "newest" | "oldest")
                 }
-                className="text-xs border rounded p-1"
+                className="text-xs backdrop-blur-md bg-white/10 border border-white/20 rounded-lg p-1.5 text-white focus:outline-none focus:border-[#00FFD1]"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
               </select>
             </div>
-          </div>
+          </motion.div>
         )}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <motion.div 
+          className={`${styles.glassCard} overflow-hidden`}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
           {isLoading ? (
-            <div className="p-8 flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+            <div className="p-12 flex justify-center">
+              <div className="w-16 h-16 relative">
+                <div className="absolute inset-0 rounded-full bg-[#00FFD1]/20 animate-ping"></div>
+                <div className="absolute inset-2 rounded-full bg-[#00FFD1]/40 animate-pulse"></div>
+                <Loader2 className="h-16 w-16 animate-spin text-[#00FFD1] relative z-10" />
+              </div>
             </div>
           ) : filteredAndSortedDonations &&
             filteredAndSortedDonations.length > 0 ? (
-            <div className="divide-y">
-              {filteredAndSortedDonations.map((donation) => {
-                const { type, amount } = getDonationTypeAndAmount(donation);
+            <div className="divide-y divide-purple-500/10">
+              {filteredAndSortedDonations.map((donation, index) => {
+                const { type, amount, icon, color } = getDonationTypeAndAmount(donation);
                 const isProcessing =
                   processingDonationId === donation.id.toString();
 
                 return (
-                  <div key={donation.id.toString()} className="p-6">
-                    <div className="flex flex-col md:flex-row justify-between md:items-center">
-                      <div className="mb-4 md:mb-0">
-                        <div className="flex items-center">
-                          <div
-                            className={`w-3 h-3 rounded-full mr-2 ${
-                              type === "Recycling"
-                                ? "bg-green-500"
-                                : type === "Token"
-                                ? "bg-purple-500"
-                                : "bg-blue-500"
-                            }`}
-                          ></div>
-                          <p className="font-medium text-lg">{type} Donation</p>
-                          <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                            ID: {donation.id.toString()}
-                          </span>
+                  <motion.div 
+                    key={donation.id.toString()} 
+                    className="p-6 hover:bg-purple-500/10 transition-colors"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                  >
+                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
+                      <div>
+                        <div className="flex items-center mb-3">
+                          <div className={`w-10 h-10 rounded-full ${
+                              color === "green" 
+                                ? "bg-green-500/20" 
+                                : color === "purple" 
+                                ? "bg-purple-500/20" 
+                                : "bg-blue-500/20"
+                            } flex items-center justify-center mr-3`}>
+                            {icon}
+                          </div>
+                          <div>
+                            <div className="flex items-center">
+                              <p className={`font-medium text-lg ${
+                                color === "green" 
+                                  ? "text-[#00FFD1]" 
+                                  : color === "purple" 
+                                  ? "text-[#FF00FF]" 
+                                  : "text-[#00FFFF]"
+                              }`}>
+                                {type} Donation
+                              </p>
+                              <span className="ml-2 text-xs text-white/50 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
+                                ID: {donation.id.toString()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-white/60">
+                              {amount}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">
-                          <span className="font-medium">From:</span>{" "}
-                          {formatAddress(donation.donor)}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-1">
-                          <span className="font-medium">Amount:</span> {amount}
-                        </p>
-                        {donation.description && (
-                          <p className="text-sm text-gray-600 mb-1">
-                            <span className="font-medium">Description:</span>{" "}
-                            {donation.description}
+                        
+                        <div className="space-y-1 text-sm text-white/60">
+                          <p className="flex items-center">
+                            <span className="inline-block w-2 h-2 rounded-full bg-white/30 mr-2"></span>
+                            <span className="font-medium text-white/80">From:</span>{" "}
+                            {formatAddress(donation.donor)}
                           </p>
-                        )}
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Date:</span>{" "}
-                          {formatTimestamp(donation.timestamp)}
-                        </p>
+                          
+                          {donation.description && (
+                            <p className="flex items-center">
+                              <span className="inline-block w-2 h-2 rounded-full bg-white/30 mr-2"></span>
+                              <span className="font-medium text-white/80">Description:</span>{" "}
+                              {donation.description}
+                            </p>
+                          )}
+                          
+                          <p className="flex items-center">
+                            <span className="inline-block w-2 h-2 rounded-full bg-white/30 mr-2"></span>
+                            <span className="font-medium text-white/80">Date:</span>{" "}
+                            {formatTimestamp(donation.timestamp)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
+                      
+                      <div className="flex gap-3">
+                        <motion.button
                           onClick={() => handleApprove(donation)}
                           disabled={isProcessing || isLoading}
                           className={`${
                             isProcessing || isLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-green-600 hover:bg-green-700"
-                          } text-white px-4 py-2 rounded flex items-center`}
+                              ? "bg-green-500/30 cursor-not-allowed"
+                              : "bg-gradient-to-r from-[#00FFD1] to-[#00E6BD] text-[#1A0B3B] hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]"
+                          } px-4 py-2 rounded-lg flex items-center font-medium min-w-[120px] justify-center`}
+                          whileHover={
+                            !(isProcessing || isLoading) 
+                              ? { scale: 1.05 } 
+                              : {}
+                          }
+                          whileTap={
+                            !(isProcessing || isLoading) 
+                              ? { scale: 0.95 } 
+                              : {}
+                          }
                         >
                           {isProcessing &&
                           processingDonationId === donation.id.toString() ? (
@@ -648,15 +845,26 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                               Approve
                             </>
                           )}
-                        </button>
-                        <button
+                        </motion.button>
+                        
+                        <motion.button
                           onClick={() => handleReject(donation)}
                           disabled={isProcessing || isLoading}
                           className={`${
                             isProcessing || isLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-red-600 hover:bg-red-700"
-                          } text-white px-4 py-2 rounded flex items-center`}
+                              ? "bg-red-500/30 cursor-not-allowed"
+                              : "bg-gradient-to-r from-[#FF1B6B] to-[#FF5E86] text-white hover:shadow-[0_0_15px_rgba(255,27,107,0.4)]"
+                          } px-4 py-2 rounded-lg flex items-center font-medium min-w-[120px] justify-center`}
+                          whileHover={
+                            !(isProcessing || isLoading) 
+                              ? { scale: 1.05 } 
+                              : {}
+                          }
+                          whileTap={
+                            !(isProcessing || isLoading) 
+                              ? { scale: 0.95 } 
+                              : {}
+                          }
                         >
                           {isProcessing &&
                           processingDonationId === donation.id.toString() ? (
@@ -670,84 +878,89 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                               Reject
                             </>
                           )}
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
           ) : (
-            <div className="p-8 text-center text-gray-500">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg
-                  className="h-8 w-8 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
+            <div className="p-12 text-center">
+              <motion.div 
+                className="mx-auto w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Package className="h-10 w-10 text-white/30" />
+              </motion.div>
+              <h3 className="text-xl font-medium text-white mb-2">
                 {filter !== "all"
                   ? `No pending ${filter} donations`
                   : "No pending donations"}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-white/60 max-w-md mx-auto">
                 {filter !== "all"
                   ? `There are no pending ${filter} donations for this center at the moment.`
                   : "There are no pending donations for this center at the moment."}
               </p>
               {filter !== "all" && (
-                <button
+                <motion.button
                   onClick={() => setFilter("all")}
-                  className="mt-4 text-blue-600 hover:text-blue-800 text-sm underline"
+                  className="mt-6 text-[#00FFD1] hover:text-[#00FFFF] text-sm border-b border-[#00FFD1]/30 hover:border-[#00FFFF]"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Show all donation types
-                </button>
+                </motion.button>
               )}
               {!center.isActive && (
-                <p className="mt-2 text-yellow-600">
+                <p className="mt-4 text-yellow-400/80 bg-yellow-400/10 backdrop-blur-md p-3 rounded-lg inline-block">
                   Note: Your center is currently inactive and cannot receive new
                   donations.
                 </p>
               )}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Batch actions (future enhancement) */}
         {filteredAndSortedDonations &&
           filteredAndSortedDonations.length > 1 && (
-            <div className="mt-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">
+            <motion.div 
+              className="mt-6 backdrop-blur-md bg-purple-900/20 border border-purple-500/10 p-4 rounded-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+            >
+              <h3 className="text-sm font-medium text-white/80 mb-3">
                 Quick Actions
               </h3>
-              <div className="flex space-x-2">
-                <button
+              <div className="flex flex-wrap gap-3">
+                <motion.button
                   onClick={() => refreshData()}
-                  className="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded border border-blue-200"
+                  className="text-xs px-4 py-2 bg-blue-500/10 text-[#00FFFF] hover:bg-blue-500/20 rounded-lg border border-blue-500/20 flex items-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
+                  <RefreshCw className="h-3 w-3 mr-2" />
                   Refresh List
-                </button>
+                </motion.button>
                 {center.isActive === false && showOwnerControls && (
-                  <button
+                  <motion.button
                     onClick={() =>
                       router.push(`/donate/centers/${resolvedParams.id}/edit`)
                     }
-                    className="text-xs px-3 py-1.5 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded border border-yellow-200"
+                    className="text-xs px-4 py-2 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg border border-yellow-500/20 flex items-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     Activate Center
-                  </button>
+                  </motion.button>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
       </div>
     </div>
