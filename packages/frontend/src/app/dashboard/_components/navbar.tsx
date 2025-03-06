@@ -1,31 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Image from "next/image";
-import {
-  House,
-  ShoppingBag,
-  Heart,
-  LayoutDashboard,
-} from "lucide-react";
+import { 
+  HomeIcon, 
+  ShoppingCartIcon, 
+  GiftIcon, 
+  ChartBarIcon, 
+  ChatBubbleLeftIcon,
+  XMarkIcon,
+  MinusIcon
+} from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Color System
 const COLORS = {
   primary: {
-    main: '#C0B283',
-    light: '#DCD0C0',
-    dark: '#A89A6B',
+    main: '#7B42FF',
+    light: '#8A2BE2',
+    dark: '#4A00E0',
   },
-  text: {
-    primary: '#162A2C',
-    secondary: '#5E6C58',
+  secondary: {
+    main: '#00FFD1',
+    light: '#00FFFF',
+    dark: '#00E6BD',
   },
   background: {
-    light: '#FFFFFF',
-    dark: '#F5F5F5',
+    dark: '#1A0B3B',
+    light: '#2A1B54',
+  },
+  text: {
+    primary: '#FFFFFF',
+    secondary: 'rgba(255, 255, 255, 0.7)',
+    muted: 'rgba(255, 255, 255, 0.5)',
   },
   glass: {
-    background: 'rgba(255, 255, 255, 0.8)',
-    border: 'rgba(94, 108, 88, 0.1)',
+    background: 'rgba(42, 27, 84, 0.2)',
+    border: 'rgba(123, 66, 255, 0.1)',
   }
 };
 
@@ -36,192 +46,339 @@ interface NavLink {
 }
 
 const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeLink, setActiveLink] = useState("");
+
   const navLinks: NavLink[] = [
-    { name: "Home", icon: <House className="w-5 h-5" />, path: "../../" },
-    { name: "Shop", icon: <ShoppingBag className="w-5 h-5" />, path: "../../marketplace" },
-    { name: "Donate", icon: <Heart className="w-5 h-5" />, path: "../../donate" },
-    { name: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" />, path: "../../dashboard" },
+    { name: "Home", icon: <HomeIcon className="w-6 h-6" />, path: "./" },
+    { name: "Shop", icon: <ShoppingCartIcon className="w-6 h-6" />, path: "./marketplace" },
+    { name: "Donate", icon: <GiftIcon className="w-6 h-6" />, path: "./donate" },
+    { name: "Dashboard", icon: <ChartBarIcon className="w-6 h-6" />, path: "./dashboard" },
+    { name: "Contact", icon: <ChatBubbleLeftIcon className="w-6 h-6" />, path: "#" },
   ];
 
   return (
     <>
       <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap');
+
         .navbar {
-          background: ${COLORS.glass.background};
-          backdrop-filter: blur(12px);
-          border-bottom: 1px solid ${COLORS.glass.border};
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-                      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          background: rgba(26, 11, 59, 0.98);
+          backdrop-filter: blur(25px);
+          border-bottom: 1px solid rgba(123, 66, 255, 0.25);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+          font-family: 'Space Grotesk', sans-serif;
         }
 
         .logo-container {
           position: relative;
-          transition: transform 0.3s ease;
+          z-index: 20;
         }
 
-        .logo-container:hover {
-          transform: translateY(-2px);
-        }
-
-        .logo-glow {
-          position: absolute;
-          inset: -8px;
-          background: linear-gradient(to right, ${COLORS.primary.main}, ${COLORS.primary.light});
-          opacity: 0;
-          border-radius: 12px;
-          filter: blur(8px);
-          transition: opacity 0.3s ease;
-        }
-
-        .logo-container:hover .logo-glow {
-          opacity: 0.3;
-        }
-
-        .logo-text {
-          background: linear-gradient(to right, ${COLORS.primary.main}, ${COLORS.primary.dark});
+        .logo-gradient {
+          background: linear-gradient(
+            135deg,
+            ${COLORS.secondary.main},
+            ${COLORS.primary.main},
+            ${COLORS.secondary.light}
+          );
+          background-size: 300% auto;
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
+          animation: shine 4s ease infinite;
+        }
+
+        @keyframes shine {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
 
         .nav-link {
           position: relative;
-          color: ${COLORS.text.primary};
-          transition: color 0.3s ease;
+          padding: 0.75rem 1.25rem;
+          border-radius: 12px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          background: transparent;
+          overflow: hidden;
         }
 
         .nav-link:hover {
-          color: ${COLORS.primary.main};
+          background: rgba(123, 66, 255, 0.15);
+          transform: translateY(-2px) scale(1.02);
         }
 
         .nav-link::after {
           content: '';
           position: absolute;
-          bottom: -4px;
-          left: 0;
+          bottom: 0;
+          left: 50%;
           width: 0;
           height: 2px;
-          background: linear-gradient(to right, ${COLORS.primary.main}, ${COLORS.primary.light});
-          transition: width 0.3s ease;
+          background: linear-gradient(
+            90deg,
+            ${COLORS.secondary.main},
+            ${COLORS.primary.main}
+          );
+          transition: all 0.3s ease;
+          transform: translateX(-50%);
         }
 
         .nav-link:hover::after {
-          width: 100%;
+          width: 80%;
+        }
+
+        .nav-link.active {
+          background: rgba(123, 66, 255, 0.2);
+          box-shadow: 0 0 15px rgba(123, 66, 255, 0.3);
         }
 
         .nav-icon {
-          transition: transform 0.3s ease, color 0.3s ease;
+          transition: transform 0.3s ease;
         }
 
         .nav-link:hover .nav-icon {
-          transform: scale(1.1);
-          color: ${COLORS.primary.main};
+          transform: scale(1.1) rotate(-5deg);
         }
 
-        .connect-button-wrapper {
-          position: relative;
-        }
+.mobile-menu {
+            box-shadow: 
+              0 10px 30px -10px rgba(0, 0, 0, 0.3),
+              0 0 20px rgba(123, 66, 255, 0.1);
+          }
 
-        .connect-button-wrapper::before {
-          content: '';
-          position: absolute;
-          inset: -8px;
-          background: linear-gradient(to right, ${COLORS.primary.main}, ${COLORS.primary.light});
-          opacity: 0;
-          border-radius: 12px;
-          filter: blur(8px);
-          transition: opacity 0.3s ease;
-        }
+          .nav-icon {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(123, 66, 255, 0.1);
+          }
 
-        .connect-button-wrapper:hover::before {
-          opacity: 0.2;
-        }
+          .active .nav-icon {
+            background: rgba(123, 66, 255, 0.2);
+            box-shadow: 
+              0 0 15px rgba(123, 66, 255, 0.2),
+              inset 0 0 10px rgba(123, 66, 255, 0.1);
+          }
 
-        .shine-effect {
-          position: relative;
-          overflow: hidden;
-        }
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
 
-        .shine-effect::after {
-          content: '';
-          position: absolute;
-          top: -50%;
-          left: -50%;
-          width: 200%;
-          height: 200%;
-          background: linear-gradient(
-            45deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            transparent 100%
-          );
-          transform: rotate(45deg);
-          animation: shine 3s infinite;
-        }
+          .mobile-menu .nav-link {
+            position: relative;
+            overflow: hidden;
+          }
 
-        @keyframes shine {
-          0% { transform: translateX(-100%) rotate(45deg); }
-          100% { transform: translateX(100%) rotate(45deg); }
-        }
+          .mobile-menu .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 2px;
+            width: 0;
+            background: linear-gradient(
+              90deg,
+              ${COLORS.secondary.main},
+              ${COLORS.primary.main}
+            );
+            transition: width 0.3s ease;
+          }
 
-        :global(.rainbow-kit-connect-button) {
-          background: ${COLORS.glass.background} !important;
-          backdrop-filter: blur(12px) !important;
-          border: 1px solid ${COLORS.glass.border} !important;
-          transition: all 0.3s ease !important;
-        }
+          .mobile-menu .nav-link:hover::before {
+            width: 100%;
+          }
 
-        :global(.rainbow-kit-connect-button:hover) {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 8px 16px rgba(192, 178, 131, 0.2) !important;
-        }
-      `}</style>
+          .mobile-menu .nav-link.active::before {
+            width: 100%;
+          }
+        `}</style>
 
       <nav className="navbar sticky top-0 z-50">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          {/* Logo */}
-          <div className="logo-container flex items-center">
-            <div className="logo-glow" />
-            <div className="relative">
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <motion.div 
+              className="logo-container flex items-center"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Image
                 src="/my-business-name-high-resolution-logo-transparent.png"
                 alt="Ace Logo"
                 width={45}
                 height={45}
-                className="rounded-lg shine-effect"
+                className="rounded-full hover:animate-spin"
                 priority
               />
-            </div>
-            <h1 className="logo-text text-2xl font-bold ml-2">
-              Ace
-            </h1>
-          </div>
+              <h1 className="logo-gradient text-2xl font-bold ml-3">
+                Ace
+              </h1>
+            </motion.div>
 
-          {/* Navigation Links */}
-          <div className="flex space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                className="nav-link flex items-center space-x-2"
+            {/* Desktop Navigation */}
+            <div className="desktop-nav hidden md:flex items-center space-x-6">
+              {navLinks.map((link) => (
+                <motion.a
+                  key={link.name}
+                  href={link.path}
+                  className={`nav-link flex items-center space-x-3 text-white font-medium
+                    ${activeLink === link.name ? 'active' : ''}`}
+                  onClick={() => setActiveLink(link.name)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="nav-icon">{link.icon}</span>
+                  <span>{link.name}</span>
+                </motion.a>
+              ))}
+              <motion.div 
+                className="ml-4"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <span className="nav-icon">
-                  {link.icon}
-                </span>
-                <span>{link.name}</span>
-              </a>
-            ))}
-          </div>
+                <ConnectButton 
+                  accountStatus="avatar"
+                  chainStatus="icon"
+                  showBalance={false}
+                />
+              </motion.div>
+            </div>
 
-          {/* Connect Button */}
-          <div className="connect-button-wrapper">
-            <ConnectButton 
-              accountStatus="avatar"
-              chainStatus="icon"
-              showBalance={false}
-            />
+            {/* Mobile Menu Button */}
+            <motion.button
+              className="mobile-nav md:hidden menu-button text-white"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              whileTap={{ scale: 0.9 }}
+            >
+              <motion.div
+                animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <MinusIcon className="w-6 h-6" />}
+              </motion.div>
+            </motion.button>
           </div>
         </div>
+
+        
+{/* Mobile Navigation */}
+<AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ 
+                duration: 0.3,
+                ease: "easeInOut"
+              }}
+              className="mobile-menu fixed inset-x-0 top-[80px] z-10"
+            >
+              <div className="container mx-auto px-6 py-4 bg-gradient-to-b from-[rgba(26,11,59,0.98)] to-[rgba(26,11,59,0.95)] backdrop-blur-xl border-t border-[rgba(123,66,255,0.15)]">
+                <motion.div 
+                  className="grid gap-3"
+                  initial="closed"
+                  animate="open"
+                  variants={{
+                    open: {
+                      transition: {
+                        staggerChildren: 0.1
+                      }
+                    },
+                    closed: {
+                      transition: {
+                        staggerChildren: 0.05,
+                        staggerDirection: -1
+                      }
+                    }
+                  }}
+                >
+                  {navLinks.map((link) => (
+                    <motion.a
+                      key={link.name}
+                      href={link.path}
+                      className={`nav-link flex items-center justify-between text-white p-4 rounded-xl
+                        ${activeLink === link.name ? 'active bg-[rgba(123,66,255,0.2)]' : ''}
+                        hover:bg-[rgba(123,66,255,0.15)] transition-all duration-300`}
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setActiveLink(link.name);
+                      }}
+                      variants={{
+                        open: {
+                          opacity: 1,
+                          y: 0,
+                          transition: {
+                            duration: 0.4
+                          }
+                        },
+                        closed: {
+                          opacity: 0,
+                          y: -20,
+                          transition: {
+                            duration: 0.3
+                          }
+                        }
+                      }}
+                      whileHover={{ 
+                        scale: 1.02,
+                        translateX: 10
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <span className="nav-icon p-2 rounded-lg bg-[rgba(123,66,255,0.1)]">
+                          {link.icon}
+                        </span>
+                        <span className="font-medium text-base">{link.name}</span>
+                      </div>
+                      <motion.span
+                        className="text-[rgba(255,255,255,0.3)]"
+                        whileHover={{ scale: 1.2 }}
+                      >
+                        →
+                      </motion.span>
+                    </motion.a>
+                  ))}
+                  
+                  <motion.div 
+                    className="mt-4 p-4"
+                    variants={{
+                      open: {
+                        opacity: 1,
+                        y: 0,
+                        transition: {
+                          delay: 0.3,
+                          duration: 0.4
+                        }
+                      },
+                      closed: {
+                        opacity: 0,
+                        y: -20,
+                        transition: {
+                          duration: 0.3
+                        }
+                      }
+                    }}
+                  >
+                    <ConnectButton 
+                      accountStatus="avatar"
+                      chainStatus="icon"
+                      showBalance={false}
+                    />
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </>
   );
