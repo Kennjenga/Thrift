@@ -503,8 +503,17 @@ contract MarketplaceEscrow is IMarketplaceEscrow, Ownable, ReentrancyGuard {
         if (isSeller) {
             require(escrow.seller == originalSender, "Not authorized");
         } else {
-            require(escrow.buyer == originalSender, "Not authorized");
-            require(!escrow.sellerConfirmed, "Seller already confirmed");
+            // Allow cancellation by buyer or by exchange creator
+            bool isBuyer = escrow.buyer == originalSender;
+            bool isExchangeCreator = escrow.isExchange &&
+                escrow.seller == originalSender;
+
+            require(isBuyer || isExchangeCreator, "Not authorized");
+
+            // Only check seller confirmation for regular purchases
+            if (!escrow.isExchange) {
+                require(!escrow.sellerConfirmed, "Seller already confirmed");
+            }
         }
 
         require(!escrow.completed && !escrow.refunded, "Escrow not active");
