@@ -1,5 +1,5 @@
 import { getDefaultConfig, getDefaultWallets } from '@rainbow-me/rainbowkit';
-import { mainnet, sepolia, polygon, arbitrum, base, optimism } from 'wagmi/chains';
+import { mainnet, sepolia, polygon, arbitrum, base, optimism, Chain } from 'wagmi/chains';
 import {
   argentWallet,
   trustWallet,
@@ -11,31 +11,34 @@ if (!process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID) {
   throw new Error('Missing NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID');
 }
 
-const { wallets } = getDefaultWallets();
-
-const liskSepolia = {
-  id: 4202, // Chain ID for Lisk Sepolia
+// Lisk Sepolia Testnet Configuration
+export const liskSepolia: Chain = {
+  id: 4202, // Confirmed Lisk Sepolia Chain ID
   name: 'Lisk Sepolia',
-  network: 'lisk-sepolia',
   nativeCurrency: {
-    name: 'SepoliaETH',
+    name: 'Sepolia ETH',
     symbol: 'ETH',
     decimals: 18,
   },
   rpcUrls: {
     default: {
-      http: ['https://lisk-sepolia.rpc.url'], // Use an array of RPC URLs
+      http: ['https://rpc.sepolia-api.lisk.com'],
+    },
+    public: {
+      http: ['https://rpc.sepolia-api.lisk.com'],
     },
   },
   blockExplorers: {
     default: {
       name: 'Lisk Sepolia Explorer',
-      url: 'https://explorer.lisk-sepolia.url', // Replace with the actual explorer URL
+      url: 'https://sepolia-explorer.lisk.com', // Replace with actual explorer URL
     },
   },
+  testnet: true,
 };
 
 
+const { wallets } = getDefaultWallets();
 
 export const config = getDefaultConfig({
   appName: 'Thrift app',
@@ -54,7 +57,7 @@ export const config = getDefaultConfig({
     arbitrum,
     base,
     optimism,
-    liskSepolia, // Add this to support Lisk Sepolia
+    liskSepolia
   ],
   transports: {
     [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`),
@@ -63,7 +66,9 @@ export const config = getDefaultConfig({
     [arbitrum.id]: http(`https://arb-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`),
     [base.id]: http(`https://base-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`),
     [optimism.id]: http(`https://opt-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`),
-    [liskSepolia.id]: http(`https://lisk-sepolia.rpc.url`)
+    [liskSepolia.id]: http(
+      process.env.NEXT_PUBLIC_LISK_SEPOLIA_RPC_URL || 'https://rpc.sepolia-api.lisk.com'
+    ),
   },
   ssr: true,
   storage: createStorage({
