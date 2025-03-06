@@ -650,7 +650,7 @@ export const THRIFT_ABI = [
     }
   ]
 
-export const THRIFT_ADDRESS = "0xCD6152307d4b223C00D1beF239F401101e4FBE78"
+export const THRIFT_ADDRESS = "0x5f260ceb6bD6937CD3CFf10FbdA4357C9B4C3D53"
 
 
 export const DONATION_AND_RECYCLING_ABI = [
@@ -2783,9 +2783,9 @@ export const DONATION_AND_RECYCLING_ABI = [
   }
 ]
 
-export const DONATION_AND_RECYCLING_ADDRESS = "0xA85B7366aD844A23dbcd81EC3439e293da5Ea196"
+export const DONATION_AND_RECYCLING_ADDRESS = "0xAbFCAB601E463c47008CE3270430664e801CF1D4"
 
-export const USERAESTHETICS_ADDRESS = "0x784d1f5Bc247aCbC4E42c260Cf710d0828B5F26A"
+export const USERAESTHETICS_ADDRESS = "0x51e676cE5B1a404981321B8726A9DdC36D7Ee4c8"
 export const USERAESTHETICS_ABI =  [
   {
     "anonymous": false,
@@ -3023,7 +3023,7 @@ export const USERAESTHETICS_ABI =  [
 ]
  
 
-export const MARKETPLACE_STORAGE_ADDRESS = "0xD3063fc5b4880ABF3F7327454e97f45DfbcdE8F0"
+export const MARKETPLACE_STORAGE_ADDRESS = "0x4e44554d4091cAa705e86Ab58F0bFa53879Bf8f1"
 export const MARKETPLACE_STORAGE_ABI = [
   {
     "inputs": [
@@ -3448,6 +3448,31 @@ export const MARKETPLACE_STORAGE_ABI = [
       }
     ],
     "name": "ProductMarkedSold",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isSold",
+        "type": "bool"
+      }
+    ],
+    "name": "ProductStatusUpdated",
     "type": "event"
   },
   {
@@ -4447,6 +4472,19 @@ export const MARKETPLACE_STORAGE_ABI = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "resetProductSold",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "contractAddress",
         "type": "address"
@@ -4731,7 +4769,7 @@ export const MARKETPLACE_STORAGE_ABI = [
   }
 ]
 
-export const MARKETPLACE_PRODUCT_ADDRESS = "0x27074dF1dF0061FaDa3a10d226f8dff22AB0a246"
+export const MARKETPLACE_PRODUCT_ADDRESS = "0xbF80Aa56bcDcf44D5a807614cB8CD8885BB5C491"
 export const MARKETPLACE_PRODUCT_ABI = [
   {
     "inputs": [
@@ -5483,8 +5521,9 @@ export const MARKETPLACE_PRODUCT_ABI = [
   }
 ]
 
-export const MARKETPLACE_ESCROW_ADDRESS = "0x13EfffDB3b1999Df9d08b72d8f34eA5438C319f9"
-export const MARKETPLACE_ESCROW_ABI =  [
+
+export const MARKETPLACE_ESCROW_ADDRESS = "0x1555dcfdCa1a7e8b93cb8064d94BA1A6030Ba046"
+export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
       {
@@ -5966,7 +6005,7 @@ export const MARKETPLACE_ESCROW_ABI =  [
   }
 ]
 
-export const MARKETPLACE_QUERY_ADDRESS = "0x99105A334B2F2EDfc200E4cd5c56FB68f72AE7F3"
+export const MARKETPLACE_QUERY_ADDRESS = "0xe39EC07E7F5f781d3b6F5B1941Ba24f58FfeD10B"
 export const MARKETPLACE_QUERY_ABI = [
   {
     "inputs": [
@@ -6510,7 +6549,7 @@ export const MARKETPLACE_QUERY_ABI = [
   }
 ]
 
-export const MARKETPLACE_ADDRESS = "0x296DFf9366C0bc9BC433D49A5193475D0B1485ca"
+export const MARKETPLACE_ADDRESS = "0x533eed07322555a73DbeD780eda0c7e19DcE19E3"
 export const MARKETPLACE_ABI = [
   {
     "inputs": [

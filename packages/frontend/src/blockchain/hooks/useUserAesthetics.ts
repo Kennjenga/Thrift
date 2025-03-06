@@ -3,7 +3,7 @@ import { Address } from 'viem'
 import { useState } from 'react'
 import { USERAESTHETICS_ABI, USERAESTHETICS_ADDRESS } from '@/blockchain/abis/thrift'
 
-export function useUserAesthetics(chainId: number = 1) {
+export function useUserAesthetics(chainId: number = 4202) {
  const { address } = useAccount()
  const { writeContract } = useWriteContract()
 

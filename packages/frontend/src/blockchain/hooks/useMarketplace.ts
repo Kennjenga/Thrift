@@ -8,7 +8,8 @@ import {
 } from '@/blockchain/abis/thrift'
 
 // Constants
-const SEPOLIA_CHAIN_ID = 11155111
+// const lisksepolia_CHAIN_ID = 11155111
+const lisksepolia_CHAIN_ID = 4202
 
 /**
  * Basic product management hooks
@@ -19,7 +20,7 @@ export function useProductsData(address?: Address) {
     address: MARKETPLACE_ADDRESS,
     abi: MARKETPLACE_ABI,
     functionName: 'getAllActiveProducts',
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
   })
   
   // Get user's products
@@ -28,7 +29,7 @@ export function useProductsData(address?: Address) {
     abi: MARKETPLACE_ABI,
     functionName: 'getUserProducts',
     args: address ? [address] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!address,
   })
   
@@ -91,7 +92,7 @@ export function useProductOperations() {
         params.isAvailableForExchange,
         params.exchangePreference
       ],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -130,7 +131,7 @@ export function useProductOperations() {
         params.isAvailableForExchange,
         params.exchangePreference
       ],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -141,7 +142,7 @@ export function useProductOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'updateProductQuantity',
       args: [productId, newQuantity],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -152,7 +153,7 @@ export function useProductOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'batchUpdateQuantities',
       args: [productIds, newQuantities],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -173,7 +174,7 @@ export function useProductDetails(productId?: bigint) {
     abi: MARKETPLACE_ABI,
     functionName: 'getProductsById',
     args: productId ? [[productId]] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!productId
   })
   
@@ -183,7 +184,7 @@ export function useProductDetails(productId?: bigint) {
     abi: MARKETPLACE_ABI,
     functionName: 'getExchangeOffers',
     args: productId ? [productId] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!productId
   })
   
@@ -214,7 +215,7 @@ export function useProductsById(productIds?: bigint[]) {
     abi: MARKETPLACE_ABI,
     functionName: 'getProductsById',
     args: productIds && productIds.length > 0 ? [productIds] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!(productIds && productIds.length > 0)
   })
   
@@ -249,7 +250,7 @@ export function useProductSearch(params?: {
     abi: MARKETPLACE_ABI,
     functionName: 'searchProducts',
     args: params ? [params] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!params
   })
   
@@ -271,7 +272,7 @@ export function useProductsByAesthetics(user?: Address, page = 1n, pageSize = 10
     abi: MARKETPLACE_ABI,
     functionName: 'getProductsByUserAesthetics',
     args: user ? [user, page, pageSize] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!user
   })
   
@@ -294,7 +295,7 @@ export function useEscrowData(address?: Address) {
     abi: MARKETPLACE_ABI,
     functionName: 'getUserActiveEscrowsAsBuyer',
     args: address ? [address] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!address
   })
   
@@ -304,7 +305,7 @@ export function useEscrowData(address?: Address) {
     abi: MARKETPLACE_ABI,
     functionName: 'getUserActiveEscrowsAsSeller',
     args: address ? [address] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!address
   })
   
@@ -314,7 +315,7 @@ export function useEscrowData(address?: Address) {
     abi: MARKETPLACE_ABI,
     functionName: 'getUserCompletedEscrows',
     args: address ? [address] : undefined,
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
     // enabled: !!address
   })
   
@@ -357,7 +358,7 @@ export function useEscrowDetails(escrowId?: bigint) {
     abi: MARKETPLACE_STORAGE_ABI,
     functionName: 'getEscrow',
     args: escrowId ? [escrowId] : undefined,
-    chainId: SEPOLIA_CHAIN_ID
+    chainId: lisksepolia_CHAIN_ID
   })
   
   return {
@@ -383,7 +384,7 @@ export function useEscrowOperations() {
       functionName: 'createEscrowWithEth',
       args: [productId, quantity],
       value,
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -394,7 +395,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'createEscrowWithTokens',
       args: [productId, quantity],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -406,7 +407,7 @@ export function useEscrowOperations() {
       functionName: 'createBulkEscrowWithEth',
       args: [productIds, quantities],
       value: totalValue,
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -417,7 +418,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'createBulkEscrowWithTokens',
       args: [productIds, quantities],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -428,7 +429,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'confirmEscrow',
       args: [escrowId],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -439,7 +440,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'rejectEscrow',
       args: [escrowId, reason],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -450,7 +451,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'cancelEscrow',
       args: [escrowId],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -461,7 +462,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'bulkConfirmEscrowsAsBuyer',
       args: [escrowIds],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -472,7 +473,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'bulkConfirmEscrowsForSeller',
       args: [escrowIds],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -488,7 +489,7 @@ export function useEscrowOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'createExchangeOffer',
       args: [offeredProductId, wantedProductId, quantity, tokenTopUp],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -518,7 +519,7 @@ export function useAdminOperations() {
       address: MARKETPLACE_ADDRESS,
       abi: MARKETPLACE_ABI,
       functionName: 'togglePause',
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -529,7 +530,7 @@ export function useAdminOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'updatePlatformFees',
       args: [newTokenFee, newEthFee],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -540,7 +541,7 @@ export function useAdminOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'updateTreasuryWallet',
       args: [newTreasury],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   
@@ -551,7 +552,7 @@ export function useAdminOperations() {
       abi: MARKETPLACE_ABI,
       functionName: 'updateUserAesthetics',
       args: [newUserAesthetics],
-      chainId: SEPOLIA_CHAIN_ID
+      chainId: lisksepolia_CHAIN_ID
     })
   }
   

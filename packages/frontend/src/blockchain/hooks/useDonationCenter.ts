@@ -56,7 +56,8 @@ export type RewardRates = {
 }
 
 export type DonationType = 'clothing' | 'recycling' | 'token';
-const SEPOLIA_CHAIN_ID = 11155111
+// const sepolia_CHAIN_ID = 11155111
+const lisksepolia_CHAIN_ID = 4202
 
 
 // Hook to get donation center details
@@ -67,7 +68,7 @@ export function useGetDonationCenter(centerId: bigint | undefined) {
     functionName: 'getDonationCenter',
     args: centerId ? [centerId] : undefined,
     query: { enabled: Boolean(centerId) },
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
   })
 }
 
@@ -79,7 +80,7 @@ export function useGetDonationCenterById(centerId: bigint | undefined) {
     functionName: 'getDonationCenterById',
     args: centerId ? [centerId] : undefined,
     query: { enabled: Boolean(centerId) },
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
   })
 
   // Convert raw data to our DonationCenter type
@@ -118,7 +119,7 @@ export function useGetAllActiveCenters() {
     address: DONATION_AND_RECYCLING_ADDRESS,
     abi: DONATION_AND_RECYCLING_ABI,
     functionName: 'getAllActiveCenters',
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
   })
 
   // Process the raw data into our DonationCenter type
@@ -155,7 +156,7 @@ export function useGetOwnerInactiveCenters() {
     address: DONATION_AND_RECYCLING_ADDRESS,
     abi: DONATION_AND_RECYCLING_ABI,
     functionName: 'getOwnerInactiveCenters',
-    chainId: SEPOLIA_CHAIN_ID,
+    chainId: lisksepolia_CHAIN_ID,
   })
 
   // Process the raw data into our DonationCenter type
