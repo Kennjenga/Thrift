@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 import EcoCharacter from "@/components/eco-character";
 import {
   AlertCircle,
@@ -1035,6 +1036,7 @@ const Home: NextPage = () => {
           <FashionMarquee />
           <MarketplaceSection />
           <FeaturedCollection />
+          <Footer />
         </main>
       </div>
     </>

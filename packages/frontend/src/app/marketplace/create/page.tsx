@@ -9,6 +9,7 @@ import {
   ProductGender,
 } from "@/types/market";
 import { AESTHETICS } from "@/constants/aesthetics";
+import EcoCharacter from "@/components/eco-character";
 import { parseEther } from "viem";
 import {
   Upload,
@@ -143,6 +144,7 @@ const CreateProduct = () => {
   return (
     <div className="min-h-screen relative">
       <BackgroundElements />
+      <EcoCharacter />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
         <motion.div

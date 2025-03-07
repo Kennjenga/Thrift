@@ -16,6 +16,7 @@ import {
   useEscrowData,
   useMarketplace,
 } from "@/blockchain/hooks/useMarketplace";
+import EcoCharacter from "@/components/eco-character";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -471,6 +472,7 @@ const EscrowPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#2A1B54] to-[#1A0B3B] py-12">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
+          <EcoCharacter />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent">
             Escrow Management
           </h1>

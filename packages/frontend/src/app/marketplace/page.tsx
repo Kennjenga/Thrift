@@ -21,6 +21,7 @@ import {
   SearchParams,
 } from "@/types/market";
 import { AESTHETICS } from "@/constants/aesthetics";
+import EcoCharacter from "@/components/eco-character";
 import { formatEther } from "ethers";
 
 // Styles object
@@ -243,10 +244,10 @@ const EmptyState = () => (
 
 const MarketplaceHeader = () => (
   <div className="mb-12 text-center">
-    <h2 className="text-4xl font-bold leading-tight mb-6 bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient">
+    <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-4 md:mb-6 bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent animate-gradient">
       Digital Fashion Marketplace
     </h2>
-    <p className="text-white/70 max-w-2xl mx-auto">
+    <p className="text-white/70 max-w-2xl mx-auto text-sm md:text-base">
       Discover unique fashion items from sustainable creators around the world.
       Buy with crypto, exchange items, or swap with Thrift tokens.
     </p>
@@ -280,7 +281,128 @@ const FilterSection: React.FC<FilterSectionProps> = ({
   handleSearch,
 }) => (
   <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-3 mb-8">
-    <div className="flex items-center w-full gap-2">
+    {/* Mobile view (stacked layout) */}
+    <div className="flex flex-col space-y-3 lg:hidden">
+      {/* Search Input */}
+      <div className="relative w-full">
+        <input
+          type="text"
+          placeholder="Search products..."
+          className="w-full py-2 px-8 bg-white/10 border border-white/20 rounded-full text-white placeholder-white/50 focus:outline-none focus:border-[#00FFD1] text-sm"
+          value={filters.nameQuery}
+          onChange={(e) =>
+            setFilters((prev: FilterState) => ({
+              ...prev,
+              nameQuery: e.target.value,
+            }))
+          }
+        />
+        <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-white/50 w-4 h-4" />
+      </div>
+
+      {/* Filters Group - First row */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Category Filter */}
+        <select
+          className="py-2 px-3 bg-white/10 border border-white/20 rounded-full text-white appearance-none text-sm focus:outline-none focus:border-[#00FFD1] w-full"
+          value={filters.categories[0] || ""}
+          onChange={(e) =>
+            setFilters((prev: FilterState) => ({
+              ...prev,
+              categories: e.target.value ? [e.target.value] : [],
+            }))
+          }
+        >
+          <option value="">Aesthetic</option>
+          {Object.values(AESTHETICS).map((aesthetic) => (
+            <option key={aesthetic} value={aesthetic}>
+              {aesthetic}
+            </option>
+          ))}
+        </select>
+
+        {/* Condition Filter */}
+        <select
+          className="py-2 px-3 bg-white/10 border border-white/20 rounded-full text-white appearance-none text-sm focus:outline-none focus:border-[#00FFD1] w-full"
+          value={filters.condition}
+          onChange={(e) =>
+            setFilters((prev: FilterState) => ({
+              ...prev,
+              condition: e.target.value as ProductCondition | "",
+            }))
+          }
+        >
+          <option value="">Condition</option>
+          <option value="New">New</option>
+          <option value="Like New">Like New</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+        </select>
+      </div>
+
+      {/* Price Range */}
+      <div className="flex items-center bg-white/10 border border-white/20 rounded-full py-2 px-3 w-full">
+        <input
+          type="number"
+          placeholder="Min"
+          className="w-full bg-transparent text-white placeholder-white/50 focus:outline-none text-sm text-center"
+          value={filters.minPrice}
+          onChange={(e) =>
+            setFilters((prev: FilterState) => ({
+              ...prev,
+              minPrice: e.target.value,
+            }))
+          }
+          min="0"
+        />
+        <div className="text-white/50 mx-1">-</div>
+        <input
+          type="number"
+          placeholder="Max"
+          className="w-full bg-transparent text-white placeholder-white/50 focus:outline-none text-sm text-center"
+          value={filters.maxPrice}
+          onChange={(e) =>
+            setFilters((prev: FilterState) => ({
+              ...prev,
+              maxPrice: e.target.value,
+            }))
+          }
+          min="0"
+        />
+        <div className="text-white/50 ml-1">ETH</div>
+      </div>
+
+      {/* Bottom row with toggle and button */}
+      <div className="flex items-center justify-between">
+        {/* Exchange Only Toggle */}
+        <label className="flex items-center gap-1.5 text-white cursor-pointer whitespace-nowrap text-sm">
+          <input
+            type="checkbox"
+            checked={filters.exchangeOnly}
+            onChange={(e) =>
+              setFilters((prev: FilterState) => ({
+                ...prev,
+                exchangeOnly: e.target.checked,
+              }))
+            }
+            className="w-3.5 h-3.5 accent-[#00FFD1]"
+          />
+          Exchange Only
+        </label>
+
+        {/* Apply Button */}
+        <button
+          onClick={handleSearch}
+          className="py-2 px-4 bg-gradient-to-r from-[#00FFD1] to-[#00FFFF] text-[#1A0B3B] rounded-full font-medium text-sm hover:shadow-[0_0_15px_rgba(0,255,209,0.4)] transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap"
+        >
+          <Filter size={14} />
+          Filter
+        </button>
+      </div>
+    </div>
+
+    {/* Desktop view (row layout) */}
+    <div className="hidden lg:flex items-center w-full gap-2">
       {/* Search Input - Flexible width */}
       <div className="relative flex-grow max-w-[30%]">
         <input
@@ -501,8 +623,9 @@ const MarketplacePage: React.FC = () => {
   return (
     <div className="min-h-screen relative">
       <BackgroundElements />
+      <EcoCharacter />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 md:py-12">
         <MarketplaceHeader />
 
         <FilterSection
@@ -512,7 +635,7 @@ const MarketplacePage: React.FC = () => {
         />
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 sm:gap-0">
           <div className="flex items-center gap-3">
             <div className="flex -space-x-2">
               {[...Array(4)].map((_, index) => (
@@ -556,16 +679,23 @@ const MarketplacePage: React.FC = () => {
             <p className="text-white/70">Active Sellers</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full sm:w-auto">
             <button
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white"
               onClick={() => refetchProducts()}
             >
               <Repeat size={20} />
             </button>
-            <Link href="/marketplace/create">
+            <Link href="/marketplace/escrow" className="flex-1 sm:flex-auto">
               <button
-                className={`${styles.button} ${styles.primaryButton} flex items-center gap-2`}
+                className={`${styles.button} ${styles.primaryButton} flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start`}
+              >
+                View Escrows <ArrowRight size={16} />
+              </button>
+            </Link>
+            <Link href="/marketplace/create" className="flex-1 sm:flex-auto">
+              <button
+                className={`${styles.button} ${styles.primaryButton} flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start`}
               >
                 List Item <ArrowRight size={16} />
               </button>
@@ -580,7 +710,7 @@ const MarketplacePage: React.FC = () => {
         ) : products.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {products.map((product) => (
               <Link
                 key={product.id.toString()}
@@ -598,7 +728,7 @@ const MarketplacePage: React.FC = () => {
           "totalPages" in searchResults &&
           searchResults.totalPages > 1n && (
             <div className="mt-12 flex justify-center">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 <button
                   className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
                   onClick={() => {
@@ -616,29 +746,64 @@ const MarketplacePage: React.FC = () => {
                   &lt;
                 </button>
 
-                {/* Generate page buttons */}
+                {/* Generate page buttons - limit visible pages on mobile */}
                 {Array.from(
                   { length: Number(searchResults.totalPages) },
-                  (_, i) => (
-                    <button
-                      key={i}
-                      className={`w-10 h-10 flex items-center justify-center rounded-lg ${
-                        BigInt(i + 1) === filters.page
-                          ? "bg-[#7B42FF] text-white"
-                          : "bg-white/10 text-white hover:bg-white/20"
-                      } transition-colors`}
-                      onClick={() => {
-                        const newPage = BigInt(i + 1);
-                        setFilters((prev: FilterState) => ({
-                          ...prev,
-                          page: newPage,
-                        }));
-                        handleSearch();
-                      }}
-                    >
-                      {i + 1}
-                    </button>
-                  )
+                  (_, i) => {
+                    // On mobile, show fewer page buttons
+                    const currentPage = Number(filters.page);
+                    const totalPages = Number(searchResults.totalPages);
+
+                    // Always show first, last, current and adjacent pages
+                    if (
+                      i === 0 ||
+                      i === totalPages - 1 ||
+                      i === currentPage - 1 ||
+                      i === currentPage ||
+                      i === currentPage - 2 ||
+                      totalPages <= 7 || // Show all if 7 or fewer pages
+                      (i >= currentPage - 2 && i <= currentPage + 2) // Show 2 on each side of current
+                    ) {
+                      return (
+                        <button
+                          key={i}
+                          className={`w-10 h-10 flex items-center justify-center rounded-lg ${
+                            BigInt(i + 1) === filters.page
+                              ? "bg-[#7B42FF] text-white"
+                              : "bg-white/10 text-white hover:bg-white/20"
+                          } transition-colors`}
+                          onClick={() => {
+                            const newPage = BigInt(i + 1);
+                            setFilters((prev: FilterState) => ({
+                              ...prev,
+                              page: newPage,
+                            }));
+                            handleSearch();
+                          }}
+                        >
+                          {i + 1}
+                        </button>
+                      );
+                    }
+
+                    // Show ellipsis for breaks in sequence
+                    if (
+                      (i === 1 && currentPage > 3) ||
+                      (i === totalPages - 2 && currentPage < totalPages - 3)
+                    ) {
+                      return (
+                        <span
+                          key={i}
+                          className="w-10 h-10 flex items-center justify-center text-white"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    // Hide other pages
+                    return null;
+                  }
                 )}
 
                 <button

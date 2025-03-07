@@ -135,7 +135,7 @@ const Navbar = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden md:flex items-center space-x-2">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
@@ -148,7 +148,7 @@ const Navbar = () => {
                   <span>{link.name}</span>
                 </a>
               ))}
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <ConnectButton
                   accountStatus="avatar"
                   chainStatus="icon"
