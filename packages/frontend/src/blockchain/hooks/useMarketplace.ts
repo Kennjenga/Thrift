@@ -8,7 +8,7 @@ import {
 } from '@/blockchain/abis/thrift'
 
 // Constants
-const sepolia_CHAIN_ID = 11155111
+const sepolia_CHAIN_ID = 4202
 
 /**
  * Basic product management hooks

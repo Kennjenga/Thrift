@@ -2,7 +2,7 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { Address } from 'viem'
 import { THRIFT_ABI, THRIFT_ADDRESS } from '@/blockchain/abis/thrift'
 
-const sepolia_CHAIN_ID = 11155111
+const sepolia_CHAIN_ID = 4202
 
 export function useThriftToken() {
   const { address } = useAccount()

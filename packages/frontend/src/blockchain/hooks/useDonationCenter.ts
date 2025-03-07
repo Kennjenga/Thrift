@@ -56,7 +56,7 @@ export type RewardRates = {
 }
 
 export type DonationType = 'clothing' | 'recycling' | 'token';
-const sepolia_CHAIN_ID = 11155111
+const sepolia_CHAIN_ID = 4202
 
 
 // Hook to get donation center details
