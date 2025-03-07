@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   useDonationAndRecycling,
@@ -10,10 +8,11 @@ import {
   type DonationCenter,
 } from "@/blockchain/hooks/useDonationCenter";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
+import EcoCharacter from "@/components/eco-character";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
 import {
-  AlertCircle,
   Search,
   Filter,
   Recycle,
@@ -26,48 +25,7 @@ import {
   Edit,
   Settings,
   ChevronRight,
-  Home,
-  ShoppingBag,
-  Heart,
-  Menu,
-  X,
-  LogOut,
-  Moon,
-  Sun,
 } from "lucide-react";
-
-// Color System (same as marketplace)
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  glass: {
-    background: "rgba(42, 27, 84, 0.2)",
-    border: "rgba(123, 66, 255, 0.1)",
-  },
-};
 
 // Styles object (same as marketplace)
 const styles = {
@@ -118,7 +76,9 @@ const styles = {
 // Utility function to format addresses
 const formatAddress = (address: string): string => {
   if (!address) return "";
-  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  return `${address.substring(0, 6)}...${address.substring(
+    address.length - 4
+  )}`;
 };
 
 // Type for filter options
@@ -144,8 +104,6 @@ const BackgroundElements = () => {
   );
 };
 
-
-
 // Loading Spinner Component
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-64">
@@ -156,19 +114,13 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Error Display Component
-const ErrorDisplay = ({ message }: { message: string }) => (
-  <div className="backdrop-blur-md bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-center gap-3">
-    <AlertCircle className="w-6 h-6 text-red-500" />
-    <p className="text-red-400">{message}</p>
-  </div>
-);
-
 // Empty State Component
 const EmptyState = () => (
   <div className="text-center py-12 backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl">
     <Package className="w-12 h-12 mx-auto mb-4 text-white/40" />
-    <p className="text-white/70 mb-6">No donation centers found matching your criteria</p>
+    <p className="text-white/70 mb-6">
+      No donation centers found matching your criteria
+    </p>
     <button className={`${styles.button} ${styles.primaryButton}`}>
       Adjust Filters
     </button>
@@ -176,17 +128,17 @@ const EmptyState = () => (
 );
 
 // Donation Center Card Component
-const DonationCenterCard = ({ 
-  center, 
+const DonationCenterCard = ({
+  center,
   isOwnedByUser,
-  router
-}: { 
-  center: DonationCenter, 
-  isOwnedByUser: boolean,
-  router: any
+  router,
+}: {
+  center: DonationCenter;
+  isOwnedByUser: boolean;
+  router: ReturnType<typeof useRouter>;
 }) => {
   return (
-    <motion.div 
+    <motion.div
       className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
@@ -220,7 +172,9 @@ const DonationCenterCard = ({
               </button>
               <button
                 className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 text-sm rounded-lg flex items-center"
-                onClick={() => router.push(`/donate/centers/${center.id}/manage`)}
+                onClick={() =>
+                  router.push(`/donate/centers/${center.id}/manage`)
+                }
               >
                 <Settings size={14} className="mr-1" /> Manage
               </button>
@@ -269,7 +223,9 @@ const DonationCenterCard = ({
 
         <div className="mt-4 border-t border-purple-500/10 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white/5 rounded-lg p-3">
-            <h3 className="text-sm font-medium text-white/50 mb-1">Total Donations</h3>
+            <h3 className="text-sm font-medium text-white/50 mb-1">
+              Total Donations
+            </h3>
             <div className="flex items-center">
               <Package className="text-[#00FFD1] mr-2 w-5 h-5" />
               <p className="text-lg font-semibold text-white">
@@ -278,7 +234,9 @@ const DonationCenterCard = ({
             </div>
           </div>
           <div className="bg-white/5 rounded-lg p-3">
-            <h3 className="text-sm font-medium text-white/50 mb-1">Total Recycling</h3>
+            <h3 className="text-sm font-medium text-white/50 mb-1">
+              Total Recycling
+            </h3>
             <div className="flex items-center">
               <Recycle className="text-[#00FFD1] mr-2 w-5 h-5" />
               <p className="text-lg font-semibold text-white">
@@ -287,7 +245,9 @@ const DonationCenterCard = ({
             </div>
           </div>
           <div className="bg-white/5 rounded-lg p-3">
-            <h3 className="text-sm font-medium text-white/50 mb-1">Token Donations</h3>
+            <h3 className="text-sm font-medium text-white/50 mb-1">
+              Token Donations
+            </h3>
             <div className="flex items-center">
               <Coins className="text-[#00FFD1] mr-2 w-5 h-5" />
               <p className="text-lg font-semibold text-white">
@@ -419,7 +379,9 @@ const DonationCentersPage: React.FC = () => {
 
   // Check if a center is owned by the current user
   const isOwnedByUser = (center: DonationCenter) => {
-    return !!userAddress && center.owner.toLowerCase() === userAddress.toLowerCase();
+    return (
+      !!userAddress && center.owner.toLowerCase() === userAddress.toLowerCase()
+    );
   };
 
   // Add the new route handler
@@ -435,9 +397,13 @@ const DonationCentersPage: React.FC = () => {
     return (
       <div className="min-h-screen relative">
         <BackgroundElements />
+        <EcoCharacter />
+
         <Navbar />
         <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-white mb-8">Donation Centers</h1>
+          <h1 className="text-3xl font-bold text-white mb-8">
+            Donation Centers
+          </h1>
           <LoadingSpinner />
         </div>
       </div>
@@ -447,8 +413,10 @@ const DonationCentersPage: React.FC = () => {
   return (
     <div className="min-h-screen relative">
       <BackgroundElements />
+      <EcoCharacter />
+
       <Navbar />
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00FFD1] via-purple-300 to-pink-400 bg-clip-text text-transparent">
@@ -506,7 +474,7 @@ const DonationCentersPage: React.FC = () => {
               Reset Filters
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Owner Filter */}
             <div>
@@ -518,7 +486,14 @@ const DonationCentersPage: React.FC = () => {
                 value={filters.owner}
                 onChange={handleFilterChange}
                 className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] appearance-none"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
+                  backgroundPosition: "right 0.5rem center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "1.5em 1.5em",
+                  paddingRight: "2.5rem",
+                }}
               >
                 <option value="all">All Owners</option>
                 {userAddress && <option value={userAddress}>My Centers</option>}
@@ -544,7 +519,14 @@ const DonationCentersPage: React.FC = () => {
                 value={filters.isActive}
                 onChange={handleFilterChange}
                 className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] appearance-none"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
+                  backgroundPosition: "right 0.5rem center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "1.5em 1.5em",
+                  paddingRight: "2.5rem",
+                }}
               >
                 <option value="all">All Status</option>
                 <option value="true">Active</option>
@@ -562,7 +544,14 @@ const DonationCentersPage: React.FC = () => {
                 value={filters.acceptsTokens}
                 onChange={handleFilterChange}
                 className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] appearance-none"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
+                  backgroundPosition: "right 0.5rem center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "1.5em 1.5em",
+                  paddingRight: "2.5rem",
+                }}
               >
                 <option value="all">All</option>
                 <option value="true">Yes</option>
@@ -580,7 +569,14 @@ const DonationCentersPage: React.FC = () => {
                 value={filters.acceptsRecycling}
                 onChange={handleFilterChange}
                 className="w-full bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#00FFD1] focus:ring-1 focus:ring-[#00FFD1] appearance-none"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
+                  backgroundPosition: "right 0.5rem center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "1.5em 1.5em",
+                  paddingRight: "2.5rem",
+                }}
               >
                 <option value="all">All</option>
                 <option value="true">Yes</option>
@@ -616,10 +612,12 @@ const DonationCentersPage: React.FC = () => {
             </div>
             <div>
               <p className="text-white/70 text-sm">Total Centers</p>
-              <p className="text-2xl font-bold text-white">{donationCenters.length}</p>
+              <p className="text-2xl font-bold text-white">
+                {donationCenters.length}
+              </p>
             </div>
           </div>
-          
+
           <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-4 flex items-center">
             <div className="w-12 h-12 rounded-full bg-[#FF00FF]/20 flex items-center justify-center mr-4">
               <Gift className="w-6 h-6 text-[#FF00FF]" />
@@ -627,11 +625,15 @@ const DonationCentersPage: React.FC = () => {
             <div>
               <p className="text-white/70 text-sm">Active Centers</p>
               <p className="text-2xl font-bold text-white">
-                {donationCenters.filter((center: DonationCenter) => center.isActive).length}
+                {
+                  donationCenters.filter(
+                    (center: DonationCenter) => center.isActive
+                  ).length
+                }
               </p>
             </div>
           </div>
-          
+
           <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/10 rounded-xl p-4 flex items-center">
             <div className="w-12 h-12 rounded-full bg-[#7B42FF]/20 flex items-center justify-center mr-4">
               <User className="w-6 h-6 text-[#7B42FF]" />
@@ -639,9 +641,12 @@ const DonationCentersPage: React.FC = () => {
             <div>
               <p className="text-white/70 text-sm">Your Centers</p>
               <p className="text-2xl font-bold text-white">
-                {userAddress ? donationCenters.filter((center: DonationCenter) => 
-                  center.owner.toLowerCase() === userAddress.toLowerCase()
-                ).length : 0}
+                {userAddress
+                  ? donationCenters.filter(
+                      (center: DonationCenter) =>
+                        center.owner.toLowerCase() === userAddress.toLowerCase()
+                    ).length
+                  : 0}
               </p>
             </div>
           </div>
@@ -651,9 +656,9 @@ const DonationCentersPage: React.FC = () => {
         <div className="space-y-6">
           {filteredCenters.length > 0 ? (
             filteredCenters.map((center: DonationCenter) => (
-              <DonationCenterCard 
-                key={center.id.toString()} 
-                center={center} 
+              <DonationCenterCard
+                key={center.id.toString()}
+                center={center}
                 isOwnedByUser={isOwnedByUser(center)}
                 router={router}
               />
@@ -662,7 +667,7 @@ const DonationCentersPage: React.FC = () => {
             <EmptyState />
           )}
         </div>
-        
+
         {/* Pagination */}
         {filteredCenters.length > 0 && (
           <div className="mt-12 flex justify-center">
@@ -685,27 +690,7 @@ const DonationCentersPage: React.FC = () => {
             </div>
           </div>
         )}
-        
-        {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-purple-500/10 text-center">
-          <p className="text-white/50 text-sm">
-            Thrift Protocol — Sustainable Fashion on the Blockchain
-          </p>
-          <div className="flex justify-center mt-4 space-x-4">
-            <a href="#" className="text-white/70 hover:text-[#00FFD1] transition-colors">
-              About
-            </a>
-            <a href="#" className="text-white/70 hover:text-[#00FFD1] transition-colors">
-              Terms
-            </a>
-            <a href="#" className="text-white/70 hover:text-[#00FFD1] transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="text-white/70 hover:text-[#00FFD1] transition-colors">
-              Contact
-            </a>
-          </div>
-        </div>
+        <Footer />
       </div>
     </div>
   );
