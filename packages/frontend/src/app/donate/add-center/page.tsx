@@ -8,53 +8,20 @@ import {
   useDonationCenterManagement,
 } from "@/blockchain/hooks/useDonationCenter"; // Updated import path
 import { motion } from "framer-motion";
-import { 
-  Loader2, 
-  AlertTriangle, 
-  CheckCircle, 
-  MapPin, 
-  FileText, 
-  Building2, 
+import {
+  Loader2,
+  AlertTriangle,
+  CheckCircle,
+  MapPin,
+  FileText,
+  Building2,
   Recycle,
   Shirt,
   Coins,
   ArrowLeft,
   Lock,
-  PlusCircle
+  PlusCircle,
 } from "lucide-react";
-
-// Color System - Using the cyberpunk theme from marketplace
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  glass: {
-    background: "rgba(42, 27, 84, 0.2)",
-    border: "rgba(123, 66, 255, 0.1)",
-  },
-};
 
 // Styles object
 const styles = {
@@ -242,7 +209,7 @@ const AddDonationCenterPage: React.FC = () => {
       <div className={`min-h-screen ${styles.backgroundGradient}`}>
         <BackgroundElements />
         <div className="relative z-10 max-w-md mx-auto px-4 py-12">
-          <motion.h1 
+          <motion.h1
             className="text-3xl font-bold mb-8 bg-gradient-to-r from-[#00FFD1] via-white to-[#FF00FF] bg-clip-text text-transparent text-center"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -250,8 +217,8 @@ const AddDonationCenterPage: React.FC = () => {
           >
             Add Donation Center
           </motion.h1>
-          
-          <motion.div 
+
+          <motion.div
             className={`${styles.glassCard} p-8`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -272,7 +239,7 @@ const AddDonationCenterPage: React.FC = () => {
               <p className="text-white/70 text-center mb-8">
                 You need creator permissions to add donation centers.
               </p>
-              
+
               <motion.button
                 onClick={() => router.push("/donate")}
                 className="bg-gradient-to-r from-[#7B42FF] to-[#8A2BE2] text-white px-6 py-3 rounded-lg flex items-center hover:shadow-[0_0_15px_rgba(123,66,255,0.4)] transition-all duration-300"
@@ -293,7 +260,7 @@ const AddDonationCenterPage: React.FC = () => {
     <div className={`min-h-screen ${styles.backgroundGradient}`}>
       <BackgroundElements />
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
-        <motion.h1 
+        <motion.h1
           className="text-3xl font-bold mb-8 bg-gradient-to-r from-[#00FFD1] via-white to-[#FF00FF] bg-clip-text text-transparent"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -365,8 +332,10 @@ const AddDonationCenterPage: React.FC = () => {
             </div>
 
             <div className="pt-4 border-t border-purple-500/20">
-              <h3 className="text-white font-medium mb-4">Donation Types Accepted</h3>
-              
+              <h3 className="text-white font-medium mb-4">
+                Donation Types Accepted
+              </h3>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* IsDonation checkbox */}
                 <div className="backdrop-blur-md bg-purple-900/20 border border-purple-500/20 rounded-lg p-4 flex items-center">
@@ -376,10 +345,15 @@ const AddDonationCenterPage: React.FC = () => {
                     name="isDonation"
                     checked={centerForm.isDonation}
                     onChange={handleChange}
-                    disabled={isSubmitting || transactionPending || isConfirming}
+                    disabled={
+                      isSubmitting || transactionPending || isConfirming
+                    }
                     className={styles.checkbox}
                   />
-                  <label htmlFor="isDonation" className="ml-3 flex items-center text-white/90">
+                  <label
+                    htmlFor="isDonation"
+                    className="ml-3 flex items-center text-white/90"
+                  >
                     <Shirt className="h-5 w-5 mr-2 text-[#FF00FF]" />
                     Clothing Donations
                   </label>
@@ -393,10 +367,15 @@ const AddDonationCenterPage: React.FC = () => {
                     name="acceptsTokens"
                     checked={centerForm.acceptsTokens}
                     onChange={handleChange}
-                    disabled={isSubmitting || transactionPending || isConfirming}
+                    disabled={
+                      isSubmitting || transactionPending || isConfirming
+                    }
                     className={styles.checkbox}
                   />
-                  <label htmlFor="acceptsTokens" className="ml-3 flex items-center text-white/90">
+                  <label
+                    htmlFor="acceptsTokens"
+                    className="ml-3 flex items-center text-white/90"
+                  >
                     <Coins className="h-5 w-5 mr-2 text-[#FFD700]" />
                     Token Donations
                   </label>
@@ -410,10 +389,15 @@ const AddDonationCenterPage: React.FC = () => {
                     name="acceptsRecycling"
                     checked={centerForm.acceptsRecycling}
                     onChange={handleChange}
-                    disabled={isSubmitting || transactionPending || isConfirming}
+                    disabled={
+                      isSubmitting || transactionPending || isConfirming
+                    }
                     className={styles.checkbox}
                   />
-                  <label htmlFor="acceptsRecycling" className="ml-3 flex items-center text-white/90">
+                  <label
+                    htmlFor="acceptsRecycling"
+                    className="ml-3 flex items-center text-white/90"
+                  >
                     <Recycle className="h-5 w-5 mr-2 text-[#00FFD1]" />
                     Recycling
                   </label>
@@ -470,27 +454,45 @@ const AddDonationCenterPage: React.FC = () => {
                 onClick={() => router.push("/donate")}
                 disabled={isSubmitting || transactionPending || isConfirming}
                 className={`px-5 py-2.5 rounded-lg flex items-center
-                  ${isSubmitting || transactionPending || isConfirming
-                    ? "bg-purple-900/20 text-white/40 cursor-not-allowed"
-                    : "bg-purple-900/30 text-white hover:bg-purple-900/50 border border-purple-500/20"
+                  ${
+                    isSubmitting || transactionPending || isConfirming
+                      ? "bg-purple-900/20 text-white/40 cursor-not-allowed"
+                      : "bg-purple-900/30 text-white hover:bg-purple-900/50 border border-purple-500/20"
                   }`}
-                whileHover={!(isSubmitting || transactionPending || isConfirming) ? { scale: 1.02 } : {}}
-                whileTap={!(isSubmitting || transactionPending || isConfirming) ? { scale: 0.98 } : {}}
+                whileHover={
+                  !(isSubmitting || transactionPending || isConfirming)
+                    ? { scale: 1.02 }
+                    : {}
+                }
+                whileTap={
+                  !(isSubmitting || transactionPending || isConfirming)
+                    ? { scale: 0.98 }
+                    : {}
+                }
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Cancel
               </motion.button>
-              
+
               <motion.button
                 type="submit"
                 disabled={isSubmitting || transactionPending || isConfirming}
                 className={`px-5 py-2.5 rounded-lg flex items-center
-                  ${isSubmitting || transactionPending || isConfirming
-                    ? "bg-[#00FFD1]/50 text-white/50 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#00FFD1] to-[#00FFFF] text-[#1A0B3B] hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]"
+                  ${
+                    isSubmitting || transactionPending || isConfirming
+                      ? "bg-[#00FFD1]/50 text-white/50 cursor-not-allowed"
+                      : "bg-gradient-to-r from-[#00FFD1] to-[#00FFFF] text-[#1A0B3B] hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]"
                   }`}
-                whileHover={!(isSubmitting || transactionPending || isConfirming) ? { scale: 1.02 } : {}}
-                whileTap={!(isSubmitting || transactionPending || isConfirming) ? { scale: 0.98 } : {}}
+                whileHover={
+                  !(isSubmitting || transactionPending || isConfirming)
+                    ? { scale: 1.02 }
+                    : {}
+                }
+                whileTap={
+                  !(isSubmitting || transactionPending || isConfirming)
+                    ? { scale: 0.98 }
+                    : {}
+                }
               >
                 {isSubmitting ? (
                   <>
@@ -507,9 +509,9 @@ const AddDonationCenterPage: React.FC = () => {
             </div>
           </div>
         </motion.form>
-        
+
         {/* Info Card */}
-        <motion.div 
+        <motion.div
           className={`${styles.glassCard} p-6 mt-6`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -523,16 +525,19 @@ const AddDonationCenterPage: React.FC = () => {
               Important Information
             </h2>
           </div>
-          
+
           <div className="space-y-3 text-white/70">
             <p>
-              Creating a donation center will deploy a smart contract to the blockchain. This action cannot be undone.
+              Creating a donation center will deploy a smart contract to the
+              blockchain. This action cannot be undone.
             </p>
             <p>
-              As the creator, you will be responsible for managing donations and maintaining the center's information.
+              As the creator, you will be responsible for managing donations and
+              maintaining the center&apos;s information.
             </p>
             <p>
-              Gas fees will apply for this transaction. Ensure you have sufficient funds in your wallet.
+              Gas fees will apply for this transaction. Ensure you have
+              sufficient funds in your wallet.
             </p>
           </div>
         </motion.div>

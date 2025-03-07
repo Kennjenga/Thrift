@@ -30,39 +30,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Color System - Using the cyberpunk theme from marketplace
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  glass: {
-    background: "rgba(42, 27, 84, 0.2)",
-    border: "rgba(123, 66, 255, 0.1)",
-  },
-};
-
 // Styles object
 const styles = {
   glassCard: `
@@ -377,7 +344,9 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (isLoadingCenter) {
     return (
-      <div className={`min-h-screen ${styles.backgroundGradient} flex justify-center items-center`}>
+      <div
+        className={`min-h-screen ${styles.backgroundGradient} flex justify-center items-center`}
+      >
         <BackgroundElements />
         <div className="text-center relative z-10">
           <div className="w-16 h-16 mx-auto mb-4 relative">
@@ -393,9 +362,13 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (!center) {
     return (
-      <div className={`min-h-screen ${styles.backgroundGradient} flex justify-center items-center`}>
+      <div
+        className={`min-h-screen ${styles.backgroundGradient} flex justify-center items-center`}
+      >
         <BackgroundElements />
-        <div className={`text-center ${styles.glassCard} p-8 max-w-md relative z-10`}>
+        <div
+          className={`text-center ${styles.glassCard} p-8 max-w-md relative z-10`}
+        >
           <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
             <AlertCircle className="h-8 w-8 text-red-500" />
           </div>
@@ -429,9 +402,9 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <div className={`min-h-screen ${styles.backgroundGradient}`}>
       <BackgroundElements />
-      
+
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
-        <motion.div 
+        <motion.div
           className="flex justify-between items-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -534,7 +507,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
         {/* Inactive center warning - only show edit button if user is owner */}
         {!center.isActive && (
-          <motion.div 
+          <motion.div
             className="backdrop-blur-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 p-6 rounded-lg mb-6 flex items-start"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -555,9 +528,9 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     router.push(`/donate/centers/${resolvedParams.id}/edit`)
                   }
                   className="mt-4 bg-[#7B42FF] hover:bg-[#8A2BE2] text-white px-4 py-2 rounded-lg text-sm flex items-center w-auto border border-[#7B42FF]/50 shadow-[0_0_10px_rgba(123,66,255,0.3)]"
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.03,
-                    boxShadow: "0 0 20px rgba(123,66,255,0.5)" 
+                    boxShadow: "0 0 20px rgba(123,66,255,0.5)",
                   }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -570,7 +543,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
         {/* Donation stats */}
         {donationsDetails && donationsDetails.length > 0 && (
-          <motion.div 
+          <motion.div
             className={`${styles.glassCard} p-6 mb-6`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -581,17 +554,19 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
               Pending Donations Overview
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <motion.div 
+              <motion.div
                 className="backdrop-blur-md bg-white/5 border border-white/10 p-4 rounded-lg relative overflow-hidden"
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full"></div>
                 <p className="text-sm text-white/60">Total Pending</p>
-                <p className="text-3xl font-bold text-white mt-1">{donationStats.total}</p>
+                <p className="text-3xl font-bold text-white mt-1">
+                  {donationStats.total}
+                </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="backdrop-blur-md bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg relative overflow-hidden"
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
@@ -605,8 +580,8 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   {donationStats.clothing}
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="backdrop-blur-md bg-green-500/10 border border-green-500/20 p-4 rounded-lg relative overflow-hidden"
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
@@ -620,8 +595,8 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   {donationStats.recycling}
                 </p>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="backdrop-blur-md bg-purple-500/10 border border-purple-500/20 p-4 rounded-lg relative overflow-hidden"
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.2 }}
@@ -641,7 +616,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
         {/* Filter controls */}
         {donationsDetails && donationsDetails.length > 0 && (
-          <motion.div 
+          <motion.div
             className={`${styles.glassEffect} mb-6 flex flex-col sm:flex-row justify-between items-center gap-4`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -707,7 +682,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <Coins className="h-3 w-3 mr-1" />
                     Tokens
                   </div>
-                  </motion.button>
+                </motion.button>
               </div>
             </div>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
@@ -727,7 +702,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </motion.div>
         )}
 
-        <motion.div 
+        <motion.div
           className={`${styles.glassCard} overflow-hidden`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -745,13 +720,14 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
             filteredAndSortedDonations.length > 0 ? (
             <div className="divide-y divide-purple-500/10">
               {filteredAndSortedDonations.map((donation, index) => {
-                const { type, amount, icon, color } = getDonationTypeAndAmount(donation);
+                const { type, amount, icon, color } =
+                  getDonationTypeAndAmount(donation);
                 const isProcessing =
                   processingDonationId === donation.id.toString();
 
                 return (
-                  <motion.div 
-                    key={donation.id.toString()} 
+                  <motion.div
+                    key={donation.id.toString()}
                     className="p-6 hover:bg-purple-500/10 transition-colors"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -760,59 +736,67 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
                       <div>
                         <div className="flex items-center mb-3">
-                          <div className={`w-10 h-10 rounded-full ${
-                              color === "green" 
-                                ? "bg-green-500/20" 
-                                : color === "purple" 
-                                ? "bg-purple-500/20" 
+                          <div
+                            className={`w-10 h-10 rounded-full ${
+                              color === "green"
+                                ? "bg-green-500/20"
+                                : color === "purple"
+                                ? "bg-purple-500/20"
                                 : "bg-blue-500/20"
-                            } flex items-center justify-center mr-3`}>
+                            } flex items-center justify-center mr-3`}
+                          >
                             {icon}
                           </div>
                           <div>
                             <div className="flex items-center">
-                              <p className={`font-medium text-lg ${
-                                color === "green" 
-                                  ? "text-[#00FFD1]" 
-                                  : color === "purple" 
-                                  ? "text-[#FF00FF]" 
-                                  : "text-[#00FFFF]"
-                              }`}>
+                              <p
+                                className={`font-medium text-lg ${
+                                  color === "green"
+                                    ? "text-[#00FFD1]"
+                                    : color === "purple"
+                                    ? "text-[#FF00FF]"
+                                    : "text-[#00FFFF]"
+                                }`}
+                              >
                                 {type} Donation
                               </p>
                               <span className="ml-2 text-xs text-white/50 bg-white/10 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
                                 ID: {donation.id.toString()}
                               </span>
                             </div>
-                            <p className="text-sm text-white/60">
-                              {amount}
-                            </p>
+                            <p className="text-sm text-white/60">{amount}</p>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-1 text-sm text-white/60">
                           <p className="flex items-center">
                             <span className="inline-block w-2 h-2 rounded-full bg-white/30 mr-2"></span>
-                            <span className="font-medium text-white/80">From:</span>{" "}
+                            <span className="font-medium text-white/80">
+                              From:
+                            </span>{" "}
                             {formatAddress(donation.donor)}
                           </p>
-                          
+
                           {donation.description && (
                             <p className="flex items-center">
                               <span className="inline-block w-2 h-2 rounded-full bg-white/30 mr-2"></span>
-                              <span className="font-medium text-white/80">Description:</span>{" "}
+                              <span className="font-medium text-white/80">
+                                Description:
+                              </span>{" "}
                               {donation.description}
                             </p>
                           )}
-                          
+
                           <p className="flex items-center">
                             <span className="inline-block w-2 h-2 rounded-full bg-white/30 mr-2"></span>
-                            <span className="font-medium text-white/80">Date:</span>{" "}
+                            <span className="font-medium text-white/80">
+                              Date:
+                            </span>{" "}
                             {formatTimestamp(donation.timestamp)}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-3">
                         <motion.button
                           onClick={() => handleApprove(donation)}
@@ -823,14 +807,10 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                               : "bg-gradient-to-r from-[#00FFD1] to-[#00E6BD] text-[#1A0B3B] hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]"
                           } px-4 py-2 rounded-lg flex items-center font-medium min-w-[120px] justify-center`}
                           whileHover={
-                            !(isProcessing || isLoading) 
-                              ? { scale: 1.05 } 
-                              : {}
+                            !(isProcessing || isLoading) ? { scale: 1.05 } : {}
                           }
                           whileTap={
-                            !(isProcessing || isLoading) 
-                              ? { scale: 0.95 } 
-                              : {}
+                            !(isProcessing || isLoading) ? { scale: 0.95 } : {}
                           }
                         >
                           {isProcessing &&
@@ -846,7 +826,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                             </>
                           )}
                         </motion.button>
-                        
+
                         <motion.button
                           onClick={() => handleReject(donation)}
                           disabled={isProcessing || isLoading}
@@ -856,14 +836,10 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                               : "bg-gradient-to-r from-[#FF1B6B] to-[#FF5E86] text-white hover:shadow-[0_0_15px_rgba(255,27,107,0.4)]"
                           } px-4 py-2 rounded-lg flex items-center font-medium min-w-[120px] justify-center`}
                           whileHover={
-                            !(isProcessing || isLoading) 
-                              ? { scale: 1.05 } 
-                              : {}
+                            !(isProcessing || isLoading) ? { scale: 1.05 } : {}
                           }
                           whileTap={
-                            !(isProcessing || isLoading) 
-                              ? { scale: 0.95 } 
-                              : {}
+                            !(isProcessing || isLoading) ? { scale: 0.95 } : {}
                           }
                         >
                           {isProcessing &&
@@ -887,7 +863,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           ) : (
             <div className="p-12 text-center">
-              <motion.div 
+              <motion.div
                 className="mx-auto w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -928,7 +904,7 @@ const ManageCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
         {/* Batch actions (future enhancement) */}
         {filteredAndSortedDonations &&
           filteredAndSortedDonations.length > 1 && (
-            <motion.div 
+            <motion.div
               className="mt-6 backdrop-blur-md bg-purple-900/20 border border-purple-500/10 p-4 rounded-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

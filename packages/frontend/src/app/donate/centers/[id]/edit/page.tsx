@@ -5,50 +5,19 @@ import { useRouter } from "next/navigation";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
 import {
-  Loader2, Check, X, ArrowLeft, Settings, 
-  Recycle, Gift, Package, Search, Filter, Heart, 
-  ArrowRight, Clock, Repeat, AlertCircle, ToggleRight
+  Loader2,
+  Check,
+  ArrowLeft,
+  Settings,
+  Recycle,
+  Gift,
+  AlertCircle,
+  ToggleRight,
 } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { formatEther } from "ethers";
 import {
   useGetDonationCenter,
   useDonationCenterManagement,
 } from "@/blockchain/hooks/useDonationCenter";
-
-// Color System
-const COLORS = {
-  primary: {
-    main: "#7B42FF",
-    light: "#8A2BE2",
-    dark: "#4A00E0",
-  },
-  secondary: {
-    main: "#00FFD1",
-    light: "#00FFFF",
-    dark: "#00E6BD",
-  },
-  accent: {
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  background: {
-    dark: "#1A0B3B",
-    light: "#2A1B54",
-  },
-  text: {
-    primary: "#FFFFFF",
-    secondary: "rgba(255, 255, 255, 0.7)",
-    muted: "rgba(255, 255, 255, 0.5)",
-    pink: "#FF00FF",
-    red: "#FF1B6B",
-  },
-  glass: {
-    background: "rgba(42, 27, 84, 0.2)",
-    border: "rgba(123, 66, 255, 0.1)",
-  },
-};
 
 // Styles object
 const styles = {
@@ -118,7 +87,7 @@ const LoadingSpinner = () => (
 
 // Error Display Component
 const ErrorDisplay = ({ message }: { message: string }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     className="mb-6 p-4 backdrop-blur-md bg-red-500/10 border border-red-500/20 rounded-xl flex items-center"
@@ -130,7 +99,7 @@ const ErrorDisplay = ({ message }: { message: string }) => (
 
 // Success Display Component
 const SuccessDisplay = ({ message }: { message: string }) => (
-  <motion.div 
+  <motion.div
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     className="mb-6 p-4 backdrop-blur-md bg-green-500/10 border border-green-500/20 rounded-xl flex items-center"
@@ -140,28 +109,30 @@ const SuccessDisplay = ({ message }: { message: string }) => (
   </motion.div>
 );
 // Form Toggle Option Component
-const FormToggleOption = ({ 
-  id, 
-  label, 
-  icon: Icon, 
-  checked, 
-  onChange, 
-  disabled 
+const FormToggleOption = ({
+  id,
+  label,
+  icon: Icon,
+  checked,
+  onChange,
+  disabled,
 }: {
   id: string;
   label: string;
-  icon: any;
+  icon: React.ElementType;
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled: boolean;
 }) => (
-  <motion.div 
+  <motion.div
     whileHover={{ scale: 1.02 }}
     className="p-4 backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg flex items-center justify-between"
   >
     <div className="flex items-center space-x-3">
       <Icon className="h-5 w-5 text-[#00FFD1]" />
-      <label htmlFor={id} className="text-white">{label}</label>
+      <label htmlFor={id} className="text-white">
+        {label}
+      </label>
     </div>
     <input
       type="checkbox"
@@ -182,7 +153,8 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const centerId = BigInt(resolvedParams.id);
   const { address: userAddress } = useAccount();
 
-  const { data: centerData, isLoading: isLoadingCenter } = useGetDonationCenter(centerId);
+  const { data: centerData, isLoading: isLoadingCenter } =
+    useGetDonationCenter(centerId);
   const { updateDonationCenter } = useDonationCenterManagement();
 
   // Form state
@@ -211,9 +183,10 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
   }, [centerData]);
 
   // Check if user owns this center
-  const isOwnedByUser = centerData && 
-    userAddress && 
-    Array.isArray(centerData) && 
+  const isOwnedByUser =
+    centerData &&
+    userAddress &&
+    Array.isArray(centerData) &&
     centerData[7]?.toLowerCase() === userAddress.toLowerCase();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -237,14 +210,16 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
       }, 1500);
     } catch (error) {
       console.error("Error updating center:", error);
-      setError(error instanceof Error ? error.message : "Failed to update center");
+      setError(
+        error instanceof Error ? error.message : "Failed to update center"
+      );
       setIsSubmitting(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setCenterForm(prev => ({
+    setCenterForm((prev) => ({
       ...prev,
       [name]: checked,
     }));
@@ -263,7 +238,7 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="min-h-screen relative">
         <BackgroundElements />
         <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className={`${styles.glassCard} p-6`}
@@ -275,7 +250,9 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
               You don&apos;t have permission to edit this donation center.
             </p>
             <button
-              onClick={() => router.push(`/donate/centers/${resolvedParams.id}`)}
+              onClick={() =>
+                router.push(`/donate/centers/${resolvedParams.id}`)
+              }
               className="flex items-center px-4 py-2 bg-[#7B42FF] text-white rounded-lg hover:bg-[#8A2BE2] transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -290,9 +267,9 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <div className="min-h-screen relative">
       <BackgroundElements />
-      
+
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -302,7 +279,7 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
             Edit Donation Center
           </h1>
           <p className="text-white/70">
-            Manage your donation center's settings and capabilities
+            Manage your donation center&apos;s settings and capabilities
           </p>
         </motion.div>
 
@@ -316,9 +293,21 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="space-y-4">
             {[
               { id: "isActive", label: "Center is Active", icon: Settings },
-              { id: "isDonation", label: "Accept Clothing Donations", icon: Gift },
-              { id: "acceptsTokens", label: "Accept Token Donations", icon: ToggleRight },
-              { id: "acceptsRecycling", label: "Accept Recycling", icon: Recycle },
+              {
+                id: "isDonation",
+                label: "Accept Clothing Donations",
+                icon: Gift,
+              },
+              {
+                id: "acceptsTokens",
+                label: "Accept Token Donations",
+                icon: ToggleRight,
+              },
+              {
+                id: "acceptsRecycling",
+                label: "Accept Recycling",
+                icon: Recycle,
+              },
             ].map((option) => (
               <FormToggleOption
                 key={option.id}
@@ -333,7 +322,9 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="flex justify-end gap-4 pt-6">
             <motion.button
               type="button"
-              onClick={() => router.push(`/donate/centers/${resolvedParams.id}`)}
+              onClick={() =>
+                router.push(`/donate/centers/${resolvedParams.id}`)
+              }
               className="px-6 py-2 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-colors"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -344,7 +335,11 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
             <motion.button
               type="submit"
               className={`px-6 py-2 bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] text-white rounded-lg
-                ${isSubmitting ? 'opacity-70' : 'hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]'}
+                ${
+                  isSubmitting
+                    ? "opacity-70"
+                    : "hover:shadow-[0_0_15px_rgba(0,255,209,0.4)]"
+                }
               `}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -356,7 +351,7 @@ const EditCenterPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   Saving...
                 </span>
               ) : (
-                'Save Changes'
+                "Save Changes"
               )}
             </motion.button>
           </div>
