@@ -1,9 +1,10 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
 import { type Abi, type Address } from 'viem'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 // Import your contract ABI and address
 import { DONATION_AND_RECYCLING_ABI, DONATION_AND_RECYCLING_ADDRESS } from '@/blockchain/abis/thrift'
+import { useThriftToken } from './useThriftToken'
 
 // Types
 export type DonationCenter = {
@@ -842,9 +843,26 @@ export function useDonationCenterManagement() {
 
 // Hook for donation operations
 export function useDonationOperations() {
-  const { writeContract, data: hash, error, isPending } = useWriteContract()
-  const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash })
+  const { writeContract, data: hash, error: writeError, isPending } = useWriteContract();
+  const { isLoading, isSuccess } = useWaitForTransactionReceipt({ hash });
   
+  // Token operation states
+  const [isApproving, setIsApproving] = useState(false);
+  const [approvalHash, setApprovalHash] = useState<`0x${string}` | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get token functions 
+  const { 
+    approve, 
+    userAddress, 
+  } = useThriftToken();
+  
+  // Monitor approval transaction
+  const { isLoading: isApprovalConfirming, isSuccess: isApprovalSuccess } = 
+    useWaitForTransactionReceipt({ 
+      hash: approvalHash
+    });
+
   // Submit a clothing donation
   const submitDonation = async (
     centerId: bigint,
@@ -858,8 +876,8 @@ export function useDonationOperations() {
       abi: DONATION_AND_RECYCLING_ABI,
       functionName: 'submitDonation',
       args: [centerId, itemCount, itemType, description, weightInKg],
-    })
-  }
+    });
+  };
   
   // Submit recycling
   const submitRecycling = async (
@@ -872,32 +890,103 @@ export function useDonationOperations() {
       abi: DONATION_AND_RECYCLING_ABI,
       functionName: 'submitRecycling',
       args: [centerId, description, weightInKg],
-    })
-  }
+    });
+  };
   
-  // Donate tokens
+  // Donate tokens with automatic approval
   const donateTokens = async (
     centerId: bigint,
-    tokenAmount: bigint
+    tokenAmount: bigint,
+    userBalance: bigint,
+    currentAllowance: bigint
   ) => {
-    return writeContract({
-      address: DONATION_AND_RECYCLING_ADDRESS,
-      abi: DONATION_AND_RECYCLING_ABI,
-      functionName: 'donateTokens',
-      args: [centerId, tokenAmount],
-    })
-  }
+    if (!userAddress) {
+      throw new Error("Wallet not connected");
+    }
+
+    try {
+      setError(null);
+      
+      // Check user's token balance first
+      if (userBalance < tokenAmount) {
+        throw new Error(`Insufficient token balance. You have ${userBalance.toString()} tokens.`);
+      }
+      
+      // If current allowance is less than the amount we want to donate, we need to approve first
+      if (currentAllowance < tokenAmount) {
+        setIsApproving(true);
+        
+        console.log(`Approving ${tokenAmount.toString()} tokens for donation center contract...`);
+        
+        try {
+          const approvalResult = await approve(
+            DONATION_AND_RECYCLING_ADDRESS as Address, 
+            tokenAmount
+          );
+          
+          if (typeof approvalResult !== 'string') {
+            throw new Error("Approval did not return a valid transaction hash");
+          }
+          
+          setApprovalHash(approvalResult);
+          
+          // Wait for approval confirmation
+          await new Promise<void>((resolve, reject) => {
+            const checkApproval = setInterval(() => {
+              if (isApprovalSuccess) {
+                clearInterval(checkApproval);
+                resolve();
+              }
+            }, 1000);
+            
+            // Set a timeout to avoid infinite waiting
+            setTimeout(() => {
+              clearInterval(checkApproval);
+              if (!isApprovalSuccess) {
+                reject(new Error("Approval timed out"));
+              }
+            }, 30000); // 30 second timeout
+          });
+          
+          console.log("Approval confirmed");
+        } catch (approvalError) {
+          console.error("Error during token approval:", approvalError);
+          setError(approvalError instanceof Error ? approvalError.message : "Failed to approve tokens");
+          throw approvalError;
+        } finally {
+          setIsApproving(false);
+        }
+      }
+      
+      // Now proceed with the donation through the donation contract
+      console.log(`Donating ${tokenAmount.toString()} tokens to center ${centerId.toString()}...`);
+      
+      return writeContract({
+        address: DONATION_AND_RECYCLING_ADDRESS,
+        abi: DONATION_AND_RECYCLING_ABI,
+        functionName: 'donateTokens',
+        args: [centerId, tokenAmount],
+      });
+      
+    } catch (err) {
+      console.error("Error in token donation process:", err);
+      setError(err instanceof Error ? err.message : "Failed to process token donation");
+      throw err;
+    }
+  };
   
   return {
     submitDonation,
     submitRecycling,
     donateTokens,
     transactionHash: hash,
-    error,
+    error: error || writeError,
     isSubmitting: isPending,
     isConfirming: isLoading,
+    isApproving,
+    isApprovalConfirming,
     isSuccess,
-  }
+  };
 }
 
 // Hook for donation approval/rejection operations

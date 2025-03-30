@@ -18,7 +18,7 @@ import {
   Clock,
   // Repeat,
 } from "lucide-react";
-import { useMarketplace } from "@/blockchain/hooks/useMarketplace1";
+import { useMarketplace } from "@/blockchain/hooks/useMarketplace";
 import { Product } from "@/types/market";
 import { formatEther } from "ethers";
 
@@ -822,17 +822,17 @@ const FashionMarquee = () => {
 
 // Marketplace Section with Real Products
 const MarketplaceSection = () => {
-  const { allActiveProducts } = useMarketplace();
+  const { activeProducts } = useMarketplace();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
 
   useEffect(() => {
-    if (allActiveProducts) {
-      setProducts(allActiveProducts as Product[]);
+    if (activeProducts) {
+      setProducts(activeProducts as Product[]);
       setLoading(false);
     }
-  }, [allActiveProducts]);
+  }, [activeProducts]);
 
   return (
     <section className="py-20 container mx-auto px-4 relative">

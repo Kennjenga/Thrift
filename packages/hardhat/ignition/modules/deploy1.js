@@ -8,18 +8,16 @@ async function main() {
 
     // Get the contract factory
     const donationFactory = await hre.ethers.getContractFactory(
-      "UserAesthetics"
+      "DonationAndRecycling"
     );
-    console.log("Contract factory created successfully");
+    console.log("Contract factory creaconstrted successfully");
 
     // Deploy the contract
     console.log("Deploying contract...");
-    const donationContract = await donationFactory.deploy();
-    // const donationContract = await donationFactory.deploy(
-    //   "0xCD6152307d4b223C00D1beF239F401101e4FBE78",
-    //   "0x93864C5a18c10cEca82BC18a12d147Dec0666E2D",
-    //   deployer.address
-    // );
+    // const donationContract = await donationFactory.deploy();
+    const donationContract = await donationFactory.deploy(
+      "0xDcDf385a28d6972C885Aa6f0d62D9c1Bc4E8b029"
+    );
     console.log("Contract deployment initiated");
 
     // Wait for the deployment to be mined

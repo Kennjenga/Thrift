@@ -12,43 +12,48 @@ module.exports = {
     hardhat: {
       allowUnlimitedContractSize: false,
     },
-    sepolia: {
-      url: process.env.ALCHEMY_API_KEY_SEPOLIA,
-      accounts: [process.env.WALLET_PRIVATE_KEY],
-      chainId: 11155111,
-      gasPrice: "auto",
-      timeout: 600000,
+    hederaTestnet: {
+      url: `https://testnet.hashio.io/api`,
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 296,
     },
+    // sepolia: {
+    //   url: process.env.ALCHEMY_API_KEY_SEPOLIA,
+    //   accounts: [process.env.WALLET_PRIVATE_KEY],
+    //   chainId: 11155111,
+    //   gasPrice: "auto",
+    //   timeout: 600000,
+    // },
 
-    lisk: {
-      url: "https://rpc.api.lisk.com",
-      accounts: [process.env.WALLET_PRIVATE_KEY],
-      gasPrice: 1000000000,
-    },
+    // lisk: {
+    //   url: "https://rpc.api.lisk.com",
+    //   accounts: [process.env.WALLET_PRIVATE_KEY],
+    //   gasPrice: 1000000000,
+    // },
 
-    "lisk-sepolia": {
-      url: "https://rpc.sepolia-api.lisk.com",
-      accounts: [process.env.WALLET_PRIVATE_KEY],
-      gasPrice: 1000000000,
-    },
+    // "lisk-sepolia": {
+    //   url: "https://rpc.sepolia-api.lisk.com",
+    //   accounts: [process.env.WALLET_PRIVATE_KEY],
+    //   gasPrice: 1000000000,
+    // },
 
-    ethereum: {
-      url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY_MAIN}`,
-      accounts: [process.env.WALLET_PRIVATE_KEY],
-      chainId: 44787,
-    },
+    // ethereum: {
+    //   url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY_MAIN}`,
+    //   accounts: [process.env.WALLET_PRIVATE_KEY],
+    //   chainId: 44787,
+    // },
 
-    alfajores: {
-      url: "https://alfajores-forno.celo-testnet.org",
-      accounts: [process.env.WALLET_PRIVATE_KEY],
-      chainId: 44787,
-    },
+    // alfajores: {
+    //   url: "https://alfajores-forno.celo-testnet.org",
+    //   accounts: [process.env.WALLET_PRIVATE_KEY],
+    //   chainId: 44787,
+    // },
 
-    celo: {
-      url: "https://forno.celo.org",
-      accounts: [process.env.WALLET_PRIVATE_KEY],
-      chainId: 42220,
-    },
+    // celo: {
+    //   url: "https://forno.celo.org",
+    //   accounts: [process.env.WALLET_PRIVATE_KEY],
+    //   chainId: 42220,
+    // },
   },
 
   // ethereum - celo - explorer API keys

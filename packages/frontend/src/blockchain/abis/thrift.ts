@@ -650,7 +650,7 @@ export const THRIFT_ABI = [
   }
 ]
 
-export const THRIFT_ADDRESS = "0x5f260ceb6bD6937CD3CFf10FbdA4357C9B4C3D53"
+export const THRIFT_ADDRESS = "0xDcDf385a28d6972C885Aa6f0d62D9c1Bc4E8b029"
 
 
 export const DONATION_AND_RECYCLING_ABI = [
@@ -2783,9 +2783,9 @@ export const DONATION_AND_RECYCLING_ABI = [
 }
 ]
 
-export const DONATION_AND_RECYCLING_ADDRESS = "0xAbFCAB601E463c47008CE3270430664e801CF1D4"
+export const DONATION_AND_RECYCLING_ADDRESS = "0xAe05e1E11dB5153935a22E6894D1d1d267219AD6"
 
-export const USERAESTHETICS_ADDRESS = "0x51e676cE5B1a404981321B8726A9DdC36D7Ee4c8"
+export const USERAESTHETICS_ADDRESS = "0x62fa6255c7f07D833145459D388a6e5CcFcad80D"
 export const USERAESTHETICS_ABI =  [
 {
   "anonymous": false,
@@ -3023,1715 +3023,1753 @@ export const USERAESTHETICS_ABI =  [
 ]
 
 
-export const MARKETPLACE_STORAGE_ADDRESS = "0xAe05e1E11dB5153935a22E6894D1d1d267219AD6"
+export const MARKETPLACE_STORAGE_ADDRESS = "0xD4A888b5841808A78E5c7111aE2aA5702B8729ad"
 export const MARKETPLACE_STORAGE_ABI = [
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "_thriftToken",
-      "type": "address"
-    },
-    {
-      "internalType": "address",
-      "name": "_userAesthetics",
-      "type": "address"
-    },
-    {
-      "internalType": "address",
-      "name": "_treasuryWallet",
-      "type": "address"
-    }
-  ],
-  "stateMutability": "nonpayable",
-  "type": "constructor"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "firstEscrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "count",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "buyer",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "totalAmount",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "bool",
-      "name": "isToken",
-      "type": "bool"
-    }
-  ],
-  "name": "BulkEscrowCreated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "contractAddress",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "bool",
-      "name": "authorized",
-      "type": "bool"
-    }
-  ],
-  "name": "ContractAuthorized",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "canceller",
-      "type": "address"
-    }
-  ],
-  "name": "EscrowCancelled",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "quantity",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "amount",
-      "type": "uint256"
-    }
-  ],
-  "name": "EscrowCompleted",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "confirmer",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "bool",
-      "name": "isBuyer",
-      "type": "bool"
-    }
-  ],
-  "name": "EscrowConfirmed",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "buyer",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "quantity",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "amount",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "bool",
-      "name": "isToken",
-      "type": "bool"
-    }
-  ],
-  "name": "EscrowCreated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "buyer",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "amount",
-      "type": "uint256"
-    }
-  ],
-  "name": "EscrowRefunded",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "rejector",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "string",
-      "name": "reason",
-      "type": "string"
-    }
-  ],
-  "name": "EscrowRejected",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "offeredProductId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "wantedProductId",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "address",
-      "name": "party1",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "address",
-      "name": "party2",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "tokenTopUp",
-      "type": "uint256"
-    }
-  ],
-  "name": "ExchangeCompleted",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "offeredProductId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "wantedProductId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "offerer",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "tokenTopUp",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    }
-  ],
-  "name": "ExchangeOfferCreated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "previousOwner",
-      "type": "address"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "newOwner",
-      "type": "address"
-    }
-  ],
-  "name": "OwnershipTransferred",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "newTokenFee",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "newEthFee",
-      "type": "uint256"
-    }
-  ],
-  "name": "PlatformFeesUpdated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "string[]",
-      "name": "categories",
-      "type": "string[]"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "quantity",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "tokenPrice",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "ethPrice",
-      "type": "uint256"
-    }
-  ],
-  "name": "ProductCreated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    }
-  ],
-  "name": "ProductMarkedSold",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "indexed": true,
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    },
-    {
-      "indexed": false,
-      "internalType": "string[]",
-      "name": "categories",
-      "type": "string[]"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "quantity",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "tokenPrice",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "ethPrice",
-      "type": "uint256"
-    }
-  ],
-  "name": "ProductUpdated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": true,
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "newTotal",
-      "type": "uint256"
-    },
-    {
-      "indexed": false,
-      "internalType": "uint256",
-      "name": "newAvailable",
-      "type": "uint256"
-    }
-  ],
-  "name": "QuantityUpdate",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": false,
-      "internalType": "address",
-      "name": "newTreasury",
-      "type": "address"
-    }
-  ],
-  "name": "TreasuryWalletUpdated",
-  "type": "event"
-},
-{
-  "anonymous": false,
-  "inputs": [
-    {
-      "indexed": false,
-      "internalType": "address",
-      "name": "newUserAesthetics",
-      "type": "address"
-    }
-  ],
-  "name": "UserAestheticsUpdated",
-  "type": "event"
-},
-{
-  "stateMutability": "payable",
-  "type": "fallback"
-},
-{
-  "inputs": [],
-  "name": "BURN_PERCENTAGE",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "MAX_BULK_PURCHASE",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "MAX_ESCROW_DURATION",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "SPENDING_REWARD_PERCENTAGE",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "TREASURY_PERCENTAGE",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "user",
-      "type": "address"
-    },
-    {
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    }
-  ],
-  "name": "addToUserActiveEscrows",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "address",
-      "name": "buyer",
-      "type": "address"
-    },
-    {
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    },
-    {
-      "internalType": "uint256",
-      "name": "amount",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "quantity",
-      "type": "uint256"
-    },
-    {
-      "internalType": "bool",
-      "name": "isToken",
-      "type": "bool"
-    },
-    {
-      "internalType": "bool",
-      "name": "isExchange",
-      "type": "bool"
-    },
-    {
-      "internalType": "uint256",
-      "name": "exchangeProductId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "tokenTopUp",
-      "type": "uint256"
-    }
-  ],
-  "name": "createEscrow",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "offeredProductId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "wantedProductId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "address",
-      "name": "offerer",
-      "type": "address"
-    },
-    {
-      "internalType": "uint256",
-      "name": "tokenTopUp",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    }
-  ],
-  "name": "createExchangeOffer",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    },
-    {
-      "internalType": "uint256",
-      "name": "tokenPrice",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "ethPrice",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "quantity",
-      "type": "uint256"
-    },
-    {
-      "internalType": "string",
-      "name": "name",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "description",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "size",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "condition",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "brand",
-      "type": "string"
-    },
-    {
-      "internalType": "string[]",
-      "name": "categories",
-      "type": "string[]"
-    },
-    {
-      "internalType": "string",
-      "name": "gender",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "image",
-      "type": "string"
-    },
-    {
-      "internalType": "bool",
-      "name": "isAvailableForExchange",
-      "type": "bool"
-    },
-    {
-      "internalType": "string",
-      "name": "exchangePreference",
-      "type": "string"
-    }
-  ],
-  "name": "createProduct",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "emergencyEthWithdraw",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "token",
-      "type": "address"
-    },
-    {
-      "internalType": "uint256",
-      "name": "amount",
-      "type": "uint256"
-    }
-  ],
-  "name": "emergencyTokenWithdraw",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "ethPlatformFee",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    }
-  ],
-  "name": "getAvailableQuantity",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    }
-  ],
-  "name": "getEscrow",
-  "outputs": [
-    {
-      "components": [
-        {
-          "internalType": "uint256",
-          "name": "escrowId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "productId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "deadline",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "quantity",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "buyerConfirmed",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "sellerConfirmed",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "completed",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "refunded",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "isToken",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "isExchange",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "exchangeProductId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenTopUp",
-          "type": "uint256"
-        }
-      ],
-      "internalType": "struct Escrow",
-      "name": "",
-      "type": "tuple"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    }
-  ],
-  "name": "getExchangeOffersForProduct",
-  "outputs": [
-    {
-      "components": [
-        {
-          "internalType": "uint256",
-          "name": "offeredProductId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "wantedProductId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "offerer",
-          "type": "address"
-        },
-        {
-          "internalType": "bool",
-          "name": "isActive",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenTopUp",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "escrowId",
-          "type": "uint256"
-        }
-      ],
-      "internalType": "struct ExchangeOffer[]",
-      "name": "",
-      "type": "tuple[]"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    }
-  ],
-  "name": "getProduct",
-  "outputs": [
-    {
-      "components": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenPrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "ethPrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "quantity",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "description",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "size",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "condition",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "brand",
-          "type": "string"
-        },
-        {
-          "internalType": "string[]",
-          "name": "categories",
-          "type": "string[]"
-        },
-        {
-          "internalType": "string",
-          "name": "gender",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "image",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "isAvailableForExchange",
-          "type": "bool"
-        },
-        {
-          "internalType": "string",
-          "name": "exchangePreference",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "isSold",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "isDeleted",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "inEscrowQuantity",
-          "type": "uint256"
-        }
-      ],
-      "internalType": "struct Product",
-      "name": "",
-      "type": "tuple"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "getProductCount",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    }
-  ],
-  "name": "getProductWithAvailability",
-  "outputs": [
-    {
-      "components": [
-        {
-          "internalType": "uint256",
-          "name": "id",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "seller",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "tokenPrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "ethPrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "totalQuantity",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "availableQuantity",
-          "type": "uint256"
-        },
-        {
-          "internalType": "string",
-          "name": "name",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "description",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "size",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "condition",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "brand",
-          "type": "string"
-        },
-        {
-          "internalType": "string[]",
-          "name": "categories",
-          "type": "string[]"
-        },
-        {
-          "internalType": "string",
-          "name": "gender",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "image",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "isAvailableForExchange",
-          "type": "bool"
-        },
-        {
-          "internalType": "string",
-          "name": "exchangePreference",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "isSold",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "isDeleted",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "inEscrowQuantity",
-          "type": "uint256"
-        }
-      ],
-      "internalType": "struct ProductWithAvailability",
-      "name": "",
-      "type": "tuple"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "string",
-      "name": "category",
-      "type": "string"
-    }
-  ],
-  "name": "getProductsInCategory",
-  "outputs": [
-    {
-      "internalType": "uint256[]",
-      "name": "",
-      "type": "uint256[]"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "user",
-      "type": "address"
-    }
-  ],
-  "name": "getUserEscrowTracking",
-  "outputs": [
-    {
-      "components": [
-        {
-          "internalType": "uint256[]",
-          "name": "activeEscrows",
-          "type": "uint256[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "completedEscrows",
-          "type": "uint256[]"
-        }
-      ],
-      "internalType": "struct UserEscrowTracking",
-      "name": "",
-      "type": "tuple"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "user",
-      "type": "address"
-    }
-  ],
-  "name": "getUserProductIds",
-  "outputs": [
-    {
-      "internalType": "uint256[]",
-      "name": "",
-      "type": "uint256[]"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "contractAddress",
-      "type": "address"
-    }
-  ],
-  "name": "isAuthorizedContract",
-  "outputs": [
-    {
-      "internalType": "bool",
-      "name": "",
-      "type": "bool"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "isPaused",
-  "outputs": [
-    {
-      "internalType": "bool",
-      "name": "",
-      "type": "bool"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    }
-  ],
-  "name": "markProductDeleted",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    }
-  ],
-  "name": "markProductSold",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "address",
-      "name": "buyer",
-      "type": "address"
-    },
-    {
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    }
-  ],
-  "name": "moveEscrowToCompleted",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "owner",
-  "outputs": [
-    {
-      "internalType": "address",
-      "name": "",
-      "type": "address"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "address",
-      "name": "buyer",
-      "type": "address"
-    },
-    {
-      "internalType": "address",
-      "name": "seller",
-      "type": "address"
-    }
-  ],
-  "name": "removeEscrowFromActiveList",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "renounceOwnership",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "contractAddress",
-      "type": "address"
-    },
-    {
-      "internalType": "bool",
-      "name": "authorized",
-      "type": "bool"
-    }
-  ],
-  "name": "setAuthorizedContract",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "thriftToken",
-  "outputs": [
-    {
-      "internalType": "address",
-      "name": "",
-      "type": "address"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "togglePause",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "tokenPlatformFee",
-  "outputs": [
-    {
-      "internalType": "uint256",
-      "name": "",
-      "type": "uint256"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "newOwner",
-      "type": "address"
-    }
-  ],
-  "name": "transferOwnership",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "treasuryWallet",
-  "outputs": [
-    {
-      "internalType": "address",
-      "name": "",
-      "type": "address"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "escrowId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "bool",
-      "name": "buyerConfirmed",
-      "type": "bool"
-    },
-    {
-      "internalType": "bool",
-      "name": "sellerConfirmed",
-      "type": "bool"
-    },
-    {
-      "internalType": "bool",
-      "name": "completed",
-      "type": "bool"
-    },
-    {
-      "internalType": "bool",
-      "name": "refunded",
-      "type": "bool"
-    }
-  ],
-  "name": "updateEscrowStatus",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "change",
-      "type": "uint256"
-    },
-    {
-      "internalType": "bool",
-      "name": "increase",
-      "type": "bool"
-    }
-  ],
-  "name": "updateInEscrowQuantity",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "newTokenFee",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "newEthFee",
-      "type": "uint256"
-    }
-  ],
-  "name": "updatePlatformFees",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "string",
-      "name": "name",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "description",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "size",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "condition",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "brand",
-      "type": "string"
-    },
-    {
-      "internalType": "string[]",
-      "name": "categories",
-      "type": "string[]"
-    },
-    {
-      "internalType": "string",
-      "name": "gender",
-      "type": "string"
-    },
-    {
-      "internalType": "string",
-      "name": "image",
-      "type": "string"
-    },
-    {
-      "internalType": "uint256",
-      "name": "tokenPrice",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "ethPrice",
-      "type": "uint256"
-    },
-    {
-      "internalType": "bool",
-      "name": "isAvailableForExchange",
-      "type": "bool"
-    },
-    {
-      "internalType": "string",
-      "name": "exchangePreference",
-      "type": "string"
-    }
-  ],
-  "name": "updateProduct",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "uint256",
-      "name": "productId",
-      "type": "uint256"
-    },
-    {
-      "internalType": "uint256",
-      "name": "newQuantity",
-      "type": "uint256"
-    }
-  ],
-  "name": "updateProductQuantity",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "newTreasury",
-      "type": "address"
-    }
-  ],
-  "name": "updateTreasuryWallet",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [
-    {
-      "internalType": "address",
-      "name": "newUserAesthetics",
-      "type": "address"
-    }
-  ],
-  "name": "updateUserAesthetics",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
-},
-{
-  "inputs": [],
-  "name": "userAesthetics",
-  "outputs": [
-    {
-      "internalType": "address",
-      "name": "",
-      "type": "address"
-    }
-  ],
-  "stateMutability": "view",
-  "type": "function"
-},
-{
-  "stateMutability": "payable",
-  "type": "receive"
-}
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_thriftToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_userAesthetics",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_treasuryWallet",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "firstEscrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isToken",
+        "type": "bool"
+      }
+    ],
+    "name": "BulkEscrowCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "ContractAuthorized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "canceller",
+        "type": "address"
+      }
+    ],
+    "name": "EscrowCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EscrowCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "confirmer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isBuyer",
+        "type": "bool"
+      }
+    ],
+    "name": "EscrowConfirmed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isToken",
+        "type": "bool"
+      }
+    ],
+    "name": "EscrowCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EscrowRefunded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "rejector",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "EscrowRejected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "offeredProductId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "wantedProductId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "party1",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "party2",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenTopUp",
+        "type": "uint256"
+      }
+    ],
+    "name": "ExchangeCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "offeredProductId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "wantedProductId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "offerer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenTopUp",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ExchangeOfferCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newTokenFee",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newEthFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "PlatformFeesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "ethPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProductCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      }
+    ],
+    "name": "ProductMarkedSold",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isSold",
+        "type": "bool"
+      }
+    ],
+    "name": "ProductStatusUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "ethPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "ProductUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newTotal",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newAvailable",
+        "type": "uint256"
+      }
+    ],
+    "name": "QuantityUpdate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newTreasury",
+        "type": "address"
+      }
+    ],
+    "name": "TreasuryWalletUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newUserAesthetics",
+        "type": "address"
+      }
+    ],
+    "name": "UserAestheticsUpdated",
+    "type": "event"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [],
+    "name": "BURN_PERCENTAGE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_BULK_PURCHASE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_ESCROW_DURATION",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SPENDING_REWARD_PERCENTAGE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TREASURY_PERCENTAGE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "addToUserActiveEscrows",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isToken",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "isExchange",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "exchangeProductId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenTopUp",
+        "type": "uint256"
+      }
+    ],
+    "name": "createEscrow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "offeredProductId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "wantedProductId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "offerer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenTopUp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "createExchangeOffer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quantity",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "size",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "condition",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "brand",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string",
+        "name": "gender",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAvailableForExchange",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "exchangePreference",
+        "type": "string"
+      }
+    ],
+    "name": "createProduct",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyEthWithdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "emergencyTokenWithdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ethPlatformFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAvailableQuantity",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getEscrow",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "escrowId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "productId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "buyer",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "buyerConfirmed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "sellerConfirmed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "completed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "refunded",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isToken",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isExchange",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "exchangeProductId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenTopUp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Escrow",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getExchangeOffersForProduct",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "offeredProductId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "wantedProductId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "offerer",
+            "type": "address"
+          },
+          {
+            "internalType": "bool",
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenTopUp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "escrowId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ExchangeOffer[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProduct",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ethPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "size",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "condition",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "brand",
+            "type": "string"
+          },
+          {
+            "internalType": "string[]",
+            "name": "categories",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string",
+            "name": "gender",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "image",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isAvailableForExchange",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "exchangePreference",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSold",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDeleted",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inEscrowQuantity",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Product",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getProductCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProductWithAvailability",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "seller",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ethPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalQuantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "availableQuantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "size",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "condition",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "brand",
+            "type": "string"
+          },
+          {
+            "internalType": "string[]",
+            "name": "categories",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string",
+            "name": "gender",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "image",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isAvailableForExchange",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "exchangePreference",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "isSold",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "isDeleted",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "inEscrowQuantity",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ProductWithAvailability",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      }
+    ],
+    "name": "getProductsInCategory",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserEscrowTracking",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256[]",
+            "name": "activeEscrows",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "completedEscrows",
+            "type": "uint256[]"
+          }
+        ],
+        "internalType": "struct UserEscrowTracking",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserProductIds",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      }
+    ],
+    "name": "isAuthorizedContract",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isPaused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "markProductDeleted",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "markProductSold",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      }
+    ],
+    "name": "moveEscrowToCompleted",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      }
+    ],
+    "name": "removeEscrowFromActiveList",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      }
+    ],
+    "name": "resetProductSold",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "authorized",
+        "type": "bool"
+      }
+    ],
+    "name": "setAuthorizedContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "thriftToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "togglePause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tokenPlatformFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "treasuryWallet",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "escrowId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "buyerConfirmed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "sellerConfirmed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "completed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "refunded",
+        "type": "bool"
+      }
+    ],
+    "name": "updateEscrowStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "change",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "increase",
+        "type": "bool"
+      }
+    ],
+    "name": "updateInEscrowQuantity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "newTokenFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newEthFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "updatePlatformFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "size",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "condition",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "brand",
+        "type": "string"
+      },
+      {
+        "internalType": "string[]",
+        "name": "categories",
+        "type": "string[]"
+      },
+      {
+        "internalType": "string",
+        "name": "gender",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isAvailableForExchange",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "exchangePreference",
+        "type": "string"
+      }
+    ],
+    "name": "updateProduct",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "productId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "newQuantity",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateProductQuantity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newTreasury",
+        "type": "address"
+      }
+    ],
+    "name": "updateTreasuryWallet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newUserAesthetics",
+        "type": "address"
+      }
+    ],
+    "name": "updateUserAesthetics",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "userAesthetics",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
 ]
 
-export const MARKETPLACE_PRODUCT_ADDRESS = "0x5e423361B444D47A58fE08cF5FC23570930E61A7"
+export const MARKETPLACE_PRODUCT_ADDRESS = "0x8Eb3283d62E18F45e0CA80F2d71B2519814FD374"
 export const MARKETPLACE_PRODUCT_ABI = [
 {
   "inputs": [
@@ -5484,7 +5522,7 @@ export const MARKETPLACE_PRODUCT_ABI = [
 ]
 
 
-export const MARKETPLACE_ESCROW_ADDRESS = "0xD481aa9F397AaddE7e5c4ed1191f2afE2e1039e2"
+export const MARKETPLACE_ESCROW_ADDRESS = "0xf7B0F1fa82Da9C18C2B3be690a9cFE776cdF2897"
 export const MARKETPLACE_ESCROW_ABI = [
   {
     "inputs": [
@@ -5967,7 +6005,7 @@ export const MARKETPLACE_ESCROW_ABI = [
   }
 ]
 
-export const MARKETPLACE_QUERY_ADDRESS = "0x5cA60801502fC39d58Fe220C33Db14932F622050"
+export const MARKETPLACE_QUERY_ADDRESS = "0xdAADcbE805fe6ca059e06657B2526ae5978B4C9E"
 export const MARKETPLACE_QUERY_ABI = [
 {
   "inputs": [
@@ -6511,7 +6549,7 @@ export const MARKETPLACE_QUERY_ABI = [
 }
 ]
 
-export const MARKETPLACE_ADDRESS = "0x68a00B69FA2F6C3A70d6Ad71ebc6223dEff68b80"
+export const MARKETPLACE_ADDRESS = "0xE783858ED75C7be250A14216C891f3D2a7378b85"
 export const MARKETPLACE_ABI = [
 {
   "inputs": [
@@ -7914,13 +7952,14 @@ export const MARKETPLACE_ABI = [
 // Deployment complete!\
 
 
-// lisk deployment
-// thrift - 0x5f260ceb6bD6937CD3CFf10FbdA4357C9B4C3D53
-// donationandrecycling - 0xAbFCAB601E463c47008CE3270430664e801CF1D4
-// userprofile - 0x51e676cE5B1a404981321B8726A9DdC36D7Ee4c8
-// MarketplaceStorage: 0xAe05e1E11dB5153935a22E6894D1d1d267219AD6
-// MarketplaceProduct: 0x5e423361B444D47A58fE08cF5FC23570930E61A7
-// MarketplaceEscrow: 0xD481aa9F397AaddE7e5c4ed1191f2afE2e1039e2
-// MarketplaceQuery: 0x5cA60801502fC39d58Fe220C33Db14932F622050
-// Marketplace: 0x68a00B69FA2F6C3A70d6Ad71ebc6223dEff68b80
+// hedera
+// UserAesthetics Address: 0x62fa6255c7f07D833145459D388a6e5CcFcad80D
+// Deployer Address: 0xBd87B618186038fe37AFf6F93154E14C00C43A49
+// ThriftToken: 0xDcDf385a28d6972C885Aa6f0d62D9c1Bc4E8b029
+// Donation: 0xAe05e1E11dB5153935a22E6894D1d1d267219AD6
+// MarketplaceStorage: 0xD4A888b5841808A78E5c7111aE2aA5702B8729ad
+// MarketplaceProduct: 0x8Eb3283d62E18F45e0CA80F2d71B2519814FD374
+// MarketplaceEscrow: 0xf7B0F1fa82Da9C18C2B3be690a9cFE776cdF2897
+// MarketplaceQuery: 0xdAADcbE805fe6ca059e06657B2526ae5978B4C9E
+// Marketplace: 0xE783858ED75C7be250A14216C891f3D2a7378b85
 // Deployer Address: 0xC63Ee3b2ceF4857ba3EA8256F41d073C88696F99

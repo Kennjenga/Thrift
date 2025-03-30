@@ -24,8 +24,10 @@ import {
   Recycle,
   Shirt,
   Coins,
+  CheckCircle2,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useThriftToken } from "@/blockchain/hooks/useThriftToken";
 
 // Styles object
 const styles = {
@@ -127,6 +129,14 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const centerId = BigInt(resolvedParams.id);
   const { address: userAddress } = useAccount(); // Get user's address from wagmi
 
+  const [tokenDonationState, setTokenDonationState] = useState<
+    "idle" | "approving" | "donating" | "success" | "error"
+  >("idle");
+
+  const { userAddress: tokenAddress, useGetBalance } = useThriftToken();
+  const { data: tokenBalance = 0n } = useGetBalance(
+    (tokenAddress as Address) || "0x0"
+  );
   // Get center data
   const { data: centerData, isLoading: isLoadingCenter } =
     useGetDonationCenter(centerId);
@@ -138,7 +148,10 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     donateTokens,
     isSubmitting,
     isConfirming,
+    isApproving,
+    isApprovalConfirming,
     isSuccess,
+    error: donationError,
   } = useDonationOperations();
 
   // Get user creator status from donation and recycling
@@ -286,10 +299,109 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
+  useEffect(() => {
+    if (isApproving || isApprovalConfirming) {
+      setTokenDonationState("approving");
+    } else if (isSubmitting || isConfirming) {
+      setTokenDonationState("donating");
+    } else if (isSuccess) {
+      setTokenDonationState("success");
+    }
+  }, [
+    isApproving,
+    isApprovalConfirming,
+    isSubmitting,
+    isConfirming,
+    isSuccess,
+  ]);
+
+  // Handle donation errors
+  useEffect(() => {
+    if (donationError) {
+      setError(donationError.toString());
+      setTokenDonationState("error");
+
+      // Reset error state after a delay
+      setTimeout(() => {
+        setTokenDonationState("idle");
+      }, 3000);
+    }
+  }, [donationError]);
+
+  useEffect(() => {
+    if (
+      !isSubmitting &&
+      !isConfirming &&
+      !isApproving &&
+      !isApprovalConfirming
+    ) {
+      setIsLoading({
+        cloths: false,
+        recycling: false,
+        tokens: false,
+      });
+    }
+  }, [isSubmitting, isConfirming, isApproving, isApprovalConfirming]);
+
+  const getTokenDonationButtonText = () => {
+    switch (tokenDonationState) {
+      case "approving":
+        return "Approving Tokens...";
+      case "donating":
+        return "Processing Donation...";
+      case "success":
+        return "Donation Complete!";
+      case "error":
+        return "Donation Failed";
+      default:
+        return "Donate Tokens";
+    }
+  };
+
+  const getTokenDonationButtonIcon = () => {
+    switch (tokenDonationState) {
+      case "approving":
+      case "donating":
+        return <Loader2 className="h-5 w-5 mr-2 animate-spin" />;
+      case "success":
+        return <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />;
+      case "error":
+        return <AlertCircle className="h-5 w-5 mr-2 text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTokenDonationButtonStyles = () => {
+    const baseStyles =
+      "w-full py-3 px-4 rounded-lg font-medium flex justify-center items-center transition-all duration-300";
+
+    switch (tokenDonationState) {
+      case "approving":
+      case "donating":
+        return `${baseStyles} bg-purple-500/50 cursor-not-allowed`;
+      case "success":
+        return `${baseStyles} bg-gradient-to-r from-[#00FFD1] to-[#7B42FF] text-white`;
+      case "error":
+        return `${baseStyles} bg-red-500/80 text-white`;
+      default:
+        return `${baseStyles} bg-gradient-to-r from-[#7B42FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(123,66,255,0.4)]`;
+    }
+  };
+
   // Handler for token donation
   const handleTokenDonation = async () => {
     if (!tokenAmount || parseFloat(tokenAmount) <= 0) {
       setError("Please enter a valid token amount");
+      return;
+    }
+
+    // Check if user has enough tokens
+    const donationAmountBigInt = BigInt(parseInt(tokenAmount));
+    if (tokenBalance < donationAmountBigInt) {
+      setError(
+        `Insufficient token balance. You have ${tokenBalance.toString()} tokens.`
+      );
       return;
     }
 
@@ -298,14 +410,20 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     setIsLoading((prev) => ({ ...prev, tokens: true }));
 
     try {
-      await donateTokens(centerId, BigInt(parseInt(tokenAmount)));
-
-      // State will be updated in the useEffect when isSuccess changes
+      if (userAddress) {
+        await donateTokens(
+          centerId,
+          donationAmountBigInt,
+          BigInt(userAddress),
+          tokenBalance
+        );
+      } else {
+        setError("User address is undefined");
+      }
+      // State will be updated in the useEffect when token operations progress/complete
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to donate tokens"
-      );
-      setIsLoading((prev) => ({ ...prev, tokens: false }));
+      // The error will be handled by the effect watching donationError
+      console.error("Token donation error:", error);
     }
   };
 
@@ -1001,6 +1119,21 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
 
                     <div className="p-6 space-y-4">
+                      {/* Token Balance Display */}
+                      <div className="backdrop-blur-md bg-purple-900/10 border border-purple-500/10 p-3 rounded-lg flex justify-between items-center">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center mr-2">
+                            <Coins className="h-4 w-4 text-[#FF00FF]" />
+                          </div>
+                          <span className="text-white/80">
+                            Your Token Balance:
+                          </span>
+                        </div>
+                        <span className="font-bold text-[#FF00FF]">
+                          {tokenBalance.toString()}
+                        </span>
+                      </div>
+
                       <div>
                         <label
                           htmlFor="tokenAmount"
@@ -1016,42 +1149,92 @@ const CenterDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
                           placeholder="Number of tokens"
                           className={styles.input}
                           min="1"
+                          disabled={tokenDonationState !== "idle"}
                         />
                       </div>
+
+                      {/* Multi-step progress indicator (only shown during approval) */}
+                      {tokenDonationState === "approving" && (
+                        <div className="mt-4 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-[#FF00FF] flex items-center justify-center mr-2">
+                                <span className="text-xs text-white font-medium">
+                                  1
+                                </span>
+                              </div>
+                              <span className="text-sm text-white">
+                                Approving tokens...
+                              </span>
+                            </div>
+                            <Loader2 className="h-4 w-4 animate-spin text-[#FF00FF]" />
+                          </div>
+                          <div className="flex justify-between items-center opacity-50">
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-gray-500/50 flex items-center justify-center mr-2">
+                                <span className="text-xs text-white font-medium">
+                                  2
+                                </span>
+                              </div>
+                              <span className="text-sm text-white/70">
+                                Complete donation
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Multi-step progress indicator (updated during donation) */}
+                      {tokenDonationState === "donating" && (
+                        <div className="mt-4 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center mr-2">
+                                <CheckCircle2 className="h-3 w-3 text-white" />
+                              </div>
+                              <span className="text-sm text-white">
+                                Token approval complete
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-[#FF00FF] flex items-center justify-center mr-2">
+                                <span className="text-xs text-white font-medium">
+                                  2
+                                </span>
+                              </div>
+                              <span className="text-sm text-white">
+                                Processing donation...
+                              </span>
+                            </div>
+                            <Loader2 className="h-4 w-4 animate-spin text-[#FF00FF]" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Donation button with dynamic state */}
                       <motion.button
                         onClick={handleTokenDonation}
-                        disabled={
-                          isLoading.tokens || isSubmitting || isConfirming
-                        }
-                        className={`w-full py-3 px-4 rounded-lg font-medium flex justify-center items-center
-                          ${
-                            isLoading.tokens || isSubmitting || isConfirming
-                              ? "bg-purple-500/50 cursor-not-allowed"
-                              : "bg-gradient-to-r from-[#7B42FF] to-[#FF00FF] text-white hover:shadow-[0_0_15px_rgba(123,66,255,0.4)]"
-                          } transition-all duration-300`}
+                        disabled={tokenDonationState !== "idle"}
+                        className={getTokenDonationButtonStyles()}
                         whileHover={
-                          !(isLoading.tokens || isSubmitting || isConfirming)
-                            ? { scale: 1.02 }
-                            : {}
+                          tokenDonationState === "idle" ? { scale: 1.02 } : {}
                         }
                         whileTap={
-                          !(isLoading.tokens || isSubmitting || isConfirming)
-                            ? { scale: 0.98 }
-                            : {}
+                          tokenDonationState === "idle" ? { scale: 0.98 } : {}
                         }
                       >
-                        {isLoading.tokens || isSubmitting || isConfirming ? (
-                          <>
-                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <Coins className="h-5 w-5 mr-2" />
-                            Donate Tokens
-                          </>
-                        )}
+                        {getTokenDonationButtonIcon()}
+                        {getTokenDonationButtonText()}
                       </motion.button>
+
+                      {/* Help text */}
+                      <p className="text-xs text-white/50 mt-2 text-center">
+                        {tokenDonationState === "approving"
+                          ? "Please approve token access in your wallet. This allows the donation contract to use your tokens."
+                          : "Your donation will directly support this center's initiatives."}
+                      </p>
                     </div>
                   </motion.div>
                 )}
