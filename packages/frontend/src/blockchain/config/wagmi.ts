@@ -14,7 +14,7 @@ if (!process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID) {
 // Lisk Sepolia Testnet Configuration
 export const liskSepolia: Chain = {
   id: 4202, // Confirmed Lisk Sepolia Chain ID
-  name: 'Lisk Sepolia',
+  name: 'hedera',
   nativeCurrency: {
     name: 'Sepolia ETH',
     symbol: 'ETH',
