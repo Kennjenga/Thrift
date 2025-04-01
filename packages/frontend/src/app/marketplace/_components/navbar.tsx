@@ -151,7 +151,7 @@ const Navbar = () => {
               <div className="flex items-center space-x-3">
                 <ConnectButton
                   accountStatus="avatar"
-                  chainStatus="icon"
+                  chainStatus="none"
                   showBalance={false}
                 />
                 <CartButton />
